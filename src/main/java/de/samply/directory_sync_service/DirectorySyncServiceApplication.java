@@ -1,6 +1,8 @@
 package de.samply.directory_sync_service;
 
 import org.quartz.*;
+import org.quartz.impl.StdSchedulerFactory;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -12,7 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.quartz.impl.StdSchedulerFactory;
+import org.apache.commons.validator.routines.UrlValidator;
 
 /**
  * Runs the Directory sync service at a biobank site.
@@ -121,6 +123,24 @@ public class DirectorySyncServiceApplication {
             directoryPassCode = prop.getProperty("directory_sync.directory.pass_code");
             fhirStoreUrl = prop.getProperty("directory_sync.fhir_store_url");
             timerCron = prop.getProperty("directory_sync.timer_cron");
+
+            // Give advanced warning if there are problems with the properties
+            if (directoryUrl == null || directoryUrl == "")
+                logger.warn("Direcory URL is empty");
+            else if (new UrlValidator().isValid(directoryUrl))
+                logger.warn("Direcory URL is invalid");
+            if (directoryUserName == null || directoryUserName == "")
+                logger.warn("Direcory user name is empty");
+            if (directoryPassCode == null || directoryPassCode == "")
+                logger.warn("Direcory pass code is empty");
+            if (fhirStoreUrl == null || fhirStoreUrl == "")
+                logger.warn("FHIR store URL is empty");
+            else if (new UrlValidator().isValid(fhirStoreUrl))
+                logger.warn("FHIR store URL is invalid");
+            if (timerCron == null || timerCron == "")
+                logger.warn("Cron expression for repeated execution of Directory sync is empty");
+            else if (!CronExpression.isValidExpression(timerCron))
+                logger.warn("Cron expression for repeated execution of Directory sync is invalid: " + timerCron);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
