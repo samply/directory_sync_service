@@ -1,0 +1,16 @@
+# Docker helpers
+build.sh
+run.sh
+images/
+
+# Maven
+.mvn/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+# git
+.gitignore

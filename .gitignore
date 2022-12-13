@@ -1,0 +1,18 @@
+# Docker helpers
+build.sh
+run.sh
+images/
+
+# docker-compose
+.env
+
+# Maven
+.mvn/
+target/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
