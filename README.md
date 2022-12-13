@@ -1,14 +1,16 @@
 # Directory sync service
 
-Runs the Directory sync service at a biobank site.
+Runs a Directory sync service at a biobank site.
 
 This service keeps the BBMRI Directory up to date with the number of samples, etc.
 kept in the biobank. It also updates the local FHIR store with the latest contact
 details etc. from the Directory.
 
+It is implemented as a standalone component that encapsulates the [Directory sync library](https://github.com/samply/directory-sync).
+
 It is assumed that you have a local FHIR store containing information about patients
-and samples, as well as the details of your biobank. This should conform to
-the GBA profile.
+and samples, as well as the details of your biobank. The data in this store should conform to
+the [https://simplifier.net/bbmri.de/~resources?category=Profile](GBA profile).
 
 If you are running a [https://github.com/samply/bridgehead](Bridgehead), then
 you will already have a suitable store, running under [https://github.com/samply/blaze](Blaze).
