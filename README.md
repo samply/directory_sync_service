@@ -10,10 +10,10 @@ It is implemented as a standalone component that encapsulates the [Directory syn
 
 It is assumed that you have a local FHIR store containing information about patients
 and samples, as well as the details of your biobank. The data in this store should conform to
-the [https://simplifier.net/bbmri.de/~resources?category=Profile](GBA profile).
+the [GBA profile](https://simplifier.net/bbmri.de/~resources?category=Profile).
 
-If you are running a [https://github.com/samply/bridgehead](Bridgehead), then
-you will already have a suitable store, running under [https://github.com/samply/blaze](Blaze).
+If you are running a [Bridgehead](https://github.com/samply/bridgehead), then
+you will already have a suitable store, running under [Blaze](https://github.com/samply/blaze).
 
 The service uses Quartz to start synchronization at regular intervals. These are specified
 using cron syntax. Once daily is the recommended frequency.
