@@ -80,6 +80,8 @@ public class DirectorySyncJob implements Job {
         FhirApi fhirApi = createFhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
+        Either<String, Void> result = sync.initResources();
+        logger.info("syncCollectionSizesToDirectory result = " + result);
         List<OperationOutcome> operationOutcomes = sync.syncCollectionSizesToDirectory();
         for (OperationOutcome oo : operationOutcomes) {
             logger.info("syncCollectionSizesToDirectory outcome: " + ctx.newJsonParser().encodeResourceToString(oo));
