@@ -15,3 +15,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.1 - 2022-12-14]
 ### Changed
 - Dependency versions updated in pom.xml
+
+## [0.2.0 - 2022-12-14]
+### Added
+- Added basic GitHub workflow
+
+## [0.3.0 - 2022-12-14]
+### Added
+- Added sensible defaults for parameters.

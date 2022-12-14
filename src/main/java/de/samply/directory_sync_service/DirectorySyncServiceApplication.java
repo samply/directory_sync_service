@@ -40,17 +40,17 @@ import org.apache.commons.validator.routines.UrlValidator;
  * directory_sync.directory.user_name=testuser@gmail.com
  * directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
  * directory_sync.fhir_store_url=http://store:8080/fhir
- * directory_sync.timer_cron=
+ * directory_sync.timer_cron=0/20 * * * *
  */
 @SpringBootApplication
 public class DirectorySyncServiceApplication {
     private static Logger logger = LogManager.getLogger(DirectorySyncServiceApplication.class);
     private String configFilename = "/etc/bridgehead/directory_sync.conf";
-    private String directoryUrl;
-    private String directoryUserName;
-    private String directoryPassCode;
-    private String fhirStoreUrl;
-    private String timerCron;
+    private String directoryUrl = "https://bbmritestnn.gcc.rug.nl"; // default: Directory test site
+    private String directoryUserName = null; // User MUST supply this value
+    private String directoryPassCode = null; // User MUST supply this value
+    private String fhirStoreUrl = "http://store:8989/fhir"; // default: Blaze in Bridgehead
+    private String timerCron = "0 22 * * *"; // Default: every evening at 10pm
 
     /**
      * Constructor. Loads parameters relating to FHIR store and Directory from
