@@ -39,7 +39,7 @@ import org.apache.commons.validator.routines.UrlValidator;
  * directory_sync.directory.url=https://bbmritestnn.gcc.rug.nl
  * directory_sync.directory.user_name=testuser@gmail.com
  * directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
- * directory_sync.fhir_store_url=http://store:8080
+ * directory_sync.fhir_store_url=http://store:8080/fhir
  * directory_sync.timer_cron=
  */
 @SpringBootApplication

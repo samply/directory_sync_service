@@ -44,7 +44,7 @@ The contents of the file should look something like this:
 directory_sync.directory.url=https://bbmritestnn.gcc.rug.nl
 directory_sync.directory.user_name=testuser@gmail.com
 directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
-directory_sync.fhir_store_url=http://store:8080
+directory_sync.fhir_store_url=http://store:8080/fhir
 directory_sync.timer_cron=
 
 Once you have done this, you can start the service directly from the command line:
@@ -72,7 +72,7 @@ The file could look like this:
 DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
 DIRECTORY_USER_NAME=foo@gmail.com
 DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
-FHIR_STORE_URL=http://store:8080
+FHIR_STORE_URL=http://store:8080/fhir
 TIMER_CRON="0/20 * * * * ?"
 
 To create a Docker image, run the following from a command line:
