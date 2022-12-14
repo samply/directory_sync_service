@@ -23,3 +23,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.3.0 - 2022-12-14]
 ### Added
 - Added sensible defaults for parameters.
+
+## [0.3.1 - 2022-12-14]
+### Changed
+- Initialize the link to CQL Directory sync was trying to execute CQL, but not finding it. The change, suggested by Alex, fixed the problem.
+
