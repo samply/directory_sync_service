@@ -50,7 +50,7 @@ jobs:
       uses: docker/metadata-action@v3
       with:
         images: |
-          samply/share-client
+          samply/directory_sync_service
         tags: |
           type=schedule
           type=ref,event=branch
