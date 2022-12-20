@@ -13,7 +13,5 @@ sed -i "s,{directory_sync.fhir_store_url},${FHIR_STORE_URL:-http://store:8080},"
 sed -i "s!{directory_sync.timer_cron}!${TIMER_CRON:-0 22 * * *}!" $file
 
 # Start the server
-#exec java -jar directory_sync_service.jar
-#exec java -agentlib:jdwp=transport=dt_socket,server=y,address=8086,suspend=n -jar directory_sync_service.jar # Debug on port 
-exec java -agentlib:jdwp=transport=dt_socket,server=y,address=*:8086,suspend=n -jar directory_sync_service.jar # Debug on port 
+exec java -jar directory_sync_service.jar
 

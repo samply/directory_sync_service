@@ -4,18 +4,10 @@ services:
   directory_sync_service:
     image: "samply/directory_sync_service"
     build: "."
-    # Make Jav available for debugging on port 800
-    environment:
-      JAVA_OPTS: "-Xmx1g -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n"
-      #ACTIVE: "true"
     env_file:
       - .env
     ports:
       - "8086:8086" # Debug port
-
-  blazectl:
-    image: "blazectl"
-    build: "images/blazectl"
 
   store:
     container_name: "store"
