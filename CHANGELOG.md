@@ -28,3 +28,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Initialize the link to CQL Directory sync was trying to execute CQL, but not finding it. The change, suggested by Alex, fixed the problem.
 
+## [1.0.0 - 2022-12-20]
+### Changed
+- Public release version of code.
+- Tested against a live Directory.
+### Added
+- Added GitHub CI.
+

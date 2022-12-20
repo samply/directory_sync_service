@@ -19,7 +19,6 @@ services:
 
   directory_sync_service:
     image: "samply/directory_sync_service"
-    build: "."
     env_file:
       - .env
 
