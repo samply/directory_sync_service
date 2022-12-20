@@ -36,7 +36,7 @@ for this. The following table shows the variables that you will need:
 |DIRECTORY_URL      |Base URL of the Directory                         |
 |DIRECTORY_USER_NAME|User name for logging in to Directory             |
 |DIRECTORY_PASS_CODE|Password for logging in to Directory              |
-|FHIR_STORE_URL     |URL for Bridgehead Blaze store                    |
+|FHIR_STORE_URL     |URL for FHIR store                                |
 |TIMER_CRON         |Execution interval for Directory sync, cron format|
 
 For your convenience, we recommend that you store these in a .env file.
@@ -46,16 +46,14 @@ DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
 DIRECTORY_USER_NAME=foo@foomail.com
 DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
 FHIR_STORE_URL=http://store:8080/fhir
-TIMER_CRON="0/20 * * * * ?"
+TIMER_CRON=0/20 * * * *
 
-To run from Docker, you can use Docker run:
+To run from Docker:
 
 docker run --env-file .env samply/directory_sync_service
 
 Alternatively, you can use docker-compose. An example docker-compose.yml file has been
-included in this repository. This contains a Directory sync container and a FHIR
-store. You will need to fill the FHIR store with data before you can do anything
-meaningful with it. To start:
+included in this repository. To start:
 
 docker-compose up
 

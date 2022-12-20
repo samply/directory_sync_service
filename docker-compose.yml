@@ -1,4 +1,20 @@
 version: '3.4'
+
+# This is an example docker-compose.yml file that you can use as a template
+# for your own development. It contains two containers, one for the Directory
+# sync itself and one for local data storage (a FHIR store). You will need to
+# make sure that all relevant environment variables have been written into a
+# file called ".env".
+#
+# With regards to local data storage, you can obviously use your own FHIR
+# store, or point to an external FHIR store, if you already have one. If you
+# decide to use the FHIR store packaged with this docker-compose file, you
+# will need to fill it with data. Additionally, in the ".env" file, you will
+# need to point to the FHIR store's URL. If you are using the included Blaze
+# store, you can add this line:
+#
+# FHIR_STORE_URL=http://store:8080/fhir
+
 services:
 
   directory_sync_service:
@@ -6,8 +22,6 @@ services:
     build: "."
     env_file:
       - .env
-    ports:
-      - "8086:8086" # Debug port
 
   store:
     container_name: "store"
@@ -22,8 +36,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
 
 volumes:
   store-db-data:
