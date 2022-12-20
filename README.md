@@ -47,7 +47,7 @@ DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
 DIRECTORY_USER_NAME=foo@foomail.com
 DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
 FHIR_STORE_URL=http://store:8080/fhir
-TIMER_CRON=0/20 * * * *
+TIMER_CRON=0 22 * * *
 ```
 
 To run from Docker:
@@ -67,7 +67,7 @@ docker-compose up
 
 You can also build and run this service on your own computer, if Docker is not an option.
 
-### Building
+### Prerequisites
 
 Please run from within Linux.
 
@@ -97,7 +97,7 @@ directory_sync.directory.url=https://bbmritestnn.gcc.rug.nl
 directory_sync.directory.user_name=testuser@gmail.com
 directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
 directory_sync.fhir_store_url=http://store:8080/fhir
-directory_sync.timer_cron=
+directory_sync.timer_cron=0 22 * * *
 ```
 
 Once you have done this, you can start the service directly from the command line:
