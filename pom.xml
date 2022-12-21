@@ -10,7 +10,7 @@
     </parent>
     <groupId>de.samply</groupId>
     <artifactId>directory_sync_service</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>directory_sync_service</name>
     <description>Directory sync</description>
     <url>https://github.com/samply/directory_sync_service</url>
@@ -23,12 +23,6 @@
         <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
       </license>
     </licenses>
-
-    <scm>
-      <connection>scm:git:https://github.com/samply/directory_sync_service.git</connection>
-      <developerConnection>scm:git:https://github.com/samply/directory_sync_service.git</developerConnection>
-      <url>https://github.com/samply/directory_sync_service</url>
-    </scm>
 
     <properties>
       <java.version>19</java.version>
