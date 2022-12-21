@@ -35,8 +35,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Added GitHub CI.
 
-
 ## [1.0.1 - 2022-12-21]
 ### Changed
 - Upgraded all GitHub Docker actions to latest versions
+
+## [1.0.3 - 2022-12-21]
+### Changed
+- Changes made to simplify GitHub release process.
 
