@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Added single-shot functionality. Allows Directory sync to be run just once.
 
-## [1.1.1 - 2022-12-23]
+## [1.1.2 - 2022-12-23]
 ### Added
 - Added push-to-DockerHub for README
 
