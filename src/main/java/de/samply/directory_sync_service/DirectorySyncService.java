@@ -43,8 +43,8 @@ import org.apache.commons.validator.routines.UrlValidator;
  * directory_sync.timer_cron=0/20 * * * *
  */
 @SpringBootApplication
-public class DirectorySyncServiceApplication {
-    private static Logger logger = LogManager.getLogger(DirectorySyncServiceApplication.class);
+public class DirectorySyncService {
+    private static Logger logger = LogManager.getLogger(DirectorySyncService.class);
     private String configFilename = "/etc/bridgehead/directory_sync.conf";
     private String directoryUrl;
     private String directoryUserName;
@@ -60,9 +60,9 @@ public class DirectorySyncServiceApplication {
      * @param args No arguments required.
      */
     public static void main(String[] args) {
-        SpringApplication.run(DirectorySyncServiceApplication.class, args);
+        SpringApplication.run(DirectorySyncService.class, args);
 
-        DirectorySyncServiceApplication d = new DirectorySyncServiceApplication();
+        DirectorySyncService d = new DirectorySyncService();
         d.loadProperties();
         d.directorySyncStart();
     }
