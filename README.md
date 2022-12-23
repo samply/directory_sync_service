@@ -2,21 +2,21 @@
 
 Runs a Directory sync service at a biobank site.
 
-This service keeps the BBMRI Directory up to date with the number of samples, etc.
+This service keeps the [BBMRI Directory](https://directory.bbmri-eric.eu/) up to date with the number of samples, etc.
 kept in the biobank. It also updates the local FHIR store with the latest contact
 details etc. from the Directory.
 
 It is implemented as a standalone component that encapsulates the [Directory sync library](https://github.com/samply/directory-sync).
 
-It is assumed that you have a local FHIR store containing information about patients
+It is assumed that you have access to a FHIR store containing information about patients
 and samples, as well as the details of your biobank. The data in this store should conform to
 the [GBA profile](https://simplifier.net/bbmri.de/~resources?category=Profile).
 
 If you are running a [Bridgehead](https://github.com/samply/bridgehead), then
 you will already have a suitable store, running under [Blaze](https://github.com/samply/blaze).
 
-The service uses Quartz to start synchronization at regular intervals. These are specified
-using cron syntax. Once daily is the recommended frequency.
+The service is able to use Quartz to start synchronization at regular intervals. These are specified
+using cron syntax. If no cron information is supplied, Directory sync will only be run once.
 
 You need to provide URL, user and password for the Directory.
 
@@ -28,16 +28,29 @@ See below for ways to get these parameters to the application.
 
 We recommend using Docker for running Directory sync.
 
-First, you will need to set up the environment variables
-for this. The following table shows the variables that you will need:
+First, you will need to set up the environment variables for this:
 
-|Variable           |Purpose                                           |
-|:------------------|:-------------------------------------------------|
-|DIRECTORY_URL      |Base URL of the Directory                         |
-|DIRECTORY_USER_NAME|User name for logging in to Directory             |
-|DIRECTORY_PASS_CODE|Password for logging in to Directory              |
-|FHIR_STORE_URL     |URL for FHIR store                                |
-|TIMER_CRON         |Execution interval for Directory sync, cron format|
+|Variable           |Purpose                                           |Default if not specified          |
+|:------------------|:-------------------------------------------------|:---------------------------------|
+|DIRECTORY_URL      |Base URL of the Directory                         |https://bbmritestnn.gcc.rug.nl    |
+|DIRECTORY_USER_NAME|User name for logging in to Directory             |                                  |
+|DIRECTORY_PASS_CODE|Password for logging in to Directory              |                                  |
+|FHIR_STORE_URL     |URL for FHIR store                                |http://store:8080/fhir            |
+|TIMER_CRON         |Execution interval for Directory sync, cron format|                                  |
+|RETRY_MAX          |Maximum number of retries when sync fails         |10                                |
+|RETRY_INTERVAL     |Interval between retries (seconds)                |20 seconds                        |
+
+DIRECTORY_USER_NAME and DIRECTORY_PASS_CODE are mandatory. If you do not specify these,
+Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.
+
+If TIMER_CRON is not specified, Directory sync will be executed once, and then the
+process will terminate.
+
+The RETRY\_ variables specify how Directory sync reacts to failure. RETRY_MAX should
+be greater than zero. A typical case where retries may be necessary is when
+you simultaneously start Directroy sync and FHIR store. It takes some time
+for a FHIR store to start, whereas Directory sync starts immediately, so
+Directory sync needs to have a way to poll the store until is ready.
 
 For your convenience, we recommend that you store these in a .env file.
 The file could look like this:
@@ -47,8 +60,11 @@ DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
 DIRECTORY_USER_NAME=foo@foomail.com
 DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
 FHIR_STORE_URL=http://store:8080/fhir
-TIMER_CRON=0 22 * * *
 ```
+
+With this configuration, the synchronization will be done just once, with the test
+Directory server. The login details are fake, you will need to replace them with something
+sensible.
 
 To run from Docker:
 
