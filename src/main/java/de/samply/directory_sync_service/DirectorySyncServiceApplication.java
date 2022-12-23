@@ -1,8 +1,5 @@
 package de.samply.directory_sync_service;
 
-import org.quartz.*;
-import org.quartz.impl.StdSchedulerFactory;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -22,12 +19,15 @@ import org.apache.commons.validator.routines.UrlValidator;
  * This service keeps the BBMRI Directory up to date with the number of samples, etc.
  * kept in the biobank.
  *
- * It uses Quartz to start synchronization at regular intervals. These are specified
- * using cron syntax.
+ * It can run Directory sync just once, or use Quartz to start synchronization at regular
+ * intervals. These are specified with the cron syntax. If you don't supply any intervals,
+ * Directiory sync will only be run once and the service will then terminate.
  *
- * You need to provide URL, user and password for the Directory.
+ * You need to provide URL, user and password for the Directory. If these are not
+ * provided, Directory sync will not be performed. You can use this behavior as
+ * a switch for turning synchronization on or off.
  *
- * Additionally, you will need to supply a URL for the FHIR store that supplies the
+ * Additionally, you will need to specify a URL for the FHIR store that supplies the
  * information for the synchronization at the Bridgehead end.
  *
  * These parameters are supplied to the program via a file:
@@ -46,21 +46,13 @@ import org.apache.commons.validator.routines.UrlValidator;
 public class DirectorySyncServiceApplication {
     private static Logger logger = LogManager.getLogger(DirectorySyncServiceApplication.class);
     private String configFilename = "/etc/bridgehead/directory_sync.conf";
-    private String directoryUrl = "https://bbmritestnn.gcc.rug.nl"; // default: Directory test site
-    private String directoryUserName = null; // User MUST supply this value
-    private String directoryPassCode = null; // User MUST supply this value
-    private String fhirStoreUrl = "http://store:8989/fhir"; // default: Blaze in Bridgehead
-    private String timerCron = "0 22 * * *"; // Default: every evening at 10pm
-
-    /**
-     * Constructor. Loads parameters relating to FHIR store and Directory from
-     * a file.
-     */
-    public DirectorySyncServiceApplication() {
-        loadProperties();
-
-        logger.info("DirectorySyncServiceApplication initialized, repeat interval: " + timerCron);
-    }
+    private String directoryUrl;
+    private String directoryUserName;
+    private String directoryPassCode;
+    private String fhirStoreUrl;
+    private String timerCron;
+    private String retryMax;
+    private String retryInterval;
 
     /**
      * Main method, used by Spring to start the Directory sync service.
@@ -70,42 +62,35 @@ public class DirectorySyncServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(DirectorySyncServiceApplication.class, args);
 
-        new DirectorySyncServiceApplication().directorySyncStart();
+        DirectorySyncServiceApplication d = new DirectorySyncServiceApplication();
+        d.loadProperties();
+        d.directorySyncStart();
     }
 
     /**
-     * Initiates the Quartz job running service and passes relevant parameters to
-     * Directory sync jobs.
+     * Starts Directory synchronization.
+     *
+     * If Directory login credentials (name or password) are missing, no Synchronization
+     * will be performed.
+     *
+     * Two operational modes are possible, depending on the value of timerCron.
+     *
+     * If timerCron is not specified (null), then Directory sync will be performed
+     * immediately. It will only be carried out once.
+     *
+     * If timerCron contains a valid cron expression, then Directory sync will be
+     * repeated indefinitely, at the times specified in the cron expression.
      */
-    private void directorySyncStart()
-    {
-        logger.info("Starting Directory sync");
-
-        JobKey directorySyncJobKey = new JobKey("directorySyncJob", "directorySync");
-        JobDetail directorySyncJob = JobBuilder.newJob(DirectorySyncJob.class)
-                .withIdentity(directorySyncJobKey).build();
-
-        Trigger directorySyncTrigger = TriggerBuilder
-                .newTrigger()
-                .withIdentity("directorySyncTrigger", "directorySync")
-                .withSchedule(
-                        CronScheduleBuilder.cronSchedule(timerCron))
-                .build();
-
-        // Pass parameters to job
-        directorySyncJob.getJobDataMap().put("directoryUrl",directoryUrl);
-        directorySyncJob.getJobDataMap().put("directoryUserName",directoryUserName);
-        directorySyncJob.getJobDataMap().put("directoryPassCode",directoryPassCode);
-        directorySyncJob.getJobDataMap().put("fhirStoreUrl",fhirStoreUrl);
-
-        try {
-            Scheduler scheduler = new StdSchedulerFactory().getScheduler();
-
-            scheduler.start();
-            scheduler.scheduleJob(directorySyncJob, directorySyncTrigger);
-        } catch (SchedulerException e) {
-            e.printStackTrace();
+    private void directorySyncStart() {
+        if (directoryUserName == null || directoryUserName.isEmpty() || directoryPassCode == null || directoryPassCode.isEmpty()) {
+            logger.info("Directory user name or pass code is empty, will *not* perform Directory sync");
+            return;
         }
+
+        if (timerCron == null || timerCron.isEmpty())
+            new DirectorySync().syncWithDirectoryFailover(directoryUserName, directoryPassCode, directoryUrl, fhirStoreUrl, retryMax, retryInterval);
+        else
+            new DirectorySyncScheduler().directorySyncStart(directoryUserName, directoryPassCode, directoryUrl, fhirStoreUrl, timerCron, retryMax, retryInterval);
     }
 
     /**
@@ -123,24 +108,14 @@ public class DirectorySyncServiceApplication {
             directoryPassCode = prop.getProperty("directory_sync.directory.pass_code");
             fhirStoreUrl = prop.getProperty("directory_sync.fhir_store_url");
             timerCron = prop.getProperty("directory_sync.timer_cron");
+            retryMax = prop.getProperty("directory_sync.retry_max");
+            retryInterval = prop.getProperty("directory_sync.retry_interval");
 
             // Give advanced warning if there are problems with the properties
-            if (directoryUrl == null || directoryUrl == "")
-                logger.warn("Direcory URL is empty");
-            else if (new UrlValidator().isValid(directoryUrl))
-                logger.warn("Direcory URL is invalid");
-            if (directoryUserName == null || directoryUserName == "")
-                logger.warn("Direcory user name is empty");
-            if (directoryPassCode == null || directoryPassCode == "")
-                logger.warn("Direcory pass code is empty");
-            if (fhirStoreUrl == null || fhirStoreUrl == "")
-                logger.warn("FHIR store URL is empty");
-            else if (new UrlValidator().isValid(fhirStoreUrl))
-                logger.warn("FHIR store URL is invalid");
-            if (timerCron == null || timerCron == "")
-                logger.warn("Cron expression for repeated execution of Directory sync is empty");
-            else if (!CronExpression.isValidExpression(timerCron))
-                logger.warn("Cron expression for repeated execution of Directory sync is invalid: " + timerCron);
+            if (directoryUrl != null && !new UrlValidator().isValid(directoryUrl))
+                logger.warn("Direcory URL is invalid: " + directoryUrl);
+            if (fhirStoreUrl != null && !new UrlValidator().isValid(fhirStoreUrl))
+                logger.warn("FHIR store URL is invalid: " + fhirStoreUrl);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
