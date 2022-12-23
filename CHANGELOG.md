@@ -43,3 +43,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Changes made to simplify GitHub release process.
 
+## [1.1.0 - 2022-12-23]
+### Added
+- Added single-shot functionality. Allows Directory sync to be run just once.
+
