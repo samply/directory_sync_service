@@ -51,3 +51,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Added push-to-DockerHub for README
 
+## [1.1.3 - 2022-12-23]
+### Changed
+- README push to DockerHub trigger changed to release
+
