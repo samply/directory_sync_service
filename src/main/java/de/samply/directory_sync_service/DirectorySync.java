@@ -9,6 +9,7 @@ import de.samply.directory_sync.directory.DirectoryService;
 import de.samply.directory_sync.fhir.FhirApi;
 import de.samply.directory_sync.fhir.FhirReporting;
 import io.vavr.control.Either;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -30,15 +31,11 @@ public class DirectorySync {
      * Attempts to perform synchronization with the Directory repeatedly, until it either
      * succeeds, or the number of attempts exceeds a threshold.
      *
-     * @param directoryUserName  User name for logging in to Directory
-     * @param directoryPassCode  Password for logging in to Directory
-     * @param directoryUrl       Base URL of the Directory
-     * @param fhirStoreUrl       URL for Bridgehead Blaze store
-     * @param retryMax           Max number of times Directory sync will be retried on failure
-     * @param retryInterval      Interval (seconds) between retries
      * @throws IOException
      */
-    public void syncWithDirectoryFailover(String directoryUserName, String directoryPassCode, String directoryUrl, String fhirStoreUrl, String retryMax, String retryInterval) {
+    public void syncWithDirectoryFailover() {
+        String retryMax = DirectorySyncConfig.getProperties().get("directory_sync.retry_max");
+        String retryInterval = DirectorySyncConfig.getProperties().get("directory_sync.retry_interval");
         for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             if (retryNum > 0) {
                 try {
@@ -48,7 +45,7 @@ public class DirectorySync {
                 }
                 logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
             }
-            if (syncWithDirectory(directoryUserName, directoryPassCode, directoryUrl, fhirStoreUrl))
+            if (syncWithDirectory())
                 break;
         }
     }
@@ -56,14 +53,21 @@ public class DirectorySync {
     /**
      * Performs the synchronization with the Directory.
      *
-     * @param directoryUserName  User name for logging in to Directory
-     * @param directoryPassCode  Password for logging in to Directory
-     * @param directoryUrl       Base URL of the Directory
-     * @param fhirStoreUrl       URL for Bridgehead Blaze store
      * @return                   Return true if synchronization successful.
      * @throws IOException
      */
-    private boolean syncWithDirectory(String directoryUserName, String directoryPassCode, String directoryUrl, String fhirStoreUrl) {
+    private boolean syncWithDirectory() {
+        String directoryUrl = DirectorySyncConfig.getProperties().get("directory_sync.directory.url");
+        String fhirStoreUrl = DirectorySyncConfig.getProperties().get("directory_sync.fhir_store_url");
+        String directoryUserName = DirectorySyncConfig.getProperties().get("directory_sync.directory.user_name");
+        String directoryPassCode = DirectorySyncConfig.getProperties().get("directory_sync.directory.pass_code");
+
+        // Give advanced warning if there are problems with the properties
+        if (directoryUrl != null && !new UrlValidator().isValid(directoryUrl))
+            logger.warn("Direcory URL is invalid: " + directoryUrl);
+        if (fhirStoreUrl != null && !new UrlValidator().isValid(fhirStoreUrl))
+            logger.warn("FHIR store URL is invalid: " + fhirStoreUrl);
+
         DirectoryApi directoryApi = null;
         try {
             Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryPassCode, directoryUrl);

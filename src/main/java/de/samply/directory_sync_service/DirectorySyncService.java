@@ -6,13 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import org.apache.commons.validator.routines.UrlValidator;
-
 /**
  * Runs the Directory sync service at a biobank site.
  *
@@ -45,79 +38,30 @@ import org.apache.commons.validator.routines.UrlValidator;
 @SpringBootApplication
 public class DirectorySyncService {
     private static Logger logger = LogManager.getLogger(DirectorySyncService.class);
-    private String configFilename = "/etc/bridgehead/directory_sync.conf";
-    private String directoryUrl;
-    private String directoryUserName;
-    private String directoryPassCode;
-    private String fhirStoreUrl;
-    private String timerCron;
-    private String retryMax;
-    private String retryInterval;
+    private static final String configFilename = "/etc/bridgehead/directory_sync.conf";
 
     /**
      * Main method, used by Spring to start the Directory sync service.
+     *
+     * If Directory login credentials (name or password) are missing, no synchronization
+     * will be performed.
      *
      * @param args No arguments required.
      */
     public static void main(String[] args) {
         SpringApplication.run(DirectorySyncService.class, args);
 
-        DirectorySyncService d = new DirectorySyncService();
-        d.loadProperties();
-        d.directorySyncStart();
-    }
+        logger.info("Starting Directory sync");
 
-    /**
-     * Starts Directory synchronization.
-     *
-     * If Directory login credentials (name or password) are missing, no Synchronization
-     * will be performed.
-     *
-     * Two operational modes are possible, depending on the value of timerCron.
-     *
-     * If timerCron is not specified (null), then Directory sync will be performed
-     * immediately. It will only be carried out once.
-     *
-     * If timerCron contains a valid cron expression, then Directory sync will be
-     * repeated indefinitely, at the times specified in the cron expression.
-     */
-    private void directorySyncStart() {
+        String directoryUserName = DirectorySyncConfig.getProperties().get("directory_sync.directory.user_name");
+        String directoryPassCode = DirectorySyncConfig.getProperties().get("directory_sync.directory.pass_code");
         if (directoryUserName == null || directoryUserName.isEmpty() || directoryPassCode == null || directoryPassCode.isEmpty()) {
-            logger.info("Directory user name or pass code is empty, will *not* perform Directory sync");
+            logger.warn("Directory user name or pass code is empty, will *not* perform Directory sync");
             return;
         }
 
-        if (timerCron == null || timerCron.isEmpty())
-            new DirectorySync().syncWithDirectoryFailover(directoryUserName, directoryPassCode, directoryUrl, fhirStoreUrl, retryMax, retryInterval);
-        else
-            new DirectorySyncScheduler().directorySyncStart(directoryUserName, directoryPassCode, directoryUrl, fhirStoreUrl, timerCron, retryMax, retryInterval);
-    }
+        String timerCron = DirectorySyncConfig.getProperties().get("directory_sync.timer_cron");
 
-    /**
-     * Pulls the parameters needed by Directory sync from a Java parameter file.
-     */
-    private void loadProperties() {
-        try (InputStream input = new FileInputStream(configFilename)) {
-            Properties prop = new Properties();
-
-            prop.load(input);
-
-            // Stash the properties
-            directoryUrl = prop.getProperty("directory_sync.directory.url");
-            directoryUserName = prop.getProperty("directory_sync.directory.user_name");
-            directoryPassCode = prop.getProperty("directory_sync.directory.pass_code");
-            fhirStoreUrl = prop.getProperty("directory_sync.fhir_store_url");
-            timerCron = prop.getProperty("directory_sync.timer_cron");
-            retryMax = prop.getProperty("directory_sync.retry_max");
-            retryInterval = prop.getProperty("directory_sync.retry_interval");
-
-            // Give advanced warning if there are problems with the properties
-            if (directoryUrl != null && !new UrlValidator().isValid(directoryUrl))
-                logger.warn("Direcory URL is invalid: " + directoryUrl);
-            if (fhirStoreUrl != null && !new UrlValidator().isValid(fhirStoreUrl))
-                logger.warn("FHIR store URL is invalid: " + fhirStoreUrl);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        new JobScheduler("directorySync").jobStart(timerCron, DirectorySyncJob.class);
     }
 }
