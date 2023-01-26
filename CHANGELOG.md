@@ -55,3 +55,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - README push to DockerHub trigger changed to release
 
+## [1.1.4 - 2023-01-25]
+### Changed
+- Allow standard cron definitions, allow safe failover if store is not yet running.
+
