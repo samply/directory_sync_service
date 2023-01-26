@@ -80,6 +80,10 @@ public class DirectorySync {
             logger.warn("syncWithDirectory: createDirectoryApi failed");
             logger.warn(e.toString());
             return false;
+        } catch (NullPointerException e) {
+            logger.warn("syncWithDirectory: createDirectoryApi failed");
+            logger.warn(e.toString());
+            return false;
         }
         DirectoryService directoryService = new DirectoryService(directoryApi);
         FhirApi fhirApi = createFhirApi(fhirStoreUrl);

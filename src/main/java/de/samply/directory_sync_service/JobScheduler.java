@@ -75,6 +75,10 @@ public class JobScheduler {
             return;
         }
 
+        // Quartz likes to have a " ?" at the end of its cron definition.
+        if (!timerCron.endsWith(" ?"))
+            timerCron = timerCron + " ?";
+
         logger.info("Running job repeatedly, according to following cron schedule: " + timerCron);
         JobKey quartzJobKey = new JobKey(jobName, jobGroup);
         JobDetail quartzJob = JobBuilder.newJob(jobClass)
