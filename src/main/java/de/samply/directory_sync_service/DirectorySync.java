@@ -33,9 +33,9 @@ public class DirectorySync {
      *
      * @throws IOException
      */
-    public void syncWithDirectoryFailover() {
-        String retryMax = DirectorySyncConfig.getProperties().get("directory_sync.retry_max");
-        String retryInterval = DirectorySyncConfig.getProperties().get("directory_sync.retry_interval");
+    public void syncWithDirectoryFailover(Configuration configuration) {
+        String retryMax = configuration.getRetryMax();
+        String retryInterval = configuration.getRetryInterval();
         for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             if (retryNum > 0) {
                 try {
@@ -45,7 +45,7 @@ public class DirectorySync {
                 }
                 logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
             }
-            if (syncWithDirectory())
+            if (syncWithDirectory(configuration))
                 break;
         }
     }
@@ -56,11 +56,11 @@ public class DirectorySync {
      * @return                   Return true if synchronization successful.
      * @throws IOException
      */
-    private boolean syncWithDirectory() {
-        String directoryUrl = DirectorySyncConfig.getProperties().get("directory_sync.directory.url");
-        String fhirStoreUrl = DirectorySyncConfig.getProperties().get("directory_sync.fhir_store_url");
-        String directoryUserName = DirectorySyncConfig.getProperties().get("directory_sync.directory.user_name");
-        String directoryPassCode = DirectorySyncConfig.getProperties().get("directory_sync.directory.pass_code");
+    private boolean syncWithDirectory(Configuration configuration) {
+        String directoryUrl = configuration.getDirectoryUrl();
+        String fhirStoreUrl = configuration.getFhirStoreUrl();
+        String directoryUserName = configuration.getDirectoryUserName();
+        String directoryUserPass = configuration.getDirectoryUserPass();
 
         // Give advanced warning if there are problems with the properties
         if (directoryUrl != null && !new UrlValidator().isValid(directoryUrl))
@@ -70,7 +70,7 @@ public class DirectorySync {
 
         DirectoryApi directoryApi = null;
         try {
-            Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryPassCode, directoryUrl);
+            Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryUserPass, directoryUrl);
             if (directoryApiContainer.isLeft()) {
                 logger.warn("syncWithDirectory: problem setting up Directory API: " + directoryApiContainer.getLeft().getIssue());
                 return false;

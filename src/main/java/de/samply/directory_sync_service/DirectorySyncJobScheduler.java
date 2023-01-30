@@ -3,7 +3,6 @@ package de.samply.directory_sync_service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.CronScheduleBuilder;
-import org.quartz.Job;
 import org.quartz.JobKey;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -14,14 +13,12 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
-import java.lang.reflect.InvocationTargetException;
-
 /**
  * Use the Quartz scheduler to start synchronization of a job at regular intervals. These are specified
  * using cron syntax.
  */
-public class JobScheduler {
-    private static Logger logger = LogManager.getLogger(JobScheduler.class);
+public class DirectorySyncJobScheduler {
+    private static Logger logger = LogManager.getLogger(DirectorySyncJobScheduler.class);
     private String jobName;
     private String jobTrigger;
     private String jobGroup;
@@ -31,7 +28,7 @@ public class JobScheduler {
      *
      * @param jobType The type of the job, e.g. "directorySync". This is used primarily in diagnostics.
      */
-    public JobScheduler(String jobType) {
+    public DirectorySyncJobScheduler(String jobType) {
         jobName = jobType + "Job";
         jobTrigger = jobType + "Trigger";
         jobGroup = jobType;
@@ -52,23 +49,13 @@ public class JobScheduler {
      * repeated indefinitely, at the times specified in the cron expression.
      *
      * @param timerCron Cron expression, specifying repeat schedule for job. Null for one-off.
-     * @param jobClass The class of the Quartz job that you want to run. Needs to inherit from
-     *                 org.quartz.Job.
      */
-    public void jobStart(String timerCron, Class jobClass)
+    public void jobStart(String timerCron, Configuration configuration)
     {
         if (timerCron == null || timerCron.isEmpty()) {
             logger.info("Running job just once");
             try {
-                ((Job) jobClass.getDeclaredConstructor().newInstance()).execute(null);
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                (new DirectorySyncJob()).execute(configuration);
             } catch (JobExecutionException e) {
                 e.printStackTrace();
             }
@@ -81,8 +68,11 @@ public class JobScheduler {
 
         logger.info("Running job repeatedly, according to following cron schedule: " + timerCron);
         JobKey quartzJobKey = new JobKey(jobName, jobGroup);
-        JobDetail quartzJob = JobBuilder.newJob(jobClass)
+        JobDetail quartzJob = JobBuilder.newJob(DirectorySyncJob.class)
                 .withIdentity(quartzJobKey).build();
+
+        // Pass configuration to job
+        quartzJob.getJobDataMap().put("configuration", configuration);
 
         Trigger quartzTrigger = TriggerBuilder
                 .newTrigger()

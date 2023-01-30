@@ -59,3 +59,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Allow standard cron definitions, allow safe failover if store is not yet running.
 
+## [1.2.0 - 2023-01-30]
+### Changed
+- All environment variables now start with "DS\_", giving them a namespace, useful in the context of a Bridgehead.
+- The File-based configuration mechanism has been replaced with a Spring Boot configuration, which means that sensitive information like passwords is no longer stored in a file.
+

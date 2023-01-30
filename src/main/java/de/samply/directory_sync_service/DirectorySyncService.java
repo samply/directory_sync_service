@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -36,9 +37,16 @@ import org.apache.logging.log4j.Logger;
  * directory_sync.timer_cron=0/20 * * * *
  */
 @SpringBootApplication
-public class DirectorySyncService {
+public class DirectorySyncService implements CommandLineRunner {
     private static Logger logger = LogManager.getLogger(DirectorySyncService.class);
     private static final String configFilename = "/etc/bridgehead/directory_sync.conf";
+
+    private DirectorySyncLauncher directorySyncLauncher;
+
+    /** Loads the Directory sync launcher. */
+    DirectorySyncService(DirectorySyncLauncher directorySyncLauncher) {
+        this.directorySyncLauncher = directorySyncLauncher;
+    }
 
     /**
      * Main method, used by Spring to start the Directory sync service.
@@ -50,18 +58,10 @@ public class DirectorySyncService {
      */
     public static void main(String[] args) {
         SpringApplication.run(DirectorySyncService.class, args);
+    }
 
-        logger.info("Starting Directory sync");
-
-        String directoryUserName = DirectorySyncConfig.getProperties().get("directory_sync.directory.user_name");
-        String directoryPassCode = DirectorySyncConfig.getProperties().get("directory_sync.directory.pass_code");
-        if (directoryUserName == null || directoryUserName.isEmpty() || directoryPassCode == null || directoryPassCode.isEmpty()) {
-            logger.warn("Directory user name or pass code is empty, will *not* perform Directory sync");
-            return;
-        }
-
-        String timerCron = DirectorySyncConfig.getProperties().get("directory_sync.timer_cron");
-
-        new JobScheduler("directorySync").jobStart(timerCron, DirectorySyncJob.class);
+    @Override
+    public void run(String... args) throws Exception {
+        directorySyncLauncher.run();
     }
 }

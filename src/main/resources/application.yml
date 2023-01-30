@@ -1,0 +1,16 @@
+ds:
+  retry:
+    max: "10"
+    interval: "20"
+  timer:
+    cron: ""
+  fhir:
+    store:
+      url: "http://store:8080"
+  directory:
+    url: "https://directory.bbmri-eric.eu"
+    user:
+      name: ""
+      pass: ""
+
+
