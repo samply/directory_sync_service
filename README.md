@@ -30,23 +30,23 @@ We recommend using Docker for running Directory sync.
 
 First, you will need to set up the environment variables for this:
 
-|Variable           |Purpose                                           |Default if not specified          |
-|:------------------|:-------------------------------------------------|:---------------------------------|
-|DIRECTORY_URL      |Base URL of the Directory                         |https://bbmritestnn.gcc.rug.nl    |
-|DIRECTORY_USER_NAME|User name for logging in to Directory             |                                  |
-|DIRECTORY_PASS_CODE|Password for logging in to Directory              |                                  |
-|FHIR_STORE_URL     |URL for FHIR store                                |http://store:8080/fhir            |
-|TIMER_CRON         |Execution interval for Directory sync, cron format|                                  |
-|RETRY_MAX          |Maximum number of retries when sync fails         |10                                |
-|RETRY_INTERVAL     |Interval between retries (seconds)                |20 seconds                        |
+|Variable              |Purpose                                           |Default if not specified          |
+|:---------------------|:-------------------------------------------------|:---------------------------------|
+|DS_DIRECTORY_URL      |Base URL of the Directory                         |https://bbmritestnn.gcc.rug.nl    |
+|DS_DIRECTORY_USER_NAME|User name for logging in to Directory             |                                  |
+|DS_DIRECTORY_PASS_CODE|Password for logging in to Directory              |                                  |
+|DS_FHIR_STORE_URL     |URL for FHIR store                                |http://store:8080/fhir            |
+|DS_TIMER_CRON         |Execution interval for Directory sync, cron format|                                  |
+|DS_RETRY_MAX          |Maximum number of retries when sync fails         |10                                |
+|DS_RETRY_INTERVAL     |Interval between retries (seconds)                |20 seconds                        |
 
-DIRECTORY_USER_NAME and DIRECTORY_PASS_CODE are mandatory. If you do not specify these,
+DS_DIRECTORY_USER_NAME and DS_DIRECTORY_PASS_CODE are mandatory. If you do not specify these,
 Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.
 
-If TIMER_CRON is not specified, Directory sync will be executed once, and then the
+If DS_TIMER_CRON is not specified, Directory sync will be executed once, and then the
 process will terminate.
 
-The RETRY\_ variables specify how Directory sync reacts to failure. RETRY_MAX should
+The DS_RETRY\_ variables specify how Directory sync reacts to failure. RETRY_MAX should
 be greater than zero. A typical case where retries may be necessary is when
 you simultaneously start Directroy sync and FHIR store. It takes some time
 for a FHIR store to start, whereas Directory sync starts immediately, so
@@ -56,10 +56,10 @@ For your convenience, we recommend that you store these in a .env file.
 The file could look like this:
 
 ```
-DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
-DIRECTORY_USER_NAME=foo@foomail.com
-DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
-FHIR_STORE_URL=http://store:8080/fhir
+DS_DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
+DS_DIRECTORY_USER_NAME=foo@foomail.com
+DS_DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
+DS_FHIR_STORE_URL=http://store:8080/fhir
 ```
 
 With this configuration, the synchronization will be done just once, with the test
@@ -99,22 +99,7 @@ mvn clean install
 
 ### Running
 
-You need to provide the necessary parameters via a file, which
-resides in:
-
-```
-/etc/bridgehead/directory_sync.conf
-```
-
-The contents of the file should look something like this:
-
-```
-directory_sync.directory.url=https://bbmritestnn.gcc.rug.nl
-directory_sync.directory.user_name=testuser@gmail.com
-directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
-directory_sync.fhir_store_url=http://store:8080/fhir
-directory_sync.timer_cron=0 22 * * *
-```
+You need to provide the necessary parameters via environment variables, as documented above. These should be set in the same shell as the one that you use to run java.
 
 Once you have done this, you can start the service directly from the command line:
 
