@@ -34,13 +34,13 @@ First, you will need to set up the environment variables for this:
 |:---------------------|:-------------------------------------------------|:---------------------------------|
 |DS_DIRECTORY_URL      |Base URL of the Directory                         |https://bbmritestnn.gcc.rug.nl    |
 |DS_DIRECTORY_USER_NAME|User name for logging in to Directory             |                                  |
-|DS_DIRECTORY_PASS_CODE|Password for logging in to Directory              |                                  |
+|DS_DIRECTORY_USER_PASS|Password for logging in to Directory              |                                  |
 |DS_FHIR_STORE_URL     |URL for FHIR store                                |http://store:8080/fhir            |
 |DS_TIMER_CRON         |Execution interval for Directory sync, cron format|                                  |
 |DS_RETRY_MAX          |Maximum number of retries when sync fails         |10                                |
 |DS_RETRY_INTERVAL     |Interval between retries (seconds)                |20 seconds                        |
 
-DS_DIRECTORY_USER_NAME and DS_DIRECTORY_PASS_CODE are mandatory. If you do not specify these,
+DS_DIRECTORY_USER_NAME and DS_DIRECTORY_USER_PASS are mandatory. If you do not specify these,
 Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.
 
 If DS_TIMER_CRON is not specified, Directory sync will be executed once, and then the
@@ -58,7 +58,7 @@ The file could look like this:
 ```
 DS_DIRECTORY_URL=https://bbmritestnn.gcc.rug.nl
 DS_DIRECTORY_USER_NAME=foo@foomail.com
-DS_DIRECTORY_PASS_CODE=qwelmqwldmqwklmdLKJNJKNKJN
+DS_DIRECTORY_USER_PASS=qwelmqwldmqwklmdLKJNJKNKJN
 DS_FHIR_STORE_URL=http://store:8080/fhir
 ```
 
