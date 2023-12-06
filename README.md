@@ -24,21 +24,37 @@ Additionally, you will need to supply a URL for the local FHIR store.
 
 See below for ways to get these parameters to the application.
 
+## Collections
+
+It is generally advised that you assign collections to all Specimens. This is best achieved
+using an extension to the Specimen resource, which contains a reference to a collection,
+see the FHIR profile. The IDs of these collections
+will be passed on to the Directory during synchronization.
+
+However, for some biobanks
+it may not be feasible to assign individual specimens to a collection. A fallback
+solution is available in this case: the default collection ID. This is a single ID
+that will be assigned to all specimens without collection references. There are two possible
+ways to specify this ID: either as environment variable (see DS_DIRECTORY_DEFAULT_COLLECTION_ID
+in the table below) or as an orphan collection in FHIR that has no references from
+any specimens but whose identifier is a collection ID. 
+
 ## Usage with Docker
 
 We recommend using Docker for running Directory sync.
 
 First, you will need to set up the environment variables for this:
 
-|Variable              |Purpose                                           |Default if not specified          |
-|:---------------------|:-------------------------------------------------|:---------------------------------|
-|DS_DIRECTORY_URL      |Base URL of the Directory                         |https://bbmritestnn.gcc.rug.nl    |
-|DS_DIRECTORY_USER_NAME|User name for logging in to Directory             |                                  |
-|DS_DIRECTORY_USER_PASS|Password for logging in to Directory              |                                  |
-|DS_FHIR_STORE_URL     |URL for FHIR store                                |http://store:8080/fhir            |
-|DS_TIMER_CRON         |Execution interval for Directory sync, cron format|                                  |
-|DS_RETRY_MAX          |Maximum number of retries when sync fails         |10                                |
-|DS_RETRY_INTERVAL     |Interval between retries (seconds)                |20 seconds                        |
+|Variable                          |Purpose                                               |Default if not specified          |
+|:---------------------------------|:-----------------------------------------------------|:---------------------------------|
+|DS_DIRECTORY_URL                  |Base URL of the Directory                             |https://directory.bbmri-eric.eu   |
+|DS_DIRECTORY_USER_NAME            |User name for logging in to Directory                 |                                  |
+|DS_DIRECTORY_USER_PASS            |Password for logging in to Directory                  |                                  |
+|DS_DIRECTORY_DEFAULT_COLLECTION_ID|ID of collection to be used if samples do not have one|                                  |
+|DS_FHIR_STORE_URL                 |URL for FHIR store                                    |http://bridgehead-bbmri-blaze:8080|
+|DS_TIMER_CRON                     |Execution interval for Directory sync, cron format    |                                  |
+|DS_RETRY_MAX                      |Maximum number of retries when sync fails             |10                                |
+|DS_RETRY_INTERVAL                 |Interval between retries (seconds)                    |20 seconds                        |
 
 DS_DIRECTORY_USER_NAME and DS_DIRECTORY_USER_PASS are mandatory. If you do not specify these,
 Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.

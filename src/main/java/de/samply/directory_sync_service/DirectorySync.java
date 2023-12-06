@@ -61,61 +61,61 @@ public class DirectorySync {
         String fhirStoreUrl = configuration.getFhirStoreUrl();
         String directoryUserName = configuration.getDirectoryUserName();
         String directoryUserPass = configuration.getDirectoryUserPass();
-
-        // Give advanced warning if there are problems with the properties
-        if (directoryUrl != null && !new UrlValidator().isValid(directoryUrl))
-            logger.warn("Direcory URL is invalid: " + directoryUrl);
-        if (fhirStoreUrl != null && !new UrlValidator().isValid(fhirStoreUrl))
-            logger.warn("FHIR store URL is invalid: " + fhirStoreUrl);
+        String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
 
         DirectoryApi directoryApi = null;
         try {
             Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryUserPass, directoryUrl);
             if (directoryApiContainer.isLeft()) {
-                logger.warn("syncWithDirectory: problem setting up Directory API: " + directoryApiContainer.getLeft().getIssue());
+                logger.error("syncWithDirectory: problem setting up Directory API: " + getErrorMessageFromOperationOutcome(directoryApiContainer.getLeft()));
                 return false;
             }
             directoryApi = directoryApiContainer.get();
         } catch (IOException e) {
-            logger.warn("syncWithDirectory: createDirectoryApi failed");
-            logger.warn(e.toString());
+            logger.error("syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
             return false;
         } catch (NullPointerException e) {
-            logger.warn("syncWithDirectory: createDirectoryApi failed");
-            logger.warn(e.toString());
+            logger.error("syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
             return false;
         }
         DirectoryService directoryService = new DirectoryService(directoryApi);
         FhirApi fhirApi = createFhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
-        Either<String, Void> result = sync.initResources();
-        List<OperationOutcome> operationOutcomes = sync.syncCollectionSizesToDirectory();
+        if (sync.initResources().isLeft()) {
+            logger.error("syncWithDirectory: problem initializing FHIR resources");
+            return false;
+        }
+        List<OperationOutcome> operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
         for (OperationOutcome operationOutcome : operationOutcomes) {
-            List<OperationOutcome.OperationOutcomeIssueComponent> issues = operationOutcome.getIssue();
-            for (OperationOutcome.OperationOutcomeIssueComponent issue: issues) {
-                OperationOutcome.IssueSeverity severity = issue.getSeverity();
-                if (severity == OperationOutcome.IssueSeverity.ERROR || severity == OperationOutcome.IssueSeverity.FATAL) {
-                    logger.warn("syncWithDirectory: there was a problem during sync to Directory: " + issue.getDiagnostics());
-                    return false;
-                }
+            String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+            if (errorMessage.length() > 0) {
+                logger.error("syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
+                return false;
             }
         }
-        operationOutcomes = sync.updateAllBiobanksOnFhirServerIfNecessary();
-        for (OperationOutcome operationOutcome : operationOutcomes) {
-            List<OperationOutcome.OperationOutcomeIssueComponent> issues = operationOutcome.getIssue();
-            for (OperationOutcome.OperationOutcomeIssueComponent issue: issues) {
-                OperationOutcome.IssueSeverity severity = issue.getSeverity();
-                if (severity == OperationOutcome.IssueSeverity.ERROR || severity == OperationOutcome.IssueSeverity.FATAL) {
-                    logger.warn("syncWithDirectory: there was a problem during sync from Directory: " + issue.getDiagnostics());
-                    return false;
-                }
+       operationOutcomes = sync.updateAllBiobanksOnFhirServerIfNecessary();
+       for (OperationOutcome operationOutcome : operationOutcomes) {
+            String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+            if (errorMessage.length() > 0) {
+                logger.error("syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
+                return false;
             }
-        }
-
-        logger.info("syncWithDirectory: Directory synchronization completed successfully");
+       }
 
         return true;
+    }
+
+    private String getErrorMessageFromOperationOutcome(OperationOutcome operationOutcome) {
+        String errorMessage = "";
+        List<OperationOutcome.OperationOutcomeIssueComponent> issues = operationOutcome.getIssue();
+        for (OperationOutcome.OperationOutcomeIssueComponent issue: issues) {
+            OperationOutcome.IssueSeverity severity = issue.getSeverity();
+            if (severity == OperationOutcome.IssueSeverity.ERROR || severity == OperationOutcome.IssueSeverity.FATAL)
+                errorMessage += issue.getDiagnostics() + "\n";
+        }
+
+        return errorMessage;
     }
 
     /**

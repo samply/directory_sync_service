@@ -12,5 +12,6 @@ ds:
     user:
       name: ""
       pass: ""
+    default_collection_id:
 
 

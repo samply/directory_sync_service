@@ -28,4 +28,7 @@ public class Configuration {
 
     @Value("${ds.directory.user.pass}")
     private String directoryUserPass;
+
+    @Value("${ds.directory.default_collection_id}")
+    private String directoryDefaultCollectionId;
 }

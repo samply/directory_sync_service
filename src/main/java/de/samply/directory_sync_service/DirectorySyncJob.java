@@ -6,13 +6,17 @@ import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.StatefulJob;
+import org.quartz.DisallowConcurrentExecution;
 
 /**
  * Job for starting a synchronization with the Directory.
  *
  * Can handle single-run or repeated run operations.
  */
-public class DirectorySyncJob implements Job {
+@DisallowConcurrentExecution
+//public class DirectorySyncJob implements Job {
+public class DirectorySyncJob implements StatefulJob  {
     private static Logger logger = LogManager.getLogger(DirectorySyncJob.class);
 
     /**
