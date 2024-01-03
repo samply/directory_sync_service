@@ -50,7 +50,8 @@ First, you will need to set up the environment variables for this:
 |DS_DIRECTORY_URL                  |Base URL of the Directory                             |https://directory.bbmri-eric.eu   |
 |DS_DIRECTORY_USER_NAME            |User name for logging in to Directory                 |                                  |
 |DS_DIRECTORY_USER_PASS            |Password for logging in to Directory                  |                                  |
-|DS_DIRECTORY_DEFAULT_COLLECTION_ID|ID of collection to be used if samples do not have one|                                  |
+|DS_DIRECTORY_DEFAULT_COLLECTION_ID|ID of collection to be used if not in samples         |                                  |
+|DS_DIRECTORY_MIN_DONORS           |Minimum number of donors per star model hypercube     |10                                |
 |DS_FHIR_STORE_URL                 |URL for FHIR store                                    |http://bridgehead-bbmri-blaze:8080|
 |DS_TIMER_CRON                     |Execution interval for Directory sync, cron format    |                                  |
 |DS_RETRY_MAX                      |Maximum number of retries when sync fails             |10                                |
@@ -58,6 +59,8 @@ First, you will need to set up the environment variables for this:
 
 DS_DIRECTORY_USER_NAME and DS_DIRECTORY_USER_PASS are mandatory. If you do not specify these,
 Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.
+
+DS_DIRECTORY_DEFAULT_COLLECTION_ID is not mandatory, but you will need to specify it if your ETL does not assign Directory collection IDs to specimens.
 
 If DS_TIMER_CRON is not specified, Directory sync will be executed once, and then the
 process will terminate.
