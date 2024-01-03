@@ -62,6 +62,7 @@ public class DirectorySync {
         String directoryUserName = configuration.getDirectoryUserName();
         String directoryUserPass = configuration.getDirectoryUserPass();
         String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
+        int minDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
 
         DirectoryApi directoryApi = null;
         try {
@@ -86,7 +87,15 @@ public class DirectorySync {
             logger.error("syncWithDirectory: problem initializing FHIR resources");
             return false;
         }
-        List<OperationOutcome> operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
+        List<OperationOutcome> operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, minDonors);
+        for (OperationOutcome operationOutcome : operationOutcomes) {
+            String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+            if (errorMessage.length() > 0) {
+                logger.error("syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
+                return false;
+            }
+        }
+        operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
         for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {

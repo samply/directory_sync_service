@@ -13,5 +13,6 @@ ds:
       name: ""
       pass: ""
     default_collection_id:
+    min_donors: "10"
 
 

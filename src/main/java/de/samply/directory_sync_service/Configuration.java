@@ -31,4 +31,7 @@ public class Configuration {
 
     @Value("${ds.directory.default_collection_id}")
     private String directoryDefaultCollectionId;
+
+    @Value("${ds.directory.min_donors}")
+    private String directoryMinDonors;
 }
