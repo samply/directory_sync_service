@@ -17,7 +17,9 @@ import org.apache.logging.log4j.Logger;
 import org.hl7.fhir.r4.model.OperationOutcome;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class sets up connections to the FHIR store and to the Directory and
@@ -62,7 +64,8 @@ public class DirectorySync {
         String directoryUserName = configuration.getDirectoryUserName();
         String directoryUserPass = configuration.getDirectoryUserPass();
         String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
-        int minDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
+        boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
+        int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
 
         DirectoryApi directoryApi = null;
         try {
@@ -87,15 +90,27 @@ public class DirectorySync {
             logger.error("syncWithDirectory: problem initializing FHIR resources");
             return false;
         }
-        List<OperationOutcome> operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, minDonors);
+        List<OperationOutcome> operationOutcomes;
+        Map<String, String> correctedDiagnoses = new HashMap<String, String>();
+        operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId, correctedDiagnoses);
         for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
-                logger.error("syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
+                logger.error("syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
                 return false;
             }
         }
-        operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
+        if (directoryAllowStarModel) {
+            operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, correctedDiagnoses, directoryMinDonors);
+            for (OperationOutcome operationOutcome : operationOutcomes) {
+                String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+                if (errorMessage.length() > 0) {
+                    logger.error("syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
+                    return false;
+                }
+            }
+        }
+        operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId, correctedDiagnoses);
         for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {

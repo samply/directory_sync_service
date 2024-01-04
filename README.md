@@ -52,6 +52,7 @@ First, you will need to set up the environment variables for this:
 |DS_DIRECTORY_USER_PASS            |Password for logging in to Directory                  |                                  |
 |DS_DIRECTORY_DEFAULT_COLLECTION_ID|ID of collection to be used if not in samples         |                                  |
 |DS_DIRECTORY_MIN_DONORS           |Minimum number of donors per star model hypercube     |10                                |
+|DS_DIRECTORY_ALLOW_STAR_MODEL     |Set to 'True' to send star model info to Directory    |False                             |
 |DS_FHIR_STORE_URL                 |URL for FHIR store                                    |http://bridgehead-bbmri-blaze:8080|
 |DS_TIMER_CRON                     |Execution interval for Directory sync, cron format    |                                  |
 |DS_RETRY_MAX                      |Maximum number of retries when sync fails             |10                                |
@@ -61,6 +62,10 @@ DS_DIRECTORY_USER_NAME and DS_DIRECTORY_USER_PASS are mandatory. If you do not s
 Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.
 
 DS_DIRECTORY_DEFAULT_COLLECTION_ID is not mandatory, but you will need to specify it if your ETL does not assign Directory collection IDs to specimens.
+
+If you set DS_DIRECTORY_ALLOW_STAR_MODEL to 'True', then the star model summary information
+for your data will be generated and sent to the Directory. You are advised to talk to
+your local data protection group before doing this.
 
 If DS_TIMER_CRON is not specified, Directory sync will be executed once, and then the
 process will terminate.

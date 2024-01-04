@@ -13,6 +13,7 @@ ds:
       name: ""
       pass: ""
     default_collection_id:
+    allow_star_model: "False"
     min_donors: "10"
 
 
