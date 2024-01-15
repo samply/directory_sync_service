@@ -15,5 +15,6 @@ ds:
     default_collection_id:
     allow_star_model: "False"
     min_donors: "10"
+    max_facts: "-1"
 
 

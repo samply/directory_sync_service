@@ -37,4 +37,7 @@ public class Configuration {
 
     @Value("${ds.directory.min_donors}")
     private String directoryMinDonors;
+
+    @Value("${ds.directory.max_facts}")
+    private String directoryMaxFacts;
 }

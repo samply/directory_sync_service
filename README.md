@@ -52,6 +52,7 @@ First, you will need to set up the environment variables for this:
 |DS_DIRECTORY_USER_PASS            |Password for logging in to Directory                  |                                  |
 |DS_DIRECTORY_DEFAULT_COLLECTION_ID|ID of collection to be used if not in samples         |                                  |
 |DS_DIRECTORY_MIN_DONORS           |Minimum number of donors per star model hypercube     |10                                |
+|DS_DIRECTORY_MAX_FACTS            |Max number of star model hypercubes to be generated   |                                  |
 |DS_DIRECTORY_ALLOW_STAR_MODEL     |Set to 'True' to send star model info to Directory    |False                             |
 |DS_FHIR_STORE_URL                 |URL for FHIR store                                    |http://bridgehead-bbmri-blaze:8080|
 |DS_TIMER_CRON                     |Execution interval for Directory sync, cron format    |                                  |

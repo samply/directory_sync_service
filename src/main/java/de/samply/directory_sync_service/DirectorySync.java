@@ -2,6 +2,8 @@ package de.samply.directory_sync_service;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.api.IRestfulClientFactory;
+import ca.uhn.fhir.rest.client.impl.RestfulClientFactory;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import de.samply.directory_sync.Sync;
 import de.samply.directory_sync.directory.DirectoryApi;
@@ -9,7 +11,6 @@ import de.samply.directory_sync.directory.DirectoryService;
 import de.samply.directory_sync.fhir.FhirApi;
 import de.samply.directory_sync.fhir.FhirReporting;
 import io.vavr.control.Either;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -66,20 +67,21 @@ public class DirectorySync {
         String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
         boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
         int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
+        int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
 
         DirectoryApi directoryApi = null;
         try {
             Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryUserPass, directoryUrl);
             if (directoryApiContainer.isLeft()) {
-                logger.error("syncWithDirectory: problem setting up Directory API: " + getErrorMessageFromOperationOutcome(directoryApiContainer.getLeft()));
+                logger.error("__________ syncWithDirectory: problem setting up Directory API: " + getErrorMessageFromOperationOutcome(directoryApiContainer.getLeft()));
                 return false;
             }
             directoryApi = directoryApiContainer.get();
         } catch (IOException e) {
-            logger.error("syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
+            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
             return false;
         } catch (NullPointerException e) {
-            logger.error("syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
+            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
             return false;
         }
         DirectoryService directoryService = new DirectoryService(directoryApi);
@@ -87,34 +89,33 @@ public class DirectorySync {
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
         if (sync.initResources().isLeft()) {
-            logger.error("syncWithDirectory: problem initializing FHIR resources");
+            logger.error("__________ syncWithDirectory: problem initializing FHIR resources");
             return false;
         }
         List<OperationOutcome> operationOutcomes;
-        Map<String, String> correctedDiagnoses = new HashMap<String, String>();
-        operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId, correctedDiagnoses);
+        operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId);
         for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
-                logger.error("syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
+                logger.error("__________ syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
                 return false;
             }
         }
         if (directoryAllowStarModel) {
-            operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, correctedDiagnoses, directoryMinDonors);
+            operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts);
             for (OperationOutcome operationOutcome : operationOutcomes) {
                 String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
                 if (errorMessage.length() > 0) {
-                    logger.error("syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
+                    logger.error("__________ syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
                     return false;
                 }
             }
         }
-        operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId, correctedDiagnoses);
+        operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
         for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
-                logger.error("syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
+                logger.error("__________ syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
                 return false;
             }
         }
@@ -122,12 +123,13 @@ public class DirectorySync {
        for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
-                logger.error("syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
+                logger.error("__________ syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
                 return false;
             }
        }
 
-        return true;
+       logger.info("__________ syncWithDirectory: completed");
+       return true;
     }
 
     private String getErrorMessageFromOperationOutcome(OperationOutcome operationOutcome) {
@@ -168,6 +170,7 @@ public class DirectorySync {
     private FhirApi createFhirApi(String fhirStoreUrl) {
         IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
         client.registerInterceptor(new LoggingInterceptor(true));
+ 
         return new FhirApi(client);
     }
 }
