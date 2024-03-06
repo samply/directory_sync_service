@@ -28,4 +28,16 @@ public class Configuration {
 
     @Value("${ds.directory.user.pass}")
     private String directoryUserPass;
+
+    @Value("${ds.directory.default_collection_id}")
+    private String directoryDefaultCollectionId;
+
+    @Value("${ds.directory.allow_star_model}")
+    private String directoryAllowStarModel;
+
+    @Value("${ds.directory.min_donors}")
+    private String directoryMinDonors;
+
+    @Value("${ds.directory.max_facts}")
+    private String directoryMaxFacts;
 }

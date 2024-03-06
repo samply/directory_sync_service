@@ -17,6 +17,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Clone directory-sync repository
+      uses: actions/checkout@v2
+      with:
+        repository: samply/directory-sync
+        path: directory-sync
+        ref: master
+
+    - name: Build directory-sync library
+      run: |
+        cd directory-sync
+        mvn clean install
+
     - name: Check out Git repository
       uses: actions/checkout@v3
 
