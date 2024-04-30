@@ -88,8 +88,9 @@ public class DirectorySync {
         FhirApi fhirApi = createFhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
-        if (sync.initResources().isLeft()) {
-            logger.error("__________ syncWithDirectory: problem initializing FHIR resources");
+        Either<String, Void> initResourcesOutcome = sync.initResources();
+        if (initResourcesOutcome.isLeft()) {
+            logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());
             return false;
         }
         List<OperationOutcome> operationOutcomes;
