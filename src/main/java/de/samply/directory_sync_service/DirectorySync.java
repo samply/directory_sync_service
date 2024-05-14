@@ -2,8 +2,6 @@ package de.samply.directory_sync_service;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.api.IRestfulClientFactory;
-import ca.uhn.fhir.rest.client.impl.RestfulClientFactory;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import de.samply.directory_sync.Sync;
 import de.samply.directory_sync.directory.DirectoryApi;
@@ -18,9 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.hl7.fhir.r4.model.OperationOutcome;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This class sets up connections to the FHIR store and to the Directory and
@@ -68,10 +64,11 @@ public class DirectorySync {
         boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
         int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
         int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
+        boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
 
         DirectoryApi directoryApi = null;
         try {
-            Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryUserPass, directoryUrl);
+            Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryUserPass, directoryUrl, directoryMock);
             if (directoryApiContainer.isLeft()) {
                 logger.error("__________ syncWithDirectory: problem setting up Directory API: " + getErrorMessageFromOperationOutcome(directoryApiContainer.getLeft()));
                 return false;
@@ -147,19 +144,20 @@ public class DirectorySync {
 
     /**
      * Opens a connection to the Directory API.
-     *
+     * <p>
      * This is where the login to the Directory happens.
      *
-     * @param directoryUserName  User name for logging in to Directory
-     * @param directoryPassCode  Password for logging in to Directory
-     * @param directoryUrl       Base URL of the Directory
+     * @param directoryUserName User name for logging in to Directory
+     * @param directoryPassCode Password for logging in to Directory
+     * @param directoryUrl      Base URL of the Directory
+     * @param directoryMock
      * @return
      * @throws IOException
      */
-    private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl)
+    private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl, boolean directoryMock)
             throws IOException {
         CloseableHttpClient client = HttpClients.createDefault();
-        return DirectoryApi.createWithLogin(client, directoryUrl, directoryUserName, directoryPassCode);
+        return DirectoryApi.createWithLogin(client, directoryUrl, directoryUserName, directoryPassCode, directoryMock);
     }
 
     /**

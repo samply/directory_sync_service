@@ -16,5 +16,6 @@ ds:
     allow_star_model: "False"
     min_donors: "10"
     max_facts: "-1"
+    mock: "False"
 
 
