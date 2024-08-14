@@ -51,7 +51,7 @@
       <dependency>
         <groupId>de.samply</groupId>
         <artifactId>directory-sync</artifactId>
-        <version>0.3.2</version>
+        <version>0.3.3</version>
       </dependency>
   
       <dependency>
