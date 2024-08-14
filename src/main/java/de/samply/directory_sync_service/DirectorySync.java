@@ -88,6 +88,7 @@ public class DirectorySync {
         Either<String, Void> initResourcesOutcome = sync.initResources();
         if (initResourcesOutcome.isLeft()) {
             logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());
+            logger.error("__________ syncWithDirectory: fhirStoreUrl: " + fhirStoreUrl);
             return false;
         }
         List<OperationOutcome> operationOutcomes;

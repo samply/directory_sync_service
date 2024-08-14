@@ -6,7 +6,7 @@ ds:
     cron: ""
   fhir:
     store:
-      url: "http://bridgehead-bbmri-blaze:8080"
+      url: "http://bridgehead-bbmri-blaze:8080/fhir"
   directory:
     url: "https://directory.bbmri-eric.eu"
     user:
