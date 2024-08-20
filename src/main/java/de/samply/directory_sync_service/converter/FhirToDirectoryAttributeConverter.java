@@ -24,17 +24,6 @@ public class FhirToDirectoryAttributeConverter {
     }
 
     /**
-     * Converts the given age attribute. No conversion needed.
-     *
-     * @param age The age attribute to be converted.
-     * @return The unchanged age attribute.
-     */
-    public static Integer convertAge(Integer age) {
-        // No conversion needed
-        return age;
-    }
-
-    /**
      * Converts the given material attribute to Directory conventions.
      *
      * @param material The material attribute to be converted.

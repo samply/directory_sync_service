@@ -1,6 +1,5 @@
 package de.samply.directory_sync_service.directory.model;
 
-import de.samply.directory_sync_service.service.DirectorySync;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

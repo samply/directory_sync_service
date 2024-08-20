@@ -41,35 +41,35 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
  * This class provides methods to update biobanks, synchronize collection sizes, generate diagnosis corrections,
  * send star model updates, and perform aggregated updates to the Directory service based on information from
  * the FHIR store.
- * 
+ * <p>
  * Usage:
- * 
+ * <p>
  * You will need to first do the initial set up of the Sync class, which includes
  * connecting to the FHIR store and to the Directory. Your code might look something like
  * this:
- * 
+ * <p>
  * DirectoryService directoryService = new DirectoryService(DirectoryApi.createWithLogin(HttpClients.createDefault(), directoryUrl, directoryUserName, directoryPassCode));
  * FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
  * Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
  * sync.initResources()
- * 
+ * <p>
  * Next, if your FHIR store does not use WHO ICD 10 codes for diagnosis, you should
  * first generate a map, mapping your local ICD 10 codes onto WHO, which are used by
  * the Directory:
- * 
+ * <p>
  * sync.generateDiagnosisCorrections(directoryDefaultCollectionId); // directoryDefaultCollectionId may be null
- * 
+ * <p>
  * Now you can start to do some synchronization, e.g.:
- * 
+ * <p>
  * Only send the collection sizes to the Directory (deprecated):
  * sync.syncCollectionSizesToDirectory
- * 
+ * <p>
  * Send all standard attributes to Directory:
  * sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
- * 
+ * <p>
  * Send star model to Directory:
  * sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors); // e.g. directoryMinDonors=10
- * 
+ * <p>
  * Get biobank information from Directory and put into local FHIR store:
  * sync.updateAllBiobanksOnFhirServerIfNecessary();
  */
@@ -209,18 +209,6 @@ public class Sync {
         return updateOutcomeEither.fold(Function.identity(), Function.identity());
     }
 
-    /**
-     * Updates collection sample count information for all collections that exist with the same
-     * BBMRI-ERIC identifier on the FHIR server and in the directory.
-     *
-     * @return the outcome of the directory update operation.
-     */
-    public List<OperationOutcome> syncCollectionSizesToDirectory() {
-        return fhirReporting.fetchCollectionSizes()
-                .map(directoryService::updateCollectionSizes)
-                .fold(Collections::singletonList, Function.identity());
-    }
-
     private Map<String, String> correctedDiagnoses = null;
 
     /**
@@ -228,9 +216,9 @@ public class Sync {
      * compatible with the Directory. You should supply this method with an empty map
      * via the correctedDiagnoses variable. This map will be filled by the method and
      * you can subsequently use it elsewhere.
-     * 
+     * <p>
      * This method performs the following steps:
-     * 
+     * <p>
      * * Retrieves diagnoses from the FHIR store for specimens with identifiable collections and their associated patients.
      * * Converts raw ICD-10 codes into MIRIAM-compatible codes.
      * * Collects corrected diagnosis codes from the Directory API based on the MIRIAM-compatible codes.
@@ -336,7 +324,7 @@ public class Sync {
     
      /**
      * Take information from the FHIR store and send aggregated updates to the Directory.
-     * 
+     * <p>
      * This is a multi step process:
      *  1. Fetch a list of collections objects from the FHIR store. These contain aggregated
      *     information over all specimens in the collections.
@@ -398,10 +386,10 @@ public class Sync {
 
     /**
      * Renew the Directory login.
-     *
+     * <p>
      * This generates a new DirectoryApi object, which needs to be distributed to the places
      * where it will be used.
-     *
+     * <p>
      * Consequence: this method has significant side effects.
      */
     private void relogin() {

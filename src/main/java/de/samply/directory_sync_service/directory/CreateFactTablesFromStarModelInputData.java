@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
  * </p>
  */
 public class CreateFactTablesFromStarModelInputData {
-    private static final Logger logger = LoggerFactory.getLogger(CreateFactTablesFromStarModelInputData.class);
 
     /**
      * Creates fact tables for each collection in the provided Star Model input data.
@@ -37,13 +36,13 @@ public class CreateFactTablesFromStarModelInputData {
                 starModelInputData.getMinDonors(),
                 maxFacts,
                 starModelInputData.getInputRowsAsStringMaps(collectionId));
-            starModelInputData.addFactTable(collectionId, factTableFinal);
+            starModelInputData.addFactTable(factTableFinal);
         }
     }
 
     /**
      * Creates a final fact table for a specific collection based on input rows, minimum donors, and data transformations.
-     *
+     * <p>
      * This code was translated from Petr Holub's R script "CRC-fact-sheet.R".
      * 
      * @param collectionId The identifier for the collection for which to create the fact table.

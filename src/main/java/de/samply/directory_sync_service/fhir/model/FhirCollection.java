@@ -10,10 +10,8 @@ import org.slf4j.LoggerFactory;
  * collection of samples.
  */
 public class FhirCollection {
-  private static final Logger logger = LoggerFactory.getLogger(FhirCollection.class);
 
   private String id;
-  private String country;
   private Integer size;
   private Integer numberOfDonors;
   private List<String> sex;
@@ -29,10 +27,6 @@ public class FhirCollection {
 
   public String getId() {
     return id;
-  }
-
-  public void setCountry(String country) {
-    this.country = country;
   }
 
   public void setSize(Integer size) {

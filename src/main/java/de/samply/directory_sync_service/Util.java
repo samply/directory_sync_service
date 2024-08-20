@@ -5,8 +5,6 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.gson.Gson;
-
 public class Util {
 
   public static <K, V> Map<K, V> mapOf() {

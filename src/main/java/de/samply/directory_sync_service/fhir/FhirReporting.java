@@ -194,7 +194,7 @@ public class FhirReporting {
 
   /**
    * Pulls information relevant to collections from the FHIR store.
-   * 
+   * <p>
    * Returns a list of FhirCollection objects, one per collection.
    * 
    * @param defaultBbmriEricCollectionId
@@ -254,9 +254,9 @@ public class FhirReporting {
   
   /**
    * Fetches diagnoses from Specimens and Patients to which collections can be assigned.
-   *
+   * <p>
    * This method retrieves specimens grouped by collection.
-   * 
+   * <p>
    * It then extracts diagnoses from Specimen extensions and Patient condition codes, eliminating duplicates,
    * and combines the results into a list of unique diagnoses.
    *

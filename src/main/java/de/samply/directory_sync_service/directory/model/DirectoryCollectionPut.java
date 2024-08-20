@@ -17,11 +17,11 @@ import org.slf4j.LoggerFactory;
 /**
  * This is a data transfer object that maps onto the JSON needed for a PUT request
  * to the Directory API when you want to update one or more collections.
- * 
+ * <p>
  * It simply extends a Map and adds a single key, "entities". This contains a list
  * of collections. Each collection is also a Map, with keys corresponding to the
  * various attributes needed when updating, such as collection name or ID.
- * 
+ * <p>
  * The setter methods allow you to set attributes in collections identified by
  * collection ID. If you use an ID that is not yet known, a new collection with this
  * ID will first be created.
@@ -116,12 +116,12 @@ public class DirectoryCollectionPut extends HashMap {
 
     /**
      * Gets the country code for the collections, e.g. "DE".
-     * 
+     * <p>
      * Assumes that all collections will have the same code and simply returns
      * the code of the first collection.
-     * 
+     * <p>
      * If there are no collections, returns null.
-     * 
+     * <p>
      * May throw a null pointer exception.
      * 
      * @return Country code
@@ -160,7 +160,7 @@ public class DirectoryCollectionPut extends HashMap {
 
     /**
      * Retrieves or creates an Entity with the specified collection ID.
-     *
+     * <p>
      * This method searches through the existing entities to find one with a matching
      * ID. If found, the existing entity is returned; otherwise, a new Entity is created
      * with the given collection ID and added to the list of entities.
@@ -231,7 +231,7 @@ public class DirectoryCollectionPut extends HashMap {
             if (country == null || country.isEmpty())
                 return;
 
-                put("country", country);
+            put("country", country);
         }
 
         public String getCountry() {

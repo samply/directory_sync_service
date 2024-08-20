@@ -141,7 +141,7 @@ public class DirectoryApi {
    * Log back in to the Directory. This is typically used in situations where there has
    * been a long pause since the last API call to the Directory. It returns a fresh
    * DirectoryApi object, which you should use to replace the existing one.
-   *
+   * <p>
    * Returns null if something goes wrong.
    *
    * @return new DirectoryApi object.
@@ -263,15 +263,13 @@ public class DirectoryApi {
    * Push the counts back to the Directory. You need 'update data' permission on entity type
    * 'Collections' at the Directory in order for this to work.
    *
-   * @param countryCode        the country code of the endpoint of the national node, e.g. Germany
    * @param collectionSizeDtos the individual collection sizes. note that all collection must share
    *                           the given {@code countryCode}
    * @return an outcome, either successful or an error
    */
-  public OperationOutcome updateCollectionSizes(String countryCode,
-      List<CollectionSizeDto> collectionSizeDtos) {
+  public OperationOutcome updateCollectionSizes(List<CollectionSizeDto> collectionSizeDtos) {
 
-    HttpPut request = updateCollectionSizesRequest(countryCode, collectionSizeDtos);
+    HttpPut request = updateCollectionSizesRequest(collectionSizeDtos);
 
     try (CloseableHttpResponse response = httpClient.execute(request)) {
       if (response.getStatusLine().getStatusCode() < 300) {
@@ -284,8 +282,7 @@ public class DirectoryApi {
     }
   }
 
-  private HttpPut updateCollectionSizesRequest(String countryCode,
-      List<CollectionSizeDto> collectionSizeDtos) {
+  private HttpPut updateCollectionSizesRequest(List<CollectionSizeDto> collectionSizeDtos) {
     HttpPut request = new HttpPut(
         baseUrl + "/api/v2/eu_bbmri_eric_collections/size");
     request.setHeader("x-molgenis-token", token);
@@ -429,7 +426,7 @@ public class DirectoryApi {
 
   /**
    * Updates the Star Model data in the Directory service based on the provided StarModelInputData.
-   * 
+   * <p>
    * Before sending any star model data to the Directory, the original
    * star model data for all known collections will be deleted from the
    * Directory.
@@ -685,11 +682,11 @@ public class DirectoryApi {
   
   /**
    * Collects diagnosis corrections from the Directory.
-   * 
+   * <p>
    * It checks with the Directory if the diagnosis codes are valid ICD values and corrects them if necessary.
-   * 
+   * <p>
    * Two levels of correction are possible:
-   * 
+   * <p>
    * 1. If the full code is not correct, remove the number after the period and try again. If the new truncated code is OK, use it to replace the existing diagnosis.
    * 2. If that doesn't work, replace the existing diagnosis with null.
    *

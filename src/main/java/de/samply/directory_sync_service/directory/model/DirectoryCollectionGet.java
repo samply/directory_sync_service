@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 /**
  * This is a data transfer object that maps onto the JSON returned by a GET request
  * to the Directory API when you want to obtain information about collections.
- * 
+ * <p>
  * It simply extends a Map and adds a single key, "items". This contains a list
  * of collections. Each collection is also a Map, with keys corresponding to the
  * various attributes needed when updating, such as collection name or ID.
- * 
+ * <p>
  * The getter methods allow you to get attributes in collections identified by
  * collection ID. If you use an ID that is not known, you will get a null pointer
  * exception.
@@ -85,12 +85,6 @@ public class DirectoryCollectionGet extends HashMap {
 
     public String getDescription(String id) {
         return (String) getItem(id).get("description");
-    }
-
-    public List<String> getCollectionIds() {
-        return getItems().stream()
-            .map(entity -> (String) entity.get("id"))
-            .collect(Collectors.toList());
     }
 
     public List<Map> getItems() {

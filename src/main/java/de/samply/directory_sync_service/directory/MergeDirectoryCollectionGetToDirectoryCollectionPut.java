@@ -12,7 +12,7 @@ import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 /**
  * Takes information from a DirectoryCollectionGet object and inserts it into
  * a preexisting DirectoryCollectionPut object.
- * 
+ * <p>
  * Both objects should contain lists of collections with identical IDs.
  */
 public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
@@ -21,7 +21,7 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
   /**
    * Merges collection information from a DirectoryCollectionGet object into a
    * DirectoryCollectionPut object.
-   * 
+   * <p>
    * Returns false if there is a problem, e.g. if there are discrepancies between
    * the collection IDs in the two objects.
    * 

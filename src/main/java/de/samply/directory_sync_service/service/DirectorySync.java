@@ -75,9 +75,6 @@ public class DirectorySync {
                 return false;
             }
             directoryApi = directoryApiContainer.get();
-        } catch (IOException e) {
-            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
-            return false;
         } catch (NullPointerException e) {
             logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
             return false;
@@ -157,10 +154,8 @@ public class DirectorySync {
      * @param directoryUrl      Base URL of the Directory
      * @param directoryMock
      * @return
-     * @throws IOException
      */
-    private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl, boolean directoryMock)
-            throws IOException {
+    private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl, boolean directoryMock) {
         CloseableHttpClient client = HttpClients.createDefault();
         return DirectoryApi.createWithLogin(client, directoryUrl, directoryUserName, directoryPassCode, directoryMock);
     }

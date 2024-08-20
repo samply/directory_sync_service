@@ -9,27 +9,27 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Runs the Directory sync service at a biobank site.
- *
+ * <p>
  * This service keeps the BBMRI Directory up to date with the number of samples, etc.
  * kept in the biobank.
- *
+ * <p>
  * It can run Directory sync just once, or use Quartz to start synchronization at regular
  * intervals. These are specified with the cron syntax. If you don't supply any intervals,
  * Directiory sync will only be run once and the service will then terminate.
- *
+ * <p>
  * You need to provide URL, user and password for the Directory. If these are not
  * provided, Directory sync will not be performed. You can use this behavior as
  * a switch for turning synchronization on or off.
- *
+ * <p>
  * Additionally, you will need to specify a URL for the FHIR store that supplies the
  * information for the synchronization at the Bridgehead end.
- *
+ * <p>
  * These parameters are supplied to the program via a file:
- *
+ * <p>
  * /etc/bridgehead/directory_sync.conf
- *
+ * <p>
  * The contents of the file should look something like this:
- *
+ * <p>
  * directory_sync.directory.url=https://bbmritestnn.gcc.rug.nl
  * directory_sync.directory.user_name=testuser@gmail.com
  * directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
@@ -38,8 +38,6 @@ import org.apache.logging.log4j.Logger;
  */
 @SpringBootApplication
 public class DirectorySyncService implements CommandLineRunner {
-    private static Logger logger = LogManager.getLogger(DirectorySyncService.class);
-    private static final String configFilename = "/etc/bridgehead/directory_sync.conf";
 
     private DirectorySyncLauncher directorySyncLauncher;
 
@@ -50,7 +48,7 @@ public class DirectorySyncService implements CommandLineRunner {
 
     /**
      * Main method, used by Spring to start the Directory sync service.
-     *
+     * <p>
      * If Directory login credentials (name or password) are missing, no synchronization
      * will be performed.
      *
@@ -61,7 +59,7 @@ public class DirectorySyncService implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         directorySyncLauncher.run();
     }
 }

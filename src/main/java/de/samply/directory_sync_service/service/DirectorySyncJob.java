@@ -2,7 +2,6 @@ package de.samply.directory_sync_service.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -11,7 +10,7 @@ import org.quartz.DisallowConcurrentExecution;
 
 /**
  * Job for starting a synchronization with the Directory.
- *
+ * <p>
  * Can handle single-run or repeated run operations.
  */
 @DisallowConcurrentExecution
@@ -23,10 +22,9 @@ public class DirectorySyncJob implements StatefulJob  {
      * Method used by Quartz to start a job.
      *
      * @param jobExecutionContext Not used, null value allowed.
-     * @throws JobExecutionException
      */
     @Override
-    public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+    public void execute(JobExecutionContext jobExecutionContext) {
         // Get parameters
         JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
         Configuration configuration = (Configuration) data.get("configuration");

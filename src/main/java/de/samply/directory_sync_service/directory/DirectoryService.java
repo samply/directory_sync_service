@@ -28,13 +28,6 @@ public class DirectoryService {
     this.api = api;
   }
 
-  public List<OperationOutcome> updateCollectionSizes(Map<BbmriEricId, Integer> collectionSizes) {
-    return groupCollectionSizesByCountryCode(collectionSizes)
-        .entrySet().stream()
-        .map(entry -> updateCollectionSizes(entry.getKey(), entry.getValue()))
-        .collect(Collectors.toList());
-  }
-
   private Map<String, List<Map.Entry<BbmriEricId, Integer>>> groupCollectionSizesByCountryCode(
       Map<BbmriEricId, Integer> collectionSizes) {
     return collectionSizes.entrySet().stream()
@@ -56,7 +49,7 @@ public class DirectoryService {
         .map(e -> new CollectionSizeDto(e.getKey(), e.getValue()))
         .collect(Collectors.toList());
 
-    return api.updateCollectionSizes(countryCode, collectionSizeDtos);
+    return api.updateCollectionSizes(collectionSizeDtos);
   }
 
   public List<OperationOutcome> updateEntities(DirectoryCollectionPut directoryCollectionPut) {

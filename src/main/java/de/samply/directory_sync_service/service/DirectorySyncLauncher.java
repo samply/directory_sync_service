@@ -17,16 +17,16 @@ import org.springframework.stereotype.Service;
 /**
  * Pull the configuration for this service from environment variables and trigger the
  * job.
- *
+ * <p>
  * The Spring Boot configuration mechanism is used to get the environment variables,
  * which need to follow the pattern laid down in the application.yml file.
- *
+ * <p>
  * Two types of job scheduling are possible: one-shot and repeated.
- *
+ * <p>
  * If you don't explicitly configure it via the environment variables, the default
  * is one-shot, which means that the job will only run once and the process will
  * then terminate.
- *
+ * <p>
  * If you set the timer-cron, then the job will be repeated forever, according to
  * the cron settings. A Quartz job manager will be used for this purpose.
  */
@@ -37,7 +37,7 @@ public class DirectorySyncLauncher {
   @Autowired
   Configuration configuration;
 
-  public void run() throws Exception {
+  public void run() {
     DirectorySyncJob directorySyncJob = new DirectorySyncJob();
 
     if (!directorySyncJob.isExecutable(configuration))

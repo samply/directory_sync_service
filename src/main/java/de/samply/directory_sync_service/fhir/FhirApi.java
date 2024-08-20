@@ -35,7 +35,6 @@ import java.util.HashSet;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CodeableConcept;
@@ -53,7 +52,6 @@ import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.Specimen;
 import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -358,7 +356,7 @@ public class FhirApi {
    * Starts with the available specimens and uses Patient references to find the patients.
    * Note that this approach means that Patients with no specimens will not be included.
    *
-   * @param defaultCollectionId
+   * @param specimensByCollection
    * @return
    */
   Either<OperationOutcome, Map<String,List<Patient>>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {

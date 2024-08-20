@@ -14,9 +14,9 @@ import de.samply.directory_sync_service.directory.model.BbmriEricId;
 
 /**
  * Represents data for the STAR model, organized by collection.
- * 
+ * <p>
  * Input data represents data read in from the FHIR store.
- * 
+ * <p>
  * Output data is in a format that is ready to be exported to the Directory.
  */
 public class StarModelData {
@@ -59,7 +59,7 @@ public class StarModelData {
     /**
      * Represents an input row of the inputData table, with attributes commonly associated with medical data.
      * Extends the HashMap class to provide a key-value mapping for attributes.
-     * 
+     * <p>
      * The attributes include collection, sample material, patient ID, sex, histological location,
      * and age at primary diagnosis.
      */
@@ -240,10 +240,9 @@ public class StarModelData {
     /**
      * Adds a collection of facts to the existing fact table.
      *
-     * @param collectionId The mandatory collection ID associated with the facts.
      * @param factTable The list of facts represented as String maps to be added to the fact table.
      */
-    public void addFactTable(String collectionId, List<Map<String, String>> factTable) {
+    public void addFactTable(List<Map<String, String>> factTable) {
         factTables.addAll(factTable);
     }
 
@@ -272,7 +271,7 @@ public class StarModelData {
      * the corrected diagnosis from the diagnoses map. If the corrected diagnosis
      * is found, it updates the fact's "disease" value; otherwise, it removes
      * the "disease" key from the fact.
-     * 
+     * <p>
      * Note: This method directly modifies the factTables in-place.
      * 
      * @param diagnoses Maps FHIR diagnoses onto Directory diagnoses.
@@ -292,12 +291,12 @@ public class StarModelData {
 
     /**
      * Gets the country code for the collections, e.g. "DE".
-     * 
+     * <p>
      * Assumes that all collections will have the same code and simply returns
      * the code of the first collection.
-     * 
+     * <p>
      * If there are no collections, returns null.
-     * 
+     * <p>
      * May throw a null pointer exception.
      * 
      * @return Country code
@@ -307,7 +306,7 @@ public class StarModelData {
             return null;
 
         String countryCode = BbmriEricId
-                .valueOf((String) factTables.get(0).get("collection"))
+                .valueOf(factTables.get(0).get("collection"))
                 .orElse(null)
                 .getCountryCode();
 

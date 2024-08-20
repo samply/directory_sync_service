@@ -15,7 +15,7 @@ import de.samply.directory_sync_service.fhir.model.FhirCollection;
 /**
  * Takes a list of FhirCollection objects and converts them into a
  * DirectoryCollectionPut object.
- * 
+ * <p>
  * This is a kind of FHIR to Directory conversion, so there are differences
  * in vocabularies, and it is the job of this converter to impedence match them.
  */
@@ -128,16 +128,7 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
     directoryCollectionPut.setStorageTemperatures(id, directoryStorageTemperatures);
   }
 
-  public static void convertDiagnosisAvailableEmpty(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
-    String id = fhirCollection.getId();
-    // The Directory is very picky about which ICD10 codes it will accept, and some
-    // of the codes that are in our test data are not known to the Directory and
-    // give rise to errors, which lead to the entire PUT to the Directory being
-    // rejected. So, for the time being, I am turning off the diagnosis conversion.
-    directoryCollectionPut.setDiagnosisAvailable(id, new ArrayList<String>());
-  }
-
-  public static void convertDiagnosisAvailable(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+    public static void convertDiagnosisAvailable(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
     String id = fhirCollection.getId();
     List<String> diagnoses = fhirCollection.getDiagnosisAvailable();
 
