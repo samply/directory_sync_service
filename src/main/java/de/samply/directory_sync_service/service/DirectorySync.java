@@ -1,13 +1,14 @@
-package de.samply.directory_sync_service;
+package de.samply.directory_sync_service.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
-import de.samply.directory_sync.Sync;
-import de.samply.directory_sync.directory.DirectoryApi;
-import de.samply.directory_sync.directory.DirectoryService;
-import de.samply.directory_sync.fhir.FhirApi;
-import de.samply.directory_sync.fhir.FhirReporting;
+import de.samply.directory_sync_service.sync.Sync;
+import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.directory.DirectoryApi;
+import de.samply.directory_sync_service.directory.DirectoryService;
+import de.samply.directory_sync_service.fhir.FhirApi;
+import de.samply.directory_sync_service.fhir.FhirReporting;
 import io.vavr.control.Either;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -75,10 +76,10 @@ public class DirectorySync {
             }
             directoryApi = directoryApiContainer.get();
         } catch (IOException e) {
-            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
+            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
             return false;
         } catch (NullPointerException e) {
-            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Utils.traceFromException(e));
+            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
             return false;
         }
         DirectoryService directoryService = new DirectoryService(directoryApi);
@@ -111,23 +112,26 @@ public class DirectorySync {
             }
         }
         operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
+        boolean failed = false;
         for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
                 logger.error("__________ syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
-                return false;
+                failed = true;
             }
         }
+        if (failed)
+            return false;
        operationOutcomes = sync.updateAllBiobanksOnFhirServerIfNecessary();
        for (OperationOutcome operationOutcome : operationOutcomes) {
             String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
                 logger.error("__________ syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
-                return false;
+//                return false;
             }
        }
 
-       logger.info("__________ syncWithDirectory: completed");
+       logger.info("__________ syncWithDirectory: all synchronization tasks completed");
        return true;
     }
 

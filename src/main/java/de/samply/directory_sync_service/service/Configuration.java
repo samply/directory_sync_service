@@ -1,4 +1,4 @@
-package de.samply.directory_sync_service;
+package de.samply.directory_sync_service.service;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

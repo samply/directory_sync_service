@@ -1,4 +1,4 @@
-package de.samply.directory_sync_service;
+package de.samply.directory_sync_service.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

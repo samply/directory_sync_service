@@ -1,4 +1,4 @@
-package de.samply.directory_sync_service;
+package de.samply.directory_sync_service.service;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
