@@ -9,7 +9,6 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueType.NOTFOUND;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import de.samply.directory_sync_service.directory.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
@@ -21,8 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.http.HttpEntity;
@@ -190,11 +187,6 @@ public class DirectoryApi {
   }
 
   public static DirectoryApi createWithToken(CloseableHttpClient httpClient, String baseUrl,
-                                             String token) {
-    return createWithToken(httpClient, baseUrl, token, false);
-  }
-
-  public static DirectoryApi createWithToken(CloseableHttpClient httpClient, String baseUrl,
                                              String token, boolean mockDirectory) {
     return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory);
   }
@@ -252,71 +244,6 @@ public class DirectoryApi {
   private HttpGet fetchBiobankRequest(BbmriEricId id) {
     HttpGet request = new HttpGet(
         baseUrl + "/api/v2/eu_bbmri_eric_" + id.getCountryCode() + "_biobanks/" + id);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    return request;
-  }
-
-  /**
-   * Send the collection sizes to the Directory.
-   * <p>
-   * Push the counts back to the Directory. You need 'update data' permission on entity type
-   * 'Collections' at the Directory in order for this to work.
-   *
-   * @param collectionSizeDtos the individual collection sizes. note that all collection must share
-   *                           the given {@code countryCode}
-   * @return an outcome, either successful or an error
-   */
-  public OperationOutcome updateCollectionSizes(List<CollectionSizeDto> collectionSizeDtos) {
-
-    HttpPut request = updateCollectionSizesRequest(collectionSizeDtos);
-
-    try (CloseableHttpResponse response = httpClient.execute(request)) {
-      if (response.getStatusLine().getStatusCode() < 300) {
-        return updateSuccessful(collectionSizeDtos.size());
-      } else {
-        return error("collection size update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
-      }
-    } catch (IOException e) {
-      return error("collection size update exception", e.getMessage());
-    }
-  }
-
-  private HttpPut updateCollectionSizesRequest(List<CollectionSizeDto> collectionSizeDtos) {
-    HttpPut request = new HttpPut(
-        baseUrl + "/api/v2/eu_bbmri_eric_collections/size");
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    request.setEntity(new StringEntity(gson.toJson(new EntitiesDto<>(collectionSizeDtos)), UTF_8));
-    return request;
-  }
-
-  /**
-   * Make a call to the Directory to get all Collection IDs for the supplied {@code countryCode}.
-   *
-   * @param countryCode the country code of the endpoint of the national node, e.g. DE
-   * @return all the Collections for the national node. E.g. "DE" will return all German collections
-   */
-  public Either<OperationOutcome, Set<BbmriEricId>> listAllCollectionIds(String countryCode) {
-    return fetchIdItems(listAllCollectionIdsRequest(countryCode), "list collection ids")
-        .map(i -> i.items.stream()
-            .map(e -> e.id)
-            .map(BbmriEricId::valueOf)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toSet()));
-  }
-
-  private HttpGet listAllCollectionIdsRequest(String countryCode) {
-    // If you simply specify "attrs=id", you will only get the first 100
-    // IDs. Setting "start" to 0 and "num" its maximum allowed value
-    // gets them all. Note that in the current Directory implementation
-    // (12.10.2021), the maximum allowed value of "num" is 10000.
-    // TODO: to really get all collections, we have to implement paging
-    HttpGet request = new HttpGet(
-        baseUrl + "/api/v2/eu_bbmri_eric_collections?attrs=id&start=0&num=10000&q=country=="
-            + countryCode);
     request.setHeader("x-molgenis-token", token);
     request.setHeader("Accept", "application/json");
     return request;
@@ -585,29 +512,6 @@ public class DirectoryApi {
     return request;
   }
 
-  public void runTestQuery() {
-    try {
-      String url = "https://bbmritestnn.gcc.rug.nl/api/v2/eu_bbmri_eric_DE_collections?q=id==%22bbmri-eric:ID:DE_DKFZ_TEST:collection:Test1%22";
-      logger.info("runTestQuery: url=" + url);
-      HttpGet request = new HttpGet(url);
-      request.setHeader("x-molgenis-token", token);
-      request.setHeader("Accept", "application/json");
-      request.setHeader("Content-type", "application/json");
-
-      CloseableHttpResponse response = httpClient.execute(request);
-      if (response.getStatusLine().getStatusCode() < 300) {
-        HttpEntity httpEntity = response.getEntity();
-        String json = EntityUtils.toString(httpEntity);
-        logger.info("runTestQuery: SUCCESS, json=" + json);
-      } else
-        logger.warn("runTestQuery: FAILURE, entity get HTTP error: " + Integer.toString(response.getStatusLine().getStatusCode()));
-    } catch (IOException e) {
-      logger.warn("runTestQuery: FAILURE, entity get exception: " + Util.traceFromException(e));
-    } catch (Exception e) {
-      logger.warn("runTestQuery: FAILURE, unknown exception: " + Util.traceFromException(e));
-    }
-  }
-
   /**
    * Deletes facts from the Directory service based on a list of fact IDs.
    *
@@ -659,15 +563,6 @@ public class DirectoryApi {
    */
   class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
     public static final String METHOD_NAME = "DELETE";
-
-    public HttpDeleteWithBody() {
-        super();
-    }
-
-    public HttpDeleteWithBody(final URI uri) {
-        super();
-        setURI(uri);
-    }
 
     public HttpDeleteWithBody(final String uri) {
         super();
@@ -782,26 +677,7 @@ public class DirectoryApi {
     return collectionApiUrl;
   }
 
-  private Either<OperationOutcome, ItemsDto<IdDto>> fetchIdItems(HttpGet request, String action) {
-    try (CloseableHttpResponse response = httpClient.execute(request)) {
-      if (response.getStatusLine().getStatusCode() == 200) {
-        return Either.right(decodeIdItems(response));
-      } else {
-        return Either.left(error(action, EntityUtils.toString(response.getEntity(), UTF_8)));
-      }
-    } catch (IOException e) {
-      return Either.left(error(action, e.getMessage()));
-    }
-  }
-
-  private ItemsDto<IdDto> decodeIdItems(CloseableHttpResponse response) throws IOException {
-    String payload = EntityUtils.toString(response.getEntity(), UTF_8);
-    return gson.fromJson(payload, new TypeToken<ItemsDto<IdDto>>() {
-    }.getType());
-  }
-
   static class LoginCredentials {
-
     String username, password;
 
     LoginCredentials(String username, String password) {
@@ -811,57 +687,9 @@ public class DirectoryApi {
   }
 
   static class LoginResponse {
-
     String username, token;
 
     LoginResponse() {
     }
-  }
-
-  private static class EntitiesDto<T> {
-
-    public EntitiesDto(List<T> entities) {
-      this.entities = entities;
-    }
-
-    List<T> entities;
-  }
-
-  static class CollectionSizeDto {
-
-    private final String id;
-    private final int size;
-
-    public CollectionSizeDto(BbmriEricId id, int size) {
-      this.id = id.toString();
-      this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      CollectionSizeDto that = (CollectionSizeDto) o;
-      return size == that.size && id.equals(that.id);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(id, size);
-    }
-  }
-
-  private static class ItemsDto<T> {
-
-    List<T> items;
-  }
-
-  private static class IdDto {
-
-    String id;
   }
 }
