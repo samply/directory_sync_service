@@ -3,45 +3,29 @@ package de.samply.directory_sync_service.directory;
 import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueType.NOTFOUND;
-
-import com.google.gson.Gson;
 
 import de.samply.directory_sync_service.directory.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import io.vavr.control.Either;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import java.net.URI;
 
 public class DirectoryApi {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryApi.class);
-
   private final CloseableHttpClient httpClient;
   private final String baseUrl;
   private final String token;
-  private final Gson gson = new Gson();
   private String username;
   private String password;
 
@@ -63,18 +47,6 @@ public class DirectoryApi {
     }
   }
 
-/*
-  public static Either<OperationOutcome, DirectoryApi> createWithLogin(
-          CloseableHttpClient httpClient,
-          String baseUrl,
-          String username,
-          String password,
-          boolean mockDirectory) {
-    return login(httpClient, baseUrl.replaceFirst("/*$", ""), username, password, mockDirectory)
-            .map(response -> createWithToken(httpClient, baseUrl, response.token, mockDirectory).setUsernameAndPassword(username, password));
-  }
-*/
-
   public static Either<OperationOutcome, DirectoryApi> createWithLogin(
           CloseableHttpClient httpClient,
           String baseUrl,
@@ -87,10 +59,10 @@ public class DirectoryApi {
 
     logger.info("createWithLogin: cleanedBaseUrl: " + cleanedBaseUrl);
 
-    // Perform the login operation and get the result
-    Either<OperationOutcome, LoginResponse> loginResult = login(httpClient, cleanedBaseUrl, username, password, mockDirectory);
+    // Perform the firstLogin operation and get the result
+    Either<OperationOutcome, DirectoryCredentials.LoginResponse> loginResult = DirectoryCredentials.firstLogin(httpClient, cleanedBaseUrl, username, password, mockDirectory);
 
-    // If login is successful, map the result to a DirectoryApi, otherwise return the error
+    // If firstLogin is successful, map the result to a DirectoryApi, otherwise return the error
     Either<OperationOutcome, DirectoryApi> finalResult = loginResult.map(response -> {
       logger.info("createWithLogin: log in to Directory apparently succeeded");
       if (response.token == null)
@@ -105,18 +77,31 @@ public class DirectoryApi {
     return finalResult;
   }
 
-  private static Either<OperationOutcome, LoginResponse> login(CloseableHttpClient httpClient,
-      String baseUrl,
-      String username, String password, boolean mockDirectory) {
+  /**
+   * Log back in to the Directory. This is typically used in situations where there has
+   * been a long pause since the last API call to the Directory. It returns a fresh
+   * DirectoryApi object, which you should use to replace the existing one.
+   * <p>
+   * Returns null if something goes wrong.
+   *
+   * @return new DirectoryApi object.
+   */
+  public DirectoryApi relogin() {
+    logger.info("relogin: logging back in");
+
     if (mockDirectory)
-      // Don't try logging in if we are mocking
-      return Either.right(new LoginResponse());
-    HttpPost request = loginRequest(baseUrl, username, password);
-    try (CloseableHttpResponse response = httpClient.execute(request)) {
-      return Either.right(decodeLoginResponse(response));
-    } catch (IOException e) {
-      return Either.left(DirectoryUtils.error("login", e.getMessage()));
-    }
+      // In a mocking situation, don't try to log back in. We can safely
+      // return the old DirectoryApi object because nothing will have changed.
+      return this;
+
+    String token = DirectoryCredentials.login(httpClient, baseUrl, username, password).token;
+
+    return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory).setUsernameAndPassword(username, password);
+  }
+
+  public static DirectoryApi createWithToken(CloseableHttpClient httpClient, String baseUrl,
+                                             String token, boolean mockDirectory) {
+    return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory);
   }
 
   /**
@@ -131,72 +116,6 @@ public class DirectoryApi {
     this.password = password;
 
     return this;
-  }
-
-  /**
-   * Log back in to the Directory. This is typically used in situations where there has
-   * been a long pause since the last API call to the Directory. It returns a fresh
-   * DirectoryApi object, which you should use to replace the existing one.
-   * <p>
-   * Returns null if something goes wrong.
-   *
-   * @return new DirectoryApi object.
-   */
-  public DirectoryApi relogin() {
-    logger.info("relogin: logging back in");
-    HttpPost request = loginRequest(baseUrl, username, password);
-
-    if (mockDirectory)
-      // In a mocking situation, don't try to log back in. We can safely
-      // return the old DirectoryApi object because nothing will have changed.
-      return this;
-
-    String token = null;
-    try (CloseableHttpResponse response = httpClient.execute(request)) {
-      LoginResponse loginResponse = decodeLoginResponse(response);
-      token = loginResponse.token;
-      if (token == null) {
-        logger.warn("relogin: got a null token back from the Directory, returning null.");
-        return null;
-      }
-    } catch (IOException e) {
-      logger.warn("relogin: exception: " + Util.traceFromException(e));
-      return null;
-    }
-
-    return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory).setUsernameAndPassword(username, password);
-  }
-
-  private static HttpPost loginRequest(String baseUrl, String username, String password) {
-    HttpPost request = new HttpPost(baseUrl + "/api/v1/login");
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    request.setEntity(encodeLoginCredentials(username, password));
-    return request;
-  }
-
-  private static StringEntity encodeLoginCredentials(String username, String password) {
-    return new StringEntity(new Gson().toJson(new LoginCredentials(username, password)), UTF_8);
-  }
-
-  private static LoginResponse decodeLoginResponse(CloseableHttpResponse tokenResponse)
-      throws IOException {
-    String body = EntityUtils.toString(tokenResponse.getEntity(), UTF_8);
-    return new Gson().fromJson(body, LoginResponse.class);
-  }
-
-  public static DirectoryApi createWithToken(CloseableHttpClient httpClient, String baseUrl,
-                                             String token, boolean mockDirectory) {
-    return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory);
-  }
-
-  private static OperationOutcome biobankNotFound(BbmriEricId id) {
-    OperationOutcome outcome = new OperationOutcome();
-    outcome.addIssue()
-        .setSeverity(INFORMATION)
-        .setCode(NOTFOUND)
-        .setDiagnostics(String.format("No Biobank in Directory with id `%s`.", id));
-    return outcome;
   }
 
   private static OperationOutcome updateSuccessful(int number) {
@@ -214,27 +133,10 @@ public class DirectoryApi {
    * @return either the Biobank or an error
    */
   public Either<OperationOutcome, Biobank> fetchBiobank(BbmriEricId id) {
-    try (CloseableHttpResponse response = httpClient.execute(fetchBiobankRequest(id))) {
-      if (response.getStatusLine().getStatusCode() == 200) {
-        String payload = EntityUtils.toString(response.getEntity(), UTF_8);
-        return Either.right(gson.fromJson(payload, Biobank.class));
-      } else if (response.getStatusLine().getStatusCode() == 404) {
-        return Either.left(biobankNotFound(id));
-      } else {
-        String message = EntityUtils.toString(response.getEntity(), UTF_8);
-        return Either.left(DirectoryUtils.error(id.toString(), message));
-      }
-    } catch (IOException e) {
-      return Either.left(DirectoryUtils.error(id.toString(), e.getMessage()));
-    }
-  }
-
-  private HttpGet fetchBiobankRequest(BbmriEricId id) {
-    HttpGet request = new HttpGet(
-        baseUrl + "/api/v2/eu_bbmri_eric_" + id.getCountryCode() + "_biobanks/" + id);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    return request;
+    Biobank biobank = (Biobank) DirectoryRest.get(httpClient, token, baseUrl + "/api/v2/eu_bbmri_eric_" + id.getCountryCode() + "_biobanks/" + id, Biobank.class);
+    if (biobank == null)
+      return Either.left(DirectoryUtils.error(id.toString(), "No Biobank in Directory with id: " + id));
+    return Either.right(biobank);
   }
 
   /**
@@ -248,51 +150,25 @@ public class DirectoryApi {
    */
   public Either<OperationOutcome, DirectoryCollectionGet> fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
     DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
-    directoryCollectionGet.init(); 
+    directoryCollectionGet.init();
+
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      directoryCollectionGet.setMockDirectory(true);
+      return Either.right(directoryCollectionGet);
+    }
+
     for (String collectionId: collectionIds) {
-      try {
-        HttpGet request = fetchCollectionsRequest(countryCode, collectionId);
-
-        if (mockDirectory) {
-          // Dummy return if we're in mock mode
-          directoryCollectionGet.setMockDirectory(true);
-          return Either.right(directoryCollectionGet);
-        }
-
-        CloseableHttpResponse response = httpClient.execute(request);
-        if (response.getStatusLine().getStatusCode() < 300) {
-          HttpEntity httpEntity = response.getEntity();
-          String json = EntityUtils.toString(httpEntity);
-          DirectoryCollectionGet singleDirectoryCollectionGet = gson.fromJson(json, DirectoryCollectionGet.class);
-          Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
-          if (item == null)
-            	return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: ", collectionId));
-          directoryCollectionGet.getItems().add(item);
-        } else
-          return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get HTTP error", Integer.toString(response.getStatusLine().getStatusCode())));
-      } catch (IOException e) {
-          return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get exception", Util.traceFromException(e)));
-      } catch (Exception e) {
-          return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: unknown exception", Util.traceFromException(e)));
-      }
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) DirectoryRest.get(httpClient, token, buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      if (singleDirectoryCollectionGet == null)
+        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: ", collectionId));
+      Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
+      if (item == null)
+        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: ", collectionId));
+      directoryCollectionGet.getItems().add(item);
     }
 
     return Either.right(directoryCollectionGet);
-  }
-
-  private HttpGet fetchCollectionsRequest(String countryCode, String collectionId) {
-    String url = buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22";
-
-    logger.info("DirectoryApi.fetchCollectionsRequest: url=" + url);
-
-    HttpGet request = new HttpGet(url);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-
-    logger.info("DirectoryApi.fetchCollectionsRequest: request successfully built");
-
-    return request;
   }
 
   /**
@@ -304,39 +180,14 @@ public class DirectoryApi {
   public OperationOutcome updateEntities(DirectoryCollectionPut directoryCollectionPut) {
     logger.info("DirectoryApi.updateEntities: entered");
 
-    HttpPut request = updateEntitiesRequest(directoryCollectionPut);
-
-    logger.info("DirectoryApi.updateEntities: url=" + request.getURI());
-
     if (mockDirectory)
       // Dummy return if we're in mock mode
       return updateSuccessful(directoryCollectionPut.size());
 
-    logger.info("DirectoryApi.updateEntities: try things");
-
-    try (CloseableHttpResponse response = httpClient.execute(request)) {
-      logger.info("DirectoryApi.updateEntities: well, now Im in a try statement!");
-      if (response.getStatusLine().getStatusCode() < 300) {
-        logger.info("DirectoryApi.updateEntities: status code: " + response.getStatusLine().getStatusCode());
-        return updateSuccessful(directoryCollectionPut.size());
-      } else {
-        logger.info("DirectoryApi.updateEntities: returning an error");
-        return DirectoryUtils.error("entity update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
-      }
-    } catch (IOException e) {
-      logger.info("DirectoryApi.updateEntities: returning an exception: " + Util.traceFromException(e));
-      return DirectoryUtils.error("entity update exception", e.getMessage());
-    }
-  }
-
-  private HttpPut updateEntitiesRequest(DirectoryCollectionPut directoryCollectionPut) {
-    HttpPut request = new HttpPut(buildCollectionApiUrl(directoryCollectionPut.getCountryCode()));
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    logger.info("updateEntitiesRequest: directoryCollectionPut: " + gson.toJson(directoryCollectionPut));
-    request.setEntity(new StringEntity(gson.toJson(directoryCollectionPut), UTF_8));
-    return request;
+    String response = DirectoryRest.put(httpClient, token, buildCollectionApiUrl(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    if (response == null)
+      return DirectoryUtils.error("entity update", "PUT problem");
+    return updateSuccessful(directoryCollectionPut.size());
   }
 
   /**
@@ -350,6 +201,10 @@ public class DirectoryApi {
    * @return An OperationOutcome indicating the success or failure of the update.
    */
   public OperationOutcome updateStarModel(StarModelData starModelInputData) {
+    if (mockDirectory)
+      // Dummy return if we're in mock mode
+      return updateSuccessful(starModelInputData.getFactCount());
+
     // Get rid of previous star models first. This is necessary, because:
     // 1. A new star model may be decomposed into different hypercubes.
     // 2. The new fact IDs may be different from the old ones.
@@ -370,42 +225,14 @@ public class DirectoryApi {
     for (int i = 0; i < factTables.size(); i += blockSize) {
       List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
 
-      // Now push the new data
-      HttpPost request = updateStarModelRequestBlock(countryCode, factTablesBlock);
-
-      if (mockDirectory)
-        // Dummy return if we're in mock mode
-        return updateSuccessful(starModelInputData.getFactCount());
-
-      try (CloseableHttpResponse response = httpClient.execute(request)) {
-        if (response.getStatusLine().getStatusCode() >= 300)
-          return DirectoryUtils.error("entity update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
-      } catch (IOException e) {
-        return DirectoryUtils.error("entity update exception", e.getMessage());
-      }
+      Map<String,Object> body = new HashMap<String,Object>();
+      body.put("entities", factTablesBlock);
+      String response = DirectoryRest.post(httpClient, token, buildApiUrl(countryCode, "facts"), body);
+      if (response == null)
+        return DirectoryUtils.error("updateStarModel", "failed, block: " + i);
     }
 
     return updateSuccessful(starModelInputData.getFactCount());
-  }
-
-  /**
-   * Constructs an HTTP POST request for updating Star Model data based on the provided StarModelInputData.
-   *
-   * @param countryCode
-   * @param factTablesBlock
-   * @return An HttpPost request object.
-   */
-  private HttpPost updateStarModelRequestBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
-    HttpPost request = new HttpPost(buildApiUrl(countryCode, "facts"));
-    // Directory likes to have its data wrapped in a map with key "entities".
-    Map<String,Object> body = new HashMap<String,Object>();
-    body.put("entities", factTablesBlock);
-    String jsonBody = gson.toJson(body);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    request.setEntity(new StringEntity(jsonBody, UTF_8));
-    return request;
   }
 
   /**
@@ -415,11 +242,11 @@ public class DirectoryApi {
    * @return An OperationOutcome indicating the success or failure of the deletion.
    */
   private OperationOutcome deleteStarModel(StarModelData starModelInputData) {
-    String apiUrl = buildApiUrl(starModelInputData.getCountryCode(), "facts");
-
     if (mockDirectory)
       // Dummy return if we're in mock mode
       return new OperationOutcome();
+
+    String apiUrl = buildApiUrl(starModelInputData.getCountryCode(), "facts");
 
     try {
       for (String collectionId: starModelInputData.getInputCollectionIds()) {
@@ -429,7 +256,8 @@ public class DirectoryApi {
         // and a single pass may not get all facts.
         do {
           // First get a list of fact IDs for this collection
-          Map factWrapper = fetchFactWrapperByCollection(apiUrl, collectionId);
+          Map factWrapper = (Map) DirectoryRest.get(httpClient, token, apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
+
           if (factWrapper == null)
             return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=", collectionId);
           if (!factWrapper.containsKey("items"))
@@ -456,51 +284,6 @@ public class DirectoryApi {
   }
 
   /**
-   * Fetches the fact wrapper object by collection from the Directory service.
-   *
-   * @param apiUrl        The base URL for the Directory API.
-   * @param collectionId  The ID of the collection for which to fetch the fact wrapper.
-   * @return A Map representing the fact wrapper retrieved from the Directory service.
-   */
-  public Map fetchFactWrapperByCollection(String apiUrl, String collectionId) {
-    Map body = null;
-    try {
-      HttpGet request = fetchFactWrapperByCollectionRequest(apiUrl, collectionId);
-
-      CloseableHttpResponse response = httpClient.execute(request);
-      if (response.getStatusLine().getStatusCode() < 300) {
-        HttpEntity httpEntity = response.getEntity();
-        String json = EntityUtils.toString(httpEntity);
-        body = gson.fromJson(json, Map.class);
-      } else
-        logger.warn("fetchFactWrapperByCollection: entity get HTTP error: " + Integer.toString(response.getStatusLine().getStatusCode()) + ", apiUrl=" + apiUrl + ", collectionId=" + collectionId);
-    } catch (IOException e) {
-      logger.warn("fetchFactWrapperByCollection: entity get exception: " + Util.traceFromException(e));
-    } catch (Exception e) {
-      logger.warn("fetchFactWrapperByCollection: unknown exception: " + Util.traceFromException(e));
-    }
-
-    return body;
-  }
-
-  /**
-   * Constructs an HTTP GET request for fetching the fact wrapper object by collection from the Directory service.
-   *
-   * @param apiUrl        The base URL for the Directory API.
-   * @param collectionId  The ID of the collection for which to fetch the fact wrapper.
-   * @return An HttpGet request object.
-   */
-  private HttpGet fetchFactWrapperByCollectionRequest(String apiUrl, String collectionId) {
-    String url = apiUrl + "?q=collection==%22" + collectionId + "%22";
-    logger.info("fetchFactWrapperByCollectionRequest: url=" + url);
-    HttpGet request = new HttpGet(url);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    return request;
-  }
-
-  /**
    * Deletes facts from the Directory service based on a list of fact IDs.
    *
    * @param apiUrl    The base URL for the Directory API.
@@ -512,57 +295,14 @@ public class DirectoryApi {
       // Nothing to delete
       return new OperationOutcome();
 
-    HttpDeleteWithBody request = deleteFactsByIdsRequest(apiUrl, factIds);
+    String result = DirectoryRest.delete(httpClient, token, apiUrl, factIds);
 
-    try (CloseableHttpResponse response = httpClient.execute(request)) {
-      if (response.getStatusLine().getStatusCode() < 300) {
-        return new OperationOutcome();
-      } else {
-        return DirectoryUtils.error("entity delete status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
-      }
-    } catch (IOException e) {
-      return DirectoryUtils.error("entity delete exception", e.getMessage());
-    }
+    if (result == null)
+      return DirectoryUtils.error("deleteFactsByIds", "Problem during delete of factIds");
+
+    return new OperationOutcome();
   }
 
-  /**
-   * Constructs an HTTP DELETE request with a request body for deleting facts by IDs from the Directory service.
-   *
-   * @param apiUrl    The base URL for the Directory API.
-   * @param factIds   The list of fact IDs to be deleted.
-   * @return An HttpDeleteWithBody request object.
-   */
-  private HttpDeleteWithBody deleteFactsByIdsRequest(String apiUrl, List<String> factIds) {
-    HttpDeleteWithBody request = new HttpDeleteWithBody(apiUrl);
-    // Directory likes to have its delete data wrapped in a map with key "entityIds".
-    Map<String,Object> body = new HashMap<String,Object>();
-    body.put("entityIds", factIds);
-    String jsonBody = gson.toJson(body);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    request.setEntity(new StringEntity(jsonBody, UTF_8));
-    return request;
-  }
-
-  /**
-   * Custom HTTP DELETE request with a request body support.
-   * Used for sending delete requests with a request body to the Directory service.
-   */
-  class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
-    public static final String METHOD_NAME = "DELETE";
-
-    public HttpDeleteWithBody(final String uri) {
-        super();
-        setURI(URI.create(uri));
-    }
-
-    @Override
-    public String getMethod() {
-        return METHOD_NAME;
-    }
-  }
-  
   /**
    * Collects diagnosis corrections from the Directory.
    * <p>
@@ -605,21 +345,20 @@ public class DirectoryApi {
    */
   private boolean isValidIcdValue(String diagnosis) {
     String url = baseUrl + "/api/v2/eu_bbmri_eric_disease_types?q=id=='" + diagnosis + "'";
-      String json = DirectoryRest.get(httpClient, token, url);
-      if (json != null) {
-        Map body = gson.fromJson(json, Map.class);
-        if (body.containsKey("total")) {
-          Object total = body.get("total");
-          if (total instanceof Double) {
-            Integer intTotal = ((Double) total).intValue();
-            if (intTotal > 0)
-              return true;
-          } else
-            logger.warn("isValidIcdValue: key 'total' is not a double");
+    Map body = (Map) DirectoryRest.get(httpClient, token, url, Map.class);
+    if (body != null) {
+      if (body.containsKey("total")) {
+        Object total = body.get("total");
+        if (total instanceof Double) {
+          Integer intTotal = ((Double) total).intValue();
+          if (intTotal > 0)
+            return true;
         } else
-          logger.warn("isValidIcdValue: key 'total' is not present");
+          logger.warn("isValidIcdValue: key 'total' is not a double");
       } else
-        logger.warn("isValidIcdValue: get response is null");
+        logger.warn("isValidIcdValue: key 'total' is not present");
+    } else
+      logger.warn("isValidIcdValue: get response is null");
 
     return false;
   }
@@ -641,21 +380,5 @@ public class DirectoryApi {
     String collectionApiUrl = baseUrl + "/api/v2/eu_bbmri_eric_" + countryCodeInsert + function;
 
     return collectionApiUrl;
-  }
-
-  static class LoginCredentials {
-    String username, password;
-
-    LoginCredentials(String username, String password) {
-      this.username = username;
-      this.password = password;
-    }
-  }
-
-  static class LoginResponse {
-    String username, token;
-
-    LoginResponse() {
-    }
   }
 }

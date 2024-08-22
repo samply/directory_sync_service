@@ -10,7 +10,7 @@ public class DirectoryUtils {
     return outcome;
   }
 
-  public static String errorMsg(String action, String message) {
+  private static String errorMsg(String action, String message) {
     return String.format("Error in BBMRI Directory response for %s, cause: %s", action,
         message);
   }
