@@ -4,7 +4,6 @@ import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueType.NOTFOUND;
 
@@ -116,7 +115,7 @@ public class DirectoryApi {
     try (CloseableHttpResponse response = httpClient.execute(request)) {
       return Either.right(decodeLoginResponse(response));
     } catch (IOException e) {
-      return Either.left(error("login", e.getMessage()));
+      return Either.left(DirectoryUtils.error("login", e.getMessage()));
     }
   }
 
@@ -191,17 +190,6 @@ public class DirectoryApi {
     return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory);
   }
 
-  private static OperationOutcome error(String action, String message) {
-    OperationOutcome outcome = new OperationOutcome();
-    outcome.addIssue().setSeverity(ERROR).setDiagnostics(errorMsg(action, message));
-    return outcome;
-  }
-
-  private static String errorMsg(String action, String message) {
-    return String.format("Error in BBMRI Directory response for %s, cause: %s", action,
-        message);
-  }
-
   private static OperationOutcome biobankNotFound(BbmriEricId id) {
     OperationOutcome outcome = new OperationOutcome();
     outcome.addIssue()
@@ -234,10 +222,10 @@ public class DirectoryApi {
         return Either.left(biobankNotFound(id));
       } else {
         String message = EntityUtils.toString(response.getEntity(), UTF_8);
-        return Either.left(error(id.toString(), message));
+        return Either.left(DirectoryUtils.error(id.toString(), message));
       }
     } catch (IOException e) {
-      return Either.left(error(id.toString(), e.getMessage()));
+      return Either.left(DirectoryUtils.error(id.toString(), e.getMessage()));
     }
   }
 
@@ -278,14 +266,14 @@ public class DirectoryApi {
           DirectoryCollectionGet singleDirectoryCollectionGet = gson.fromJson(json, DirectoryCollectionGet.class);
           Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
           if (item == null)
-            	return Either.left(error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: ", collectionId));
+            	return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: ", collectionId));
           directoryCollectionGet.getItems().add(item);
         } else
-          return Either.left(error("fetchCollectionGetOutcomes: entity get HTTP error", Integer.toString(response.getStatusLine().getStatusCode())));
+          return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get HTTP error", Integer.toString(response.getStatusLine().getStatusCode())));
       } catch (IOException e) {
-          return Either.left(error("fetchCollectionGetOutcomes: entity get exception", Util.traceFromException(e)));
+          return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get exception", Util.traceFromException(e)));
       } catch (Exception e) {
-          return Either.left(error("fetchCollectionGetOutcomes: unknown exception", Util.traceFromException(e)));
+          return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: unknown exception", Util.traceFromException(e)));
       }
     }
 
@@ -333,11 +321,11 @@ public class DirectoryApi {
         return updateSuccessful(directoryCollectionPut.size());
       } else {
         logger.info("DirectoryApi.updateEntities: returning an error");
-        return error("entity update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
+        return DirectoryUtils.error("entity update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
       }
     } catch (IOException e) {
       logger.info("DirectoryApi.updateEntities: returning an exception: " + Util.traceFromException(e));
-      return error("entity update exception", e.getMessage());
+      return DirectoryUtils.error("entity update exception", e.getMessage());
     }
   }
 
@@ -391,9 +379,9 @@ public class DirectoryApi {
 
       try (CloseableHttpResponse response = httpClient.execute(request)) {
         if (response.getStatusLine().getStatusCode() >= 300)
-          return error("entity update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
+          return DirectoryUtils.error("entity update status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
       } catch (IOException e) {
-        return error("entity update exception", e.getMessage());
+        return DirectoryUtils.error("entity update exception", e.getMessage());
       }
     }
 
@@ -443,9 +431,9 @@ public class DirectoryApi {
           // First get a list of fact IDs for this collection
           Map factWrapper = fetchFactWrapperByCollection(apiUrl, collectionId);
           if (factWrapper == null)
-            return error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=", collectionId);
+            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=", collectionId);
           if (!factWrapper.containsKey("items"))
-            return error("deleteStarModel: Problem getting facts for collection, no item key present: ", collectionId);
+            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, no item key present: ", collectionId);
           List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
           if (facts.size() == 0)
             break;
@@ -461,7 +449,7 @@ public class DirectoryApi {
         } while (true);
       }
     } catch(Exception e) {
-      return error("deleteStarModel: Exception during delete", Util.traceFromException(e));
+      return DirectoryUtils.error("deleteStarModel: Exception during delete", Util.traceFromException(e));
     }
 
     return new OperationOutcome();
@@ -530,10 +518,10 @@ public class DirectoryApi {
       if (response.getStatusLine().getStatusCode() < 300) {
         return new OperationOutcome();
       } else {
-        return error("entity delete status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
+        return DirectoryUtils.error("entity delete status code " + response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity(), UTF_8));
       }
     } catch (IOException e) {
-      return error("entity delete exception", e.getMessage());
+      return DirectoryUtils.error("entity delete exception", e.getMessage());
     }
   }
 
@@ -617,12 +605,8 @@ public class DirectoryApi {
    */
   private boolean isValidIcdValue(String diagnosis) {
     String url = baseUrl + "/api/v2/eu_bbmri_eric_disease_types?q=id=='" + diagnosis + "'";
-    try {
-      HttpGet request = isValidIcdValueRequest(url);
-      CloseableHttpResponse response = httpClient.execute(request);
-      if (response.getStatusLine().getStatusCode() < 300) {
-        HttpEntity httpEntity = response.getEntity();
-        String json = EntityUtils.toString(httpEntity);
+      String json = DirectoryRest.get(httpClient, token, url);
+      if (json != null) {
         Map body = gson.fromJson(json, Map.class);
         if (body.containsKey("total")) {
           Object total = body.get("total");
@@ -630,33 +614,15 @@ public class DirectoryApi {
             Integer intTotal = ((Double) total).intValue();
             if (intTotal > 0)
               return true;
-          }
-        }
+          } else
+            logger.warn("isValidIcdValue: key 'total' is not a double");
+        } else
+          logger.warn("isValidIcdValue: key 'total' is not present");
       } else
-        logger.warn("ICD validation get HTTP error; " + Integer.toString(response.getStatusLine().getStatusCode()));
-    } catch (IOException e) {
-        logger.warn("ICD validation get exception: " + Util.traceFromException(e));
-    } catch (Exception e) {
-        logger.warn("ICD validation, unknown exception: " + Util.traceFromException(e));
-    }
+        logger.warn("isValidIcdValue: get response is null");
 
     return false;
   }
-
-  /**
-   * Constructs an HTTP GET request for validating an ICD value against the Directory service.
-   *
-   * @param url The URL for validating the ICD value.
-   * @return An HttpGet request object.
-   */
-  private HttpGet isValidIcdValueRequest(String url) {
-    HttpGet request = new HttpGet(url);
-    request.setHeader("x-molgenis-token", token);
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    return request;
-  }
-
   private String buildCollectionApiUrl(String countryCode) {
     return buildApiUrl(countryCode, "collections");
   }
