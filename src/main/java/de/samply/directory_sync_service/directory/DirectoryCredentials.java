@@ -1,36 +1,32 @@
 package de.samply.directory_sync_service.directory;
 
-import io.vavr.control.Either;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.hl7.fhir.r4.model.OperationOutcome;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DirectoryCredentials {
-  public static Either<OperationOutcome, LoginResponse> firstLogin(CloseableHttpClient httpClient,
-                                                                                String baseUrl,
-                                                                                String username,
-                                                                                String password,
-                                                                                boolean mockDirectory) {
-    if (mockDirectory)
-      // Don't try logging in if we are mocking
-      return Either.right(new LoginResponse());
+  private static final Logger logger = LoggerFactory.getLogger(DirectoryCredentials.class);
+  private String username;
+  private String password;
+  private String token;
 
-    LoginResponse loginResponse = login(httpClient, baseUrl, username, password);
-    if (loginResponse != null)
-      return Either.right(loginResponse);
-    else
-      return Either.left(DirectoryUtils.error("firstLogin", "Failed to login to Directory"));
+  public DirectoryCredentials(String username, String password) {
+    this.username = username;
+    this.password = password;
   }
 
-  public static LoginResponse login(CloseableHttpClient httpClient,
-                                                 String baseUrl,
-                                                 String username,
-                                                 String password) {
-    LoginResponse loginResponse = (LoginResponse) DirectoryRest.post(httpClient, baseUrl + "/api/v1/login", LoginResponse.class, new LoginCredentials(username, password));
-
-    return loginResponse;
+  public String getToken() {
+    return token;
   }
 
-  static class LoginCredentials {
+  public void setToken(String token) {
+    this.token = token;
+  }
+
+  public Object generateLoginCredentials() {
+    return new LoginCredentials(username, password);
+  }
+
+  public class LoginCredentials {
     String username, password;
 
     LoginCredentials(String username, String password) {

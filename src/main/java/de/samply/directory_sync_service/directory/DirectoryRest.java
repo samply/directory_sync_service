@@ -2,7 +2,6 @@ package de.samply.directory_sync_service.directory;
 
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
-import io.vavr.control.Either;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -18,17 +17,32 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DirectoryRest {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryRest.class);
-  private static final Gson gson = new Gson();
+  private final Gson gson = new Gson();
+  private final CloseableHttpClient httpClient;
+  private final String baseUrl;
+  private DirectoryCredentials directoryCredentials;
 
-  public static Object get(CloseableHttpClient httpClient, String token, String url, Class c) {
-    HttpGet request = buildGetRequest(token, url);
-    String response = executeRequest(httpClient, request);
+  public DirectoryRest(CloseableHttpClient httpClient, String baseUrl, String username, String password) {
+    this.httpClient = httpClient;
+    this.baseUrl = baseUrl.replaceFirst("/*$", "");
+    this.directoryCredentials = new DirectoryCredentials(username, password);
+    login();
+  }
+
+  public void login() {
+    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post("/api/v1/login", DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
+    if (loginResponse != null)
+      directoryCredentials.setToken(loginResponse.token);
+  }
+
+  public Object get(String commandUrl, Class c) {
+    HttpGet request = buildGetRequest(commandUrl);
+    String response = executeRequest(request);
     if (response == null)
       return null;
     Object body = gson.fromJson(response, c);
@@ -36,12 +50,8 @@ public class DirectoryRest {
     return body;
   }
 
-  public static Object post(CloseableHttpClient httpClient, String url, Class c, Object o) {
-    return post(httpClient, null, url, c, o);
-  }
-
-  public static Object post(CloseableHttpClient httpClient, String token, String url, Class c, Object o) {
-    String response = post(httpClient, token, url, o);
+  public Object post(String commandUrl, Class c, Object o) {
+    String response = post(commandUrl, o);
     if (response == null)
       return null;
     Object body = gson.fromJson(response, c);
@@ -49,76 +59,88 @@ public class DirectoryRest {
     return body;
   }
 
-  public static String post(CloseableHttpClient httpClient, String token, String url, Object o) {
-    HttpPost request = buildPostRequest(token, url, o);
-    String response = executeRequest(httpClient, request);
+  public String post(String commandUrl, Object o) {
+    HttpPost request = buildPostRequest(commandUrl, o);
+    String response = executeRequest(request);
 
     return response;
   }
 
-  public static String put(CloseableHttpClient httpClient, String token, String url, Object o) {
-    HttpPut request = buildPutRequest(token, url, o);
-    String response = executeRequest(httpClient, request);
+  public String put(String commandUrl, Object o) {
+    HttpPut request = buildPutRequest(commandUrl, o);
+    String response = executeRequest(request);
 
     return response;
   }
 
-  public static String delete(CloseableHttpClient httpClient, String token, String url, Object o) {
-    HttpDeleteWithBody request = buildDeleteRequest(token, url, o);
-    String response = executeRequest(httpClient, request);
+  public String delete(String commandUrl, Object o) {
+    HttpDeleteWithBody request = buildDeleteRequest(commandUrl, o);
+    String response = executeRequest(request);
 
     return response;
   }
 
-  private static HttpGet buildGetRequest(String token, String url) {
-    HttpGet request = new HttpGet(url);
-    if (token != null)
-      request.setHeader("x-molgenis-token", token);
+  private HttpGet buildGetRequest(String commandUrl) {
+    HttpGet request = buildTokenlessGetRequest(commandUrl);
+    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+    return request;
+  }
+
+  private HttpGet buildTokenlessGetRequest(String commandUrl) {
+    HttpGet request = new HttpGet(urlCombine(baseUrl, commandUrl));
     request.setHeader("Accept", "application/json");
     return request;
   }
 
-  private  static HttpPost buildPostRequest(String token, String url, Object o) {
+  private HttpPost buildPostRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
-    HttpPost request = new HttpPost(url);
-    if (token != null)
-      request.setHeader("x-molgenis-token", token);
+    HttpPost request = new HttpPost(urlCombine(baseUrl, commandUrl));
+    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     request.setHeader("Accept", "application/json");
     request.setHeader("Content-type", "application/json");
     request.setEntity(entity);
     return request;
   }
 
-  private static HttpPut buildPutRequest(String token, String url, Object o) {
+  private HttpPut buildPutRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
-    HttpPut request = new HttpPut(url);
-    if (token != null)
-      request.setHeader("x-molgenis-token", token);
+    HttpPut request = new HttpPut(urlCombine(baseUrl, commandUrl));
+    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     request.setHeader("Accept", "application/json");
     request.setHeader("Content-type", "application/json");
     request.setEntity(entity);
     return request;
   }
 
-  private static HttpDeleteWithBody buildDeleteRequest(String token, String url, Object o) {
+  private HttpDeleteWithBody buildDeleteRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
-    HttpDeleteWithBody request = new HttpDeleteWithBody(url);
-    if (token != null)
-      request.setHeader("x-molgenis-token", token);
+    HttpDeleteWithBody request = new HttpDeleteWithBody(urlCombine(baseUrl, commandUrl));
+    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     request.setHeader("Accept", "application/json");
     request.setHeader("Content-type", "application/json");
     request.setEntity(entity);
     return request;
   }
 
-  private static StringEntity objectToStringEntity(Object o) {
+  private StringEntity objectToStringEntity(Object o) {
     String jsonBody = gson.toJson(o);
     StringEntity entity = new StringEntity(jsonBody, UTF_8);
 
     return entity;
   }
 
-  private static String executeRequest(CloseableHttpClient httpClient, HttpUriRequest request) {
+  // method  to combine URIs, ensuring that they are appended with a single slash between them
+  private static String urlCombine(String url1, String url2) {
+    if (url1.endsWith("/") && url2.startsWith("/")) {
+      return url1 + url2.substring(1);
+    } else if (url1.endsWith("/") || url2.startsWith("/")) {
+      return url1 + url2;
+    } else {
+      return url1 + "/" + url2;
+    }
+  }
+
+  private String executeRequest(HttpUriRequest request) {
     String result = null;
     try {
       CloseableHttpResponse response = httpClient.execute(request);
@@ -126,13 +148,13 @@ public class DirectoryRest {
         HttpEntity httpEntity = response.getEntity();
         result = EntityUtils.toString(httpEntity);
       } else if (response.getStatusLine().getStatusCode() == 404) {
-        logger.warn("executeRequest: entity get HTTP error (not found): " + Integer.toString(response.getStatusLine().getStatusCode()));
+        logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + Integer.toString(response.getStatusLine().getStatusCode()));
       } else
-        logger.warn("executeRequest: entity get HTTP error: " + Integer.toString(response.getStatusLine().getStatusCode()));
+        logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " +  Integer.toString(response.getStatusLine().getStatusCode()));
     } catch (IOException e) {
-      logger.warn("executeRequest: entity get exception: " + Util.traceFromException(e));
+      logger.warn("executeRequest: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
     } catch (Exception e) {
-      logger.warn("executeRequest: unknown exception: " + Util.traceFromException(e));
+      logger.warn("executeRequest: unknown exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
     }
 
     return result;
@@ -142,7 +164,7 @@ public class DirectoryRest {
    * Custom HTTP DELETE request with a request body support.
    * Used for sending delete requests with a request body to the Directory service.
    */
-  static class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
+  class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
     public static final String METHOD_NAME = "DELETE";
 
     public HttpDeleteWithBody(final String uri) {

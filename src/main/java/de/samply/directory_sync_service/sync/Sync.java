@@ -393,8 +393,7 @@ public class Sync {
      * Consequence: this method has significant side effects.
      */
     private void relogin() {
-        directoryApi = directoryApi.relogin();
-        directoryService.setApi(directoryApi);
+        directoryApi.relogin();
     }
 
     private String errorMessageFromOperationOutcome(OperationOutcome operationOutcome) {

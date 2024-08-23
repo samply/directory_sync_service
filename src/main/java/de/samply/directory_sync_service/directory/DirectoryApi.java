@@ -13,7 +13,6 @@ import io.vavr.control.Either;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -23,58 +22,15 @@ import org.slf4j.LoggerFactory;
 
 public class DirectoryApi {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryApi.class);
-  private final CloseableHttpClient httpClient;
-  private final String baseUrl;
-  private final String token;
-  private String username;
-  private String password;
+  private DirectoryRest directoryRest;
 
   // Setting this variable to true will prevent any contact being made to the Directory.
   // All public methods will return feasible fake results.
   private boolean mockDirectory = false;
 
-  private DirectoryApi(CloseableHttpClient httpClient, String baseUrl, String token, boolean mockDirectory) {
-    this.httpClient = Objects.requireNonNull(httpClient);
-    this.baseUrl = Objects.requireNonNull(baseUrl);
+  public DirectoryApi(CloseableHttpClient httpClient, String baseUrl, boolean mockDirectory, String username, String password) {
     this.mockDirectory = mockDirectory;
-    if (mockDirectory)
-      // if we are mocking, then we don't need to check token, because it won't get used anyway.
-      this.token = token;
-    else {
-      if (token == null)
-        logger.warn("No token provided, directory operations will not be logged in.");
-      this.token = Objects.requireNonNull(token);
-    }
-  }
-
-  public static Either<OperationOutcome, DirectoryApi> createWithLogin(
-          CloseableHttpClient httpClient,
-          String baseUrl,
-          String username,
-          String password,
-          boolean mockDirectory) {
-
-    // Clean up the baseUrl
-    String cleanedBaseUrl = baseUrl.replaceFirst("/*$", "");
-
-    logger.info("createWithLogin: cleanedBaseUrl: " + cleanedBaseUrl);
-
-    // Perform the firstLogin operation and get the result
-    Either<OperationOutcome, DirectoryCredentials.LoginResponse> loginResult = DirectoryCredentials.firstLogin(httpClient, cleanedBaseUrl, username, password, mockDirectory);
-
-    // If firstLogin is successful, map the result to a DirectoryApi, otherwise return the error
-    Either<OperationOutcome, DirectoryApi> finalResult = loginResult.map(response -> {
-      logger.info("createWithLogin: log in to Directory apparently succeeded");
-      if (response.token == null)
-        logger.warn("createWithLogin: response.token is null");
-      // Create the DirectoryApi with the token and set the username and password
-      DirectoryApi api = createWithToken(httpClient, cleanedBaseUrl, response.token, mockDirectory);
-      return api.setUsernameAndPassword(username, password);
-    });
-
-    logger.warn("createWithLogin: log in to Directory failed: " + finalResult);
-
-    return finalResult;
+    this.directoryRest = new DirectoryRest(httpClient, baseUrl, username, password);
   }
 
   /**
@@ -86,36 +42,14 @@ public class DirectoryApi {
    *
    * @return new DirectoryApi object.
    */
-  public DirectoryApi relogin() {
-    logger.info("relogin: logging back in");
+  public void relogin() {
+    logger.info("login: logging back in");
 
     if (mockDirectory)
-      // In a mocking situation, don't try to log back in. We can safely
-      // return the old DirectoryApi object because nothing will have changed.
-      return this;
+      // Don't try logging in if we are mocking
+      return;
 
-    String token = DirectoryCredentials.login(httpClient, baseUrl, username, password).token;
-
-    return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory).setUsernameAndPassword(username, password);
-  }
-
-  public static DirectoryApi createWithToken(CloseableHttpClient httpClient, String baseUrl,
-                                             String token, boolean mockDirectory) {
-    return new DirectoryApi(httpClient, baseUrl.replaceFirst("/*$", ""), token, mockDirectory);
-  }
-
-  /**
-   * Store username and password internally, to allow relogin where necessary.
-   *
-   * @param username
-   * @param password
-   * @return
-   */
-  private DirectoryApi setUsernameAndPassword(String username, String password) {
-    this.username = username;
-    this.password = password;
-
-    return this;
+    directoryRest.login();
   }
 
   private static OperationOutcome updateSuccessful(int number) {
@@ -133,7 +67,7 @@ public class DirectoryApi {
    * @return either the Biobank or an error
    */
   public Either<OperationOutcome, Biobank> fetchBiobank(BbmriEricId id) {
-    Biobank biobank = (Biobank) DirectoryRest.get(httpClient, token, baseUrl + "/api/v2/eu_bbmri_eric_" + id.getCountryCode() + "_biobanks/" + id, Biobank.class);
+    Biobank biobank = (Biobank) directoryRest.get("/api/v2/eu_bbmri_eric_" + id.getCountryCode() + "_biobanks/" + id, Biobank.class);
     if (biobank == null)
       return Either.left(DirectoryUtils.error(id.toString(), "No Biobank in Directory with id: " + id));
     return Either.right(biobank);
@@ -159,7 +93,7 @@ public class DirectoryApi {
     }
 
     for (String collectionId: collectionIds) {
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) DirectoryRest.get(httpClient, token, buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRest.get(buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null)
         return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: ", collectionId));
       Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
@@ -184,7 +118,7 @@ public class DirectoryApi {
       // Dummy return if we're in mock mode
       return updateSuccessful(directoryCollectionPut.size());
 
-    String response = DirectoryRest.put(httpClient, token, buildCollectionApiUrl(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    String response = directoryRest.put(buildCollectionApiUrl(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null)
       return DirectoryUtils.error("entity update", "PUT problem");
     return updateSuccessful(directoryCollectionPut.size());
@@ -227,7 +161,7 @@ public class DirectoryApi {
 
       Map<String,Object> body = new HashMap<String,Object>();
       body.put("entities", factTablesBlock);
-      String response = DirectoryRest.post(httpClient, token, buildApiUrl(countryCode, "facts"), body);
+      String response = directoryRest.post(buildApiUrl(countryCode, "facts"), body);
       if (response == null)
         return DirectoryUtils.error("updateStarModel", "failed, block: " + i);
     }
@@ -256,7 +190,7 @@ public class DirectoryApi {
         // and a single pass may not get all facts.
         do {
           // First get a list of fact IDs for this collection
-          Map factWrapper = (Map) DirectoryRest.get(httpClient, token, apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
+          Map factWrapper = (Map) directoryRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
 
           if (factWrapper == null)
             return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=", collectionId);
@@ -295,7 +229,7 @@ public class DirectoryApi {
       // Nothing to delete
       return new OperationOutcome();
 
-    String result = DirectoryRest.delete(httpClient, token, apiUrl, factIds);
+    String result = directoryRest.delete(apiUrl, factIds);
 
     if (result == null)
       return DirectoryUtils.error("deleteFactsByIds", "Problem during delete of factIds");
@@ -344,8 +278,8 @@ public class DirectoryApi {
    * @return true if the diagnosis code is a valid ICD value, false if not, or if an error condition was encountered.
    */
   private boolean isValidIcdValue(String diagnosis) {
-    String url = baseUrl + "/api/v2/eu_bbmri_eric_disease_types?q=id=='" + diagnosis + "'";
-    Map body = (Map) DirectoryRest.get(httpClient, token, url, Map.class);
+    String url = "/api/v2/eu_bbmri_eric_disease_types?q=id=='" + diagnosis + "'";
+    Map body = (Map) directoryRest.get(url, Map.class);
     if (body != null) {
       if (body.containsKey("total")) {
         Object total = body.get("total");
@@ -377,7 +311,7 @@ public class DirectoryApi {
     String countryCodeInsert = "";
     if (countryCode != null && !countryCode.isEmpty())
       countryCodeInsert = countryCode + "_";
-    String collectionApiUrl = baseUrl + "/api/v2/eu_bbmri_eric_" + countryCodeInsert + function;
+    String collectionApiUrl = "/api/v2/eu_bbmri_eric_" + countryCodeInsert + function;
 
     return collectionApiUrl;
   }

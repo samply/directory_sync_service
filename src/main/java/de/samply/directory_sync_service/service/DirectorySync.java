@@ -128,7 +128,7 @@ public class DirectorySync {
             }
        }
 
-       logger.info("__________ syncWithDirectory: all synchronization tasks completed");
+       logger.info("__________ syncWithDirectory: all synchronization tasks finished");
        return true;
     }
 
@@ -157,7 +157,7 @@ public class DirectorySync {
      */
     private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl, boolean directoryMock) {
         CloseableHttpClient client = HttpClients.createDefault();
-        return DirectoryApi.createWithLogin(client, directoryUrl, directoryUserName, directoryPassCode, directoryMock);
+        return Either.right(new DirectoryApi(client, directoryUrl, directoryMock, directoryUserName, directoryPassCode));
     }
 
     /**

@@ -17,10 +17,6 @@ public class DirectoryService {
     this.api = Objects.requireNonNull(api);
   }
 
-  public void setApi(DirectoryApi api) {
-    this.api = api;
-  }
-
   public List<OperationOutcome> updateEntities(DirectoryCollectionPut directoryCollectionPut) {
     OperationOutcome operationOutcome = api.updateEntities(directoryCollectionPut);
     return Collections.singletonList(operationOutcome);
