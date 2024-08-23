@@ -6,7 +6,6 @@ import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import de.samply.directory_sync_service.sync.Sync;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
-import de.samply.directory_sync_service.directory.DirectoryService;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.fhir.FhirReporting;
 import io.vavr.control.Either;
@@ -79,10 +78,9 @@ public class DirectorySync {
             logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
             return false;
         }
-        DirectoryService directoryService = new DirectoryService(directoryApi);
         FhirApi fhirApi = createFhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
-        Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
+        Sync sync = new Sync(fhirApi, fhirReporting, directoryApi);
         Either<String, Void> initResourcesOutcome = sync.initResources();
         if (initResourcesOutcome.isLeft()) {
             logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());

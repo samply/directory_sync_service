@@ -5,7 +5,6 @@ import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryCollectionPutConverter;
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
 import de.samply.directory_sync_service.directory.DirectoryApi;
-import de.samply.directory_sync_service.directory.DirectoryService;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
 import de.samply.directory_sync_service.directory.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
@@ -84,21 +83,18 @@ public class Sync {
     private final FhirApi fhirApi;
     private final FhirReporting fhirReporting;
     private DirectoryApi directoryApi;
-    private final DirectoryService directoryService;
 
-    public Sync(FhirApi fhirApi, FhirReporting fhirReporting, DirectoryApi directoryApi,
-        DirectoryService directoryService) {
+    public Sync(FhirApi fhirApi, FhirReporting fhirReporting, DirectoryApi directoryApi) {
         this.fhirApi = fhirApi;
         this.fhirReporting = fhirReporting;
         this.directoryApi = directoryApi;
-        this.directoryService = directoryService;
     }
 
     public static void main(String[] args) {
         FhirContext fhirContext = FhirContext.forR4();
         FhirApi fhirApi = new FhirApi(fhirContext.newRestfulGenericClient(args[0]));
         FhirReporting fhirReporting = new FhirReporting(fhirContext, fhirApi);
-        Sync sync = new Sync(fhirApi, fhirReporting, null, null);
+        Sync sync = new Sync(fhirApi, fhirReporting, null);
         Either<String, Void> result = sync.initResources();
         System.out.println("result = " + result);
         Either<OperationOutcome, Map<BbmriEricId, Integer>> collectionSizes = fhirReporting.fetchCollectionSizes();
@@ -139,22 +135,6 @@ public class Sync {
                 .fold(Collections::singletonList, Function.identity());
     }
 
-//    /**
-//     * Takes a biobank from FHIR and updates it with current information from the Directory.
-//     *
-//     * @param fhirBiobank the biobank to update.
-//     * @return the {@link OperationOutcome} from the FHIR server update
-//     */
-//    OperationOutcome updateBiobankOnFhirServerIfNecessary(Organization fhirBiobank) {
-//        return Option.ofOptional(FhirApi.bbmriEricId(fhirBiobank))
-//                .toEither(missingIdentifierOperationOutcome())
-//                .flatMap(directoryApi::fetchBiobank)
-//                .map(dirBiobank -> new BiobankTuple(fhirBiobank, dirBiobank))
-//                .map(UPDATE_BIOBANK_NAME)
-//                .filterOrElse(BiobankTuple::hasChanged, tuple -> noUpdateNecessaryOperationOutcome())
-//                .map(tuple -> fhirApi.updateResource(tuple.fhirBiobank))
-//                .fold(Function.identity(), Function.identity());
-//    }
     /**
      * Takes a biobank from FHIR and updates it with current information from the Directory.
      *
@@ -313,7 +293,7 @@ public class Sync {
 
             // Send fact tables to Direcory.
             relogin();
-            List<OperationOutcome> starModelUpdateOutcome = directoryService.updateStarModel(starModelInputData);
+            List<OperationOutcome> starModelUpdateOutcome = Collections.singletonList(directoryApi.updateStarModel(starModelInputData));
             logger.info("__________ sendStarModelUpdatesToDirectory: star model has been updated");
             // Return some kind of results count or whatever
             return starModelUpdateOutcome;
@@ -359,7 +339,7 @@ public class Sync {
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
             relogin();
-            Either<OperationOutcome, DirectoryCollectionGet> directoryCollectionGetOutcomes = directoryService.fetchDirectoryCollectionGetOutcomes(countryCode, collectionIds);
+            Either<OperationOutcome, DirectoryCollectionGet> directoryCollectionGetOutcomes = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
             if (directoryCollectionGetOutcomes.isLeft())
                 return createErrorOutcome("Problem getting collections from Directory, " + errorMessageFromOperationOutcome(directoryCollectionGetOutcomes.getLeft()));
             DirectoryCollectionGet directoryCollectionGet = directoryCollectionGetOutcomes.get();
@@ -376,7 +356,7 @@ public class Sync {
             logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
             relogin();
-            List<OperationOutcome> outcomes = directoryService.updateEntities(directoryCollectionPut);
+            List<OperationOutcome> outcomes = Collections.singletonList(directoryApi.updateEntities(directoryCollectionPut));
             logger.info("__________ sendUpdatesToDirectory: 2 outcomes: " + outcomes);
             return outcomes;
         } catch (Exception e) {

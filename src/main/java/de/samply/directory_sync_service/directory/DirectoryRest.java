@@ -20,6 +20,12 @@ import java.net.URI;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * Class for interacting with a Directory service via REST API calls.
+ * <p>
+ * It provides methods to perform HTTP GET, POST, PUT, and DELETE operations on a Directory service.
+ * It handles authentication via a login method and manages session tokens for authorized requests.
+ */
 public class DirectoryRest {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryRest.class);
   private final Gson gson = new Gson();
@@ -27,6 +33,17 @@ public class DirectoryRest {
   private final String baseUrl;
   private DirectoryCredentials directoryCredentials;
 
+  /**
+   * Constructs a DirectoryRest object.
+   * <p>
+   * This constructor initializes the HTTP client, base URL, and credentials for interacting with the Directory service.
+   * It also triggers the login process to authenticate and obtain a session token.
+   *
+   * @param httpClient the HTTP client to use for requests
+   * @param baseUrl the base URL for the Directory service
+   * @param username the username for Directory authentication
+   * @param password the password for Directory authentication
+   */
   public DirectoryRest(CloseableHttpClient httpClient, String baseUrl, String username, String password) {
     this.httpClient = httpClient;
     this.baseUrl = baseUrl.replaceFirst("/*$", "");
@@ -34,12 +51,23 @@ public class DirectoryRest {
     login();
   }
 
+  /**
+   * Logs in to the Directory, using local credentials.
+   * Updates the token in the directory credentials upon successful login.
+   */
   public void login() {
     DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post("/api/v1/login", DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
     if (loginResponse != null)
       directoryCredentials.setToken(loginResponse.token);
   }
 
+  /**
+   * Sends a GET request to the Directory service.
+   *
+   * @param commandUrl the URL path to send the GET request to
+   * @param c          the class type to which the response should be deserialized
+   * @return the response body deserialized into an object of type {@code c}, or {@code null} if the response is empty
+   */
   public Object get(String commandUrl, Class c) {
     HttpGet request = buildGetRequest(commandUrl);
     String response = executeRequest(request);
@@ -50,6 +78,14 @@ public class DirectoryRest {
     return body;
   }
 
+  /**
+   * Sends a POST request to the Directory service and deserializes the response.
+   *
+   * @param commandUrl the URL path to send the POST request to
+   * @param c          the class type to which the response should be deserialized
+   * @param o          the request body object to be sent
+   * @return the response body deserialized into an object of type {@code c}, or {@code null} if the response is empty
+   */
   public Object post(String commandUrl, Class c, Object o) {
     String response = post(commandUrl, o);
     if (response == null)
@@ -59,6 +95,13 @@ public class DirectoryRest {
     return body;
   }
 
+  /**
+   * Sends a POST request to the Directory service.
+   *
+   * @param commandUrl the URL path to send the POST request to
+   * @param o          the request body object to be sent
+   * @return the response as a {@code String}, or {@code null} if the response is empty
+   */
   public String post(String commandUrl, Object o) {
     HttpPost request = buildPostRequest(commandUrl, o);
     String response = executeRequest(request);
@@ -66,6 +109,13 @@ public class DirectoryRest {
     return response;
   }
 
+  /**
+   * Sends a PUT request to the Directory service.
+   *
+   * @param commandUrl the URL path to send the PUT request to
+   * @param o          the request body object to be sent
+   * @return the response as a {@code String}, or {@code null} if the response is empty
+   */
   public String put(String commandUrl, Object o) {
     HttpPut request = buildPutRequest(commandUrl, o);
     String response = executeRequest(request);
@@ -73,6 +123,13 @@ public class DirectoryRest {
     return response;
   }
 
+  /**
+   * Sends a DELETE request to the Directory service with a request body.
+   *
+   * @param commandUrl the URL path to send the DELETE request to
+   * @param o          the request body object to be sent
+   * @return the response as a {@code String}, or {@code null} if the response is empty
+   */
   public String delete(String commandUrl, Object o) {
     HttpDeleteWithBody request = buildDeleteRequest(commandUrl, o);
     String response = executeRequest(request);
@@ -80,18 +137,37 @@ public class DirectoryRest {
     return response;
   }
 
+  /**
+   * Builds an HTTP GET request with the session token included in the header.
+   *
+   * @param commandUrl the URL path for the GET request
+   * @return an {@code HttpGet} object configured with the necessary headers
+   */
   private HttpGet buildGetRequest(String commandUrl) {
     HttpGet request = buildTokenlessGetRequest(commandUrl);
     request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     return request;
   }
 
+  /**
+   * Builds an HTTP GET request without including the session token in the header.
+   *
+   * @param commandUrl the URL path for the GET request
+   * @return an {@code HttpGet} object configured with the necessary headers
+   */
   private HttpGet buildTokenlessGetRequest(String commandUrl) {
     HttpGet request = new HttpGet(urlCombine(baseUrl, commandUrl));
     request.setHeader("Accept", "application/json");
     return request;
   }
 
+  /**
+   * Builds an HTTP POST request with the session token and request body.
+   *
+   * @param commandUrl the URL path for the POST request
+   * @param o          the object to be serialized into the request body
+   * @return an {@code HttpPost} object configured with the necessary headers and body
+   */
   private HttpPost buildPostRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
     HttpPost request = new HttpPost(urlCombine(baseUrl, commandUrl));
@@ -102,6 +178,13 @@ public class DirectoryRest {
     return request;
   }
 
+  /**
+   * Builds an HTTP PUT request with the session token and request body.
+   *
+   * @param commandUrl the URL path for the PUT request
+   * @param o          the object to be serialized into the request body
+   * @return an {@code HttpPut} object configured with the necessary headers and body
+   */
   private HttpPut buildPutRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
     HttpPut request = new HttpPut(urlCombine(baseUrl, commandUrl));
@@ -112,6 +195,13 @@ public class DirectoryRest {
     return request;
   }
 
+  /**
+   * Builds an HTTP DELETE request with a request body.
+   *
+   * @param commandUrl the URL path for the DELETE request
+   * @param o          the object to be serialized into the request body
+   * @return an {@code HttpDeleteWithBody} object configured with the necessary headers and body
+   */
   private HttpDeleteWithBody buildDeleteRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
     HttpDeleteWithBody request = new HttpDeleteWithBody(urlCombine(baseUrl, commandUrl));
@@ -122,6 +212,12 @@ public class DirectoryRest {
     return request;
   }
 
+  /**
+   * Converts an object to a JSON string and wraps it in a {@code StringEntity}.
+   *
+   * @param o the object to convert
+   * @return a {@code StringEntity} containing the serialized JSON
+   */
   private StringEntity objectToStringEntity(Object o) {
     String jsonBody = gson.toJson(o);
     StringEntity entity = new StringEntity(jsonBody, UTF_8);
@@ -129,7 +225,13 @@ public class DirectoryRest {
     return entity;
   }
 
-  // method  to combine URIs, ensuring that they are appended with a single slash between them
+  /**
+   * Combines two URL parts, ensuring that there is exactly one slash between them.
+   *
+   * @param url1 the first part of the URL
+   * @param url2 the second part of the URL
+   * @return the combined URL as a {@code String}
+   */
   private static String urlCombine(String url1, String url2) {
     if (url1.endsWith("/") && url2.startsWith("/")) {
       return url1 + url2.substring(1);
@@ -140,6 +242,15 @@ public class DirectoryRest {
     }
   }
 
+  /**
+   * Executes an HTTP request and returns the response as a string.
+   * <p>
+   * Logs any exceptions or HTTP errors that occur during the request.
+   * </p>
+   *
+   * @param request the HTTP request to execute
+   * @return the response body as a {@code String}, or {@code null} if an error occurs
+   */
   private String executeRequest(HttpUriRequest request) {
     String result = null;
     try {
@@ -163,6 +274,8 @@ public class DirectoryRest {
   /**
    * Custom HTTP DELETE request with a request body support.
    * Used for sending delete requests with a request body to the Directory service.
+   * <p>
+   * This class extends {@code HttpEntityEnclosingRequestBase} to allow sending a body with a DELETE request.
    */
   class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
     public static final String METHOD_NAME = "DELETE";
