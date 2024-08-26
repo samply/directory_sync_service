@@ -3,8 +3,6 @@ package de.samply.directory_sync_service.directory;
 import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
-
 import de.samply.directory_sync_service.directory.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
@@ -20,6 +18,13 @@ import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+/**
+ * The DirectoryApi class provides an interface for interacting with the Directory service.
+ * This class allows for fetching and updating biobank and collection information, managing star models,
+ * and performing various validation and correction operations.
+ * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
+ */
 public class DirectoryApi {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryApi.class);
   private DirectoryRest directoryRest;
@@ -28,9 +33,20 @@ public class DirectoryApi {
   // All public methods will return feasible fake results.
   private boolean mockDirectory = false;
 
-  public DirectoryApi(CloseableHttpClient httpClient, String baseUrl, boolean mockDirectory, String username, String password) {
+  /**
+   * Constructs a new DirectoryApi instance.
+   * If we are not in mocking mode, log in to the Directory.
+   *
+   * @param httpClient The HTTP client used for communication with the Directory.
+   * @param baseUrl The base URL of the Directory service.
+   * @param mockDirectory If true, the instance operates in mock mode, returning fake data.
+   * @param username The username for authenticating with the Directory.
+   * @param password The password for authenticating with the Directory.
+   */  public DirectoryApi(CloseableHttpClient httpClient, String baseUrl, boolean mockDirectory, String username, String password) {
     this.mockDirectory = mockDirectory;
     this.directoryRest = new DirectoryRest(httpClient, baseUrl, username, password);
+    if (!mockDirectory)
+      this.directoryRest.login();
   }
 
   /**
@@ -52,14 +68,6 @@ public class DirectoryApi {
     directoryRest.login();
   }
 
-  private static OperationOutcome updateSuccessful(int number) {
-    OperationOutcome outcome = new OperationOutcome();
-    outcome.addIssue()
-        .setSeverity(INFORMATION)
-        .setDiagnostics(String.format("Successful update of %d collection size values.", number));
-    return outcome;
-  }
-
   /**
    * Fetches the Biobank with the given {@code id}.
    *
@@ -67,7 +75,11 @@ public class DirectoryApi {
    * @return either the Biobank or an error
    */
   public Either<OperationOutcome, Biobank> fetchBiobank(BbmriEricId id) {
-    Biobank biobank = (Biobank) directoryRest.get("/api/v2/eu_bbmri_eric_" + id.getCountryCode() + "_biobanks/" + id, Biobank.class);
+    if (mockDirectory)
+      // Return a fake Biobank if we are mocking
+      return Either.right(new Biobank());
+
+    Biobank biobank = (Biobank) directoryRest.get(buildBiobankApiUrl(id.getCountryCode()) + "/" + id, Biobank.class);
     if (biobank == null)
       return Either.left(DirectoryUtils.error(id.toString(), "No Biobank in Directory with id: " + id));
     return Either.right(biobank);
@@ -112,16 +124,15 @@ public class DirectoryApi {
    * @return an outcome, either successful or an error
    */
   public OperationOutcome updateEntities(DirectoryCollectionPut directoryCollectionPut) {
-    logger.info("DirectoryApi.updateEntities: entered");
-
     if (mockDirectory)
       // Dummy return if we're in mock mode
-      return updateSuccessful(directoryCollectionPut.size());
+      return DirectoryUtils.success("DirectoryApi.updateEntities: in mock mode, skip update");
 
     String response = directoryRest.put(buildCollectionApiUrl(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null)
       return DirectoryUtils.error("entity update", "PUT problem");
-    return updateSuccessful(directoryCollectionPut.size());
+
+    return DirectoryUtils.success("DirectoryApi.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
   }
 
   /**
@@ -137,7 +148,7 @@ public class DirectoryApi {
   public OperationOutcome updateStarModel(StarModelData starModelInputData) {
     if (mockDirectory)
       // Dummy return if we're in mock mode
-      return updateSuccessful(starModelInputData.getFactCount());
+      return DirectoryUtils.success("DirectoryApi.updateStarModel: in mock mode, skip update");
 
     // Get rid of previous star models first. This is necessary, because:
     // 1. A new star model may be decomposed into different hypercubes.
@@ -166,7 +177,7 @@ public class DirectoryApi {
         return DirectoryUtils.error("updateStarModel", "failed, block: " + i);
     }
 
-    return updateSuccessful(starModelInputData.getFactCount());
+    return DirectoryUtils.success("DirectoryApi.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
   }
 
   /**
@@ -176,10 +187,6 @@ public class DirectoryApi {
    * @return An OperationOutcome indicating the success or failure of the deletion.
    */
   private OperationOutcome deleteStarModel(StarModelData starModelInputData) {
-    if (mockDirectory)
-      // Dummy return if we're in mock mode
-      return new OperationOutcome();
-
     String apiUrl = buildApiUrl(starModelInputData.getCountryCode(), "facts");
 
     try {
@@ -224,7 +231,7 @@ public class DirectoryApi {
    * @param factIds   The list of fact IDs to be deleted.
    * @return An OperationOutcome indicating the success or failure of the deletion.
    */
-  public OperationOutcome deleteFactsByIds(String apiUrl, List<String> factIds) {
+  private OperationOutcome deleteFactsByIds(String apiUrl, List<String> factIds) {
     if (factIds.size() == 0)
       // Nothing to delete
       return new OperationOutcome();
@@ -250,6 +257,10 @@ public class DirectoryApi {
    * @param diagnoses A string map containing diagnoses to be corrected.
    */
   public void collectDiagnosisCorrections(Map<String, String> diagnoses) {
+    if (mockDirectory)
+      // Don't do anything if we're in mock mode
+      return;
+
     int diagnosisCounter = 0; // for diagnostics only
     int invalidIcdValueCounter = 0;
     int correctedIcdValueCounter = 0;
@@ -296,6 +307,23 @@ public class DirectoryApi {
 
     return false;
   }
+
+  /**
+   * Constructs the URL for accessing the biobank endpoint of the Directory API based on the country code.
+   *
+   * @param countryCode The country code (e.g., "DE").
+   * @return the constructed biobank API URL.
+   */
+  private String buildBiobankApiUrl(String countryCode) {
+    return buildApiUrl(countryCode, "biobanks");
+  }
+
+  /**
+   * Constructs the URL for accessing the collection endpoint of the Directory API based on the country code.
+   *
+   * @param countryCode The country code (e.g., "DE").
+   * @return the constructed collection API URL.
+   */
   private String buildCollectionApiUrl(String countryCode) {
     return buildApiUrl(countryCode, "collections");
   }

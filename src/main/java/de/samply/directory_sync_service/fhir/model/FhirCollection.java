@@ -2,9 +2,6 @@ package de.samply.directory_sync_service.fhir.model;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A DTO for carrying the data collected from a FHIR store relating to a single
  * collection of samples.

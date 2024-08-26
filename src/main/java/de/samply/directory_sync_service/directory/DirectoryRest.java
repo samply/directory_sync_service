@@ -48,7 +48,6 @@ public class DirectoryRest {
     this.httpClient = httpClient;
     this.baseUrl = baseUrl.replaceFirst("/*$", "");
     this.directoryCredentials = new DirectoryCredentials(username, password);
-    login();
   }
 
   /**

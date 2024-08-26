@@ -1,6 +1,5 @@
 package de.samply.directory_sync_service.sync;
 
-import ca.uhn.fhir.context.FhirContext;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryCollectionPutConverter;
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
@@ -88,17 +87,6 @@ public class Sync {
         this.fhirApi = fhirApi;
         this.fhirReporting = fhirReporting;
         this.directoryApi = directoryApi;
-    }
-
-    public static void main(String[] args) {
-        FhirContext fhirContext = FhirContext.forR4();
-        FhirApi fhirApi = new FhirApi(fhirContext.newRestfulGenericClient(args[0]));
-        FhirReporting fhirReporting = new FhirReporting(fhirContext, fhirApi);
-        Sync sync = new Sync(fhirApi, fhirReporting, null);
-        Either<String, Void> result = sync.initResources();
-        System.out.println("result = " + result);
-        Either<OperationOutcome, Map<BbmriEricId, Integer>> collectionSizes = fhirReporting.fetchCollectionSizes();
-        System.out.println("collectionSizes = " + collectionSizes);
     }
 
     /**
@@ -274,7 +262,7 @@ public class Sync {
             StarModelData starModelInputData = starModelInputDataOutcome.get();
             logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
-            relogin();
+            directoryApi.relogin();
 
             // Hypercubes containing less than the minimum number of donors will not be
             // included in the star model output.
@@ -292,7 +280,7 @@ public class Sync {
             logger.info("__________ sendStarModelUpdatesToDirectory: 2 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
 
             // Send fact tables to Direcory.
-            relogin();
+            directoryApi.relogin();
             List<OperationOutcome> starModelUpdateOutcome = Collections.singletonList(directoryApi.updateStarModel(starModelInputData));
             logger.info("__________ sendStarModelUpdatesToDirectory: star model has been updated");
             // Return some kind of results count or whatever
@@ -338,7 +326,7 @@ public class Sync {
     
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
-            relogin();
+            directoryApi.relogin();
             Either<OperationOutcome, DirectoryCollectionGet> directoryCollectionGetOutcomes = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
             if (directoryCollectionGetOutcomes.isLeft())
                 return createErrorOutcome("Problem getting collections from Directory, " + errorMessageFromOperationOutcome(directoryCollectionGetOutcomes.getLeft()));
@@ -355,25 +343,13 @@ public class Sync {
                 directoryCollectionPut.applyDiagnosisCorrections(correctedDiagnoses);
             logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
-            relogin();
+            directoryApi.relogin();
             List<OperationOutcome> outcomes = Collections.singletonList(directoryApi.updateEntities(directoryCollectionPut));
             logger.info("__________ sendUpdatesToDirectory: 2 outcomes: " + outcomes);
             return outcomes;
         } catch (Exception e) {
             return createErrorOutcome("sendUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
         }
-    }
-
-    /**
-     * Renew the Directory login.
-     * <p>
-     * This generates a new DirectoryApi object, which needs to be distributed to the places
-     * where it will be used.
-     * <p>
-     * Consequence: this method has significant side effects.
-     */
-    private void relogin() {
-        directoryApi.relogin();
     }
 
     private String errorMessageFromOperationOutcome(OperationOutcome operationOutcome) {

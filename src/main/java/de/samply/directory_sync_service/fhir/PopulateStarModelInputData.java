@@ -126,6 +126,10 @@ public class PopulateStarModelInputData {
               .toLocalDate();
 
       LocalDate collectionDate = extractCollectionLocalDateFromSpecimen(specimen);
+      if (collectionDate == null) {
+        logger.warn("determinePatientAgeAtCollection: extractCollectionLocalDateFromSpecimen is null, returning null.");
+        return null;
+      }
 
       // Calculate the patient's age in years using the Period class
       int ageInYears = Period.between(localBirthDate, collectionDate).getYears();

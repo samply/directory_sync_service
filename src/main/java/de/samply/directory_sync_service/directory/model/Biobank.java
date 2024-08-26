@@ -1,6 +1,5 @@
 package de.samply.directory_sync_service.directory.model;
 
-//TODO Add other relevant attributes
 public class Biobank {
     String id;
 
