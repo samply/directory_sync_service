@@ -66,18 +66,7 @@ public class DirectorySync {
         int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
         boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
 
-        DirectoryApi directoryApi = null;
-        try {
-            Either<OperationOutcome, DirectoryApi> directoryApiContainer = createDirectoryApi(directoryUserName, directoryUserPass, directoryUrl, directoryMock);
-            if (directoryApiContainer.isLeft()) {
-                logger.error("__________ syncWithDirectory: problem setting up Directory API: " + getErrorMessageFromOperationOutcome(directoryApiContainer.getLeft()));
-                return false;
-            }
-            directoryApi = directoryApiContainer.get();
-        } catch (NullPointerException e) {
-            logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
-            return false;
-        }
+        DirectoryApi directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi);
@@ -90,7 +79,7 @@ public class DirectorySync {
         List<OperationOutcome> operationOutcomes;
         operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId);
         for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
                 logger.error("__________ syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
                 return false;
@@ -99,7 +88,7 @@ public class DirectorySync {
         if (directoryAllowStarModel) {
             operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts);
             for (OperationOutcome operationOutcome : operationOutcomes) {
-                String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+                String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
                 if (errorMessage.length() > 0) {
                     logger.error("__________ syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
                     return false;
@@ -109,7 +98,7 @@ public class DirectorySync {
         operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
         boolean failed = false;
         for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
                 logger.error("__________ syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
                 failed = true;
@@ -119,7 +108,7 @@ public class DirectorySync {
             return false;
        operationOutcomes = sync.updateAllBiobanksOnFhirServerIfNecessary();
        for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = getErrorMessageFromOperationOutcome(operationOutcome);
+            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
             if (errorMessage.length() > 0) {
                 logger.error("__________ syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
 //                return false;
@@ -128,33 +117,5 @@ public class DirectorySync {
 
        logger.info("__________ syncWithDirectory: all synchronization tasks finished");
        return true;
-    }
-
-    private String getErrorMessageFromOperationOutcome(OperationOutcome operationOutcome) {
-        String errorMessage = "";
-        List<OperationOutcome.OperationOutcomeIssueComponent> issues = operationOutcome.getIssue();
-        for (OperationOutcome.OperationOutcomeIssueComponent issue: issues) {
-            OperationOutcome.IssueSeverity severity = issue.getSeverity();
-            if (severity == OperationOutcome.IssueSeverity.ERROR || severity == OperationOutcome.IssueSeverity.FATAL)
-                errorMessage += issue.getDiagnostics() + "\n";
-        }
-
-        return errorMessage;
-    }
-
-    /**
-     * Opens a connection to the Directory API.
-     * <p>
-     * This is where the login to the Directory happens.
-     *
-     * @param directoryUserName User name for logging in to Directory
-     * @param directoryPassCode Password for logging in to Directory
-     * @param directoryUrl      Base URL of the Directory
-     * @param directoryMock
-     * @return
-     */
-    private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl, boolean directoryMock) {
-        CloseableHttpClient client = HttpClients.createDefault();
-        return Either.right(new DirectoryApi(client, directoryUrl, directoryMock, directoryUserName, directoryPassCode));
     }
 }

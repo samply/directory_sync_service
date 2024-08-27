@@ -11,6 +11,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class DirectoryRest {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryRest.class);
   private final Gson gson = new Gson();
-  private final CloseableHttpClient httpClient;
+  private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final String baseUrl;
   private DirectoryCredentials directoryCredentials;
 
@@ -44,8 +45,7 @@ public class DirectoryRest {
    * @param username the username for Directory authentication
    * @param password the password for Directory authentication
    */
-  public DirectoryRest(CloseableHttpClient httpClient, String baseUrl, String username, String password) {
-    this.httpClient = httpClient;
+  public DirectoryRest(String baseUrl, String username, String password) {
     this.baseUrl = baseUrl.replaceFirst("/*$", "");
     this.directoryCredentials = new DirectoryCredentials(username, password);
   }

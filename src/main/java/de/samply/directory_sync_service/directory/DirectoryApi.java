@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +36,14 @@ public class DirectoryApi {
    * Constructs a new DirectoryApi instance.
    * If we are not in mocking mode, log in to the Directory.
    *
-   * @param httpClient The HTTP client used for communication with the Directory.
    * @param baseUrl The base URL of the Directory service.
    * @param mockDirectory If true, the instance operates in mock mode, returning fake data.
    * @param username The username for authenticating with the Directory.
    * @param password The password for authenticating with the Directory.
-   */  public DirectoryApi(CloseableHttpClient httpClient, String baseUrl, boolean mockDirectory, String username, String password) {
+   */
+  public DirectoryApi(String baseUrl, boolean mockDirectory, String username, String password) {
     this.mockDirectory = mockDirectory;
-    this.directoryRest = new DirectoryRest(httpClient, baseUrl, username, password);
+    this.directoryRest = new DirectoryRest(baseUrl, username, password);
     if (!mockDirectory)
       this.directoryRest.login();
   }

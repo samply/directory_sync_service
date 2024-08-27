@@ -207,7 +207,7 @@ public class Sync {
             // collections and their associated patients.
             Either<OperationOutcome, List<String>> fhirDiagnosesOutcome = fhirReporting.fetchDiagnoses(defaultBbmriEricCollectionId);
             if (fhirDiagnosesOutcome.isLeft())
-                return createErrorOutcome("Problem getting diagnosis information from FHIR store, " + errorMessageFromOperationOutcome(fhirDiagnosesOutcome.getLeft()));
+                return Util.createErrorOutcome("Problem getting diagnosis information from FHIR store, " + Util.getErrorMessageFromOperationOutcome(fhirDiagnosesOutcome.getLeft()));
             List<String> fhirDiagnoses = fhirDiagnosesOutcome.get();
             logger.info("__________ generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
@@ -228,7 +228,7 @@ public class Sync {
             outcome.addIssue().setSeverity(INFORMATION).setDiagnostics("Diagnosis corrections generated successfully");
             return Collections.singletonList(outcome);
         } catch (Exception e) {
-            return createErrorOutcome("generateDiagnosisCorrections - unexpected error: " + Util.traceFromException(e));
+            return Util.createErrorOutcome("generateDiagnosisCorrections - unexpected error: " + Util.traceFromException(e));
         }
     }
 
@@ -258,7 +258,7 @@ public class Sync {
             // star model hypercubes.
             Either<OperationOutcome, StarModelData> starModelInputDataOutcome = fhirReporting.fetchStarModelInputData(defaultBbmriEricCollectionId);
             if (starModelInputDataOutcome.isLeft())
-                return createErrorOutcome("Problem getting star model information from FHIR store, " + errorMessageFromOperationOutcome(starModelInputDataOutcome.getLeft()));
+                return Util.createErrorOutcome("Problem getting star model information from FHIR store, " + Util.getErrorMessageFromOperationOutcome(starModelInputDataOutcome.getLeft()));
             StarModelData starModelInputData = starModelInputDataOutcome.get();
             logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
@@ -286,7 +286,7 @@ public class Sync {
             // Return some kind of results count or whatever
             return starModelUpdateOutcome;
         } catch (Exception e) {
-            return createErrorOutcome("sendStarModelUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
+            return Util.createErrorOutcome("sendStarModelUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
         }
     }
     
@@ -316,12 +316,12 @@ public class Sync {
 
             Either<OperationOutcome, List<FhirCollection>> fhirCollectionOutcomes = fhirReporting.fetchFhirCollections(defaultBbmriEricCollectionId);
             if (fhirCollectionOutcomes.isLeft())
-                return createErrorOutcome("Problem getting collections from FHIR store, " + errorMessageFromOperationOutcome(fhirCollectionOutcomes.getLeft()));
+                return Util.createErrorOutcome("Problem getting collections from FHIR store, " + Util.getErrorMessageFromOperationOutcome(fhirCollectionOutcomes.getLeft()));
             logger.info("__________ sendUpdatesToDirectory: FHIR collection count): " + fhirCollectionOutcomes.get().size());
 
             DirectoryCollectionPut directoryCollectionPut = FhirCollectionToDirectoryCollectionPutConverter.convert(fhirCollectionOutcomes.get());
             if (directoryCollectionPut == null) 
-                return createErrorOutcome("Problem converting FHIR attributes to Directory attributes");
+                return Util.createErrorOutcome("Problem converting FHIR attributes to Directory attributes");
             logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
     
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
@@ -329,12 +329,12 @@ public class Sync {
             directoryApi.relogin();
             Either<OperationOutcome, DirectoryCollectionGet> directoryCollectionGetOutcomes = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
             if (directoryCollectionGetOutcomes.isLeft())
-                return createErrorOutcome("Problem getting collections from Directory, " + errorMessageFromOperationOutcome(directoryCollectionGetOutcomes.getLeft()));
+                return Util.createErrorOutcome("Problem getting collections from Directory, " + Util.getErrorMessageFromOperationOutcome(directoryCollectionGetOutcomes.getLeft()));
             DirectoryCollectionGet directoryCollectionGet = directoryCollectionGetOutcomes.get();
             logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
 
             if (!MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut))
-                return createErrorOutcome("Problem merging Directory GET attributes to Directory PUT attributes");
+                return Util.createErrorOutcome("Problem merging Directory GET attributes to Directory PUT attributes");
             logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
             
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
@@ -348,25 +348,11 @@ public class Sync {
             logger.info("__________ sendUpdatesToDirectory: 2 outcomes: " + outcomes);
             return outcomes;
         } catch (Exception e) {
-            return createErrorOutcome("sendUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
+            return Util.createErrorOutcome("sendUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
         }
     }
 
-    private String errorMessageFromOperationOutcome(OperationOutcome operationOutcome) {
-        return operationOutcome.getIssue().stream()
-                .filter(issue -> issue.getSeverity() == OperationOutcome.IssueSeverity.ERROR || issue.getSeverity() == OperationOutcome.IssueSeverity.FATAL)
-                .map(OperationOutcome.OperationOutcomeIssueComponent::getDiagnostics)
-                .collect(Collectors.joining("\n"));
-    }
-    
-    private List<OperationOutcome> createErrorOutcome(String diagnostics) {
-        OperationOutcome outcome = new OperationOutcome();
-        outcome.addIssue().setSeverity(ERROR).setDiagnostics(diagnostics);
-        return Collections.singletonList(outcome);
-    }
-    
     private static class BiobankTuple {
-
         private final Organization fhirBiobank;
         private final Organization fhirBiobankCopy;
         private final Biobank dirBiobank;
