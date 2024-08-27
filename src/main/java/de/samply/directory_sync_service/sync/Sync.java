@@ -5,7 +5,7 @@ import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryColle
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
-import de.samply.directory_sync_service.directory.model.BbmriEricId;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;

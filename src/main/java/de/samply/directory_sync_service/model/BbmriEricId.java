@@ -1,4 +1,4 @@
-package de.samply.directory_sync_service.directory.model;
+package de.samply.directory_sync_service.model;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +55,10 @@ public class BbmriEricId {
       return Optional.empty();
     }
     return Optional.of(new BbmriEricId(matcher.group(1), matcher.group(2)));
+  }
+
+  public static boolean isValidDirectoryCollectionIdentifier(String s) {
+    return valueOf(s).isPresent();
   }
 
   @Override

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.directory.model.BbmriEricId;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import io.vavr.control.Either;
 
 /**

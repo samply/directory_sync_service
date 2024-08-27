@@ -10,8 +10,6 @@ import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConver
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.samply.directory_sync_service.directory.model.BbmriEricId;
-
 /**
  * Represents data for the STAR model, organized by collection.
  * <p>

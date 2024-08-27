@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

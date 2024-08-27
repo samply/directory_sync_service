@@ -15,7 +15,7 @@ import ca.uhn.fhir.rest.gclient.IUpdateExecutable;
 import ca.uhn.fhir.rest.gclient.UriClientParam;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.directory.model.BbmriEricId;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import io.vavr.control.Either;
 
 import java.util.AbstractMap;
@@ -96,7 +96,6 @@ public class FhirApi {
       logger.info("updateResource: run getOperationOutcome");
       IBaseOperationOutcome outcome = resourceUpdater.execute().getOperationOutcome();
       return (OperationOutcome) outcome;
-//      return (OperationOutcome) resourceUpdate(theResource).execute().getOperationOutcome();
     } catch (Exception e) {
       logger.info("updateResource: exception: " + Util.traceFromException(e));
       OperationOutcome outcome = new OperationOutcome();
@@ -579,7 +578,7 @@ public class FhirApi {
     List<Identifier> collectionIdentifiers = collection.getIdentifier();
     for (Identifier collectionIdentifier : collectionIdentifiers) {
       String collectionIdentifierString = collectionIdentifier.getValue();
-      if (isValidDirectoryCollectionIdentifier(collectionIdentifierString)) {
+      if (BbmriEricId.isValidDirectoryCollectionIdentifier(collectionIdentifierString)) {
         collectionId = collectionIdentifierString;
         break;
       }
@@ -628,18 +627,5 @@ public class FhirApi {
             // Collect the results into a non-duplicating list
             .distinct()
             .collect(Collectors.toList());
-  }
-
-  private boolean isValidDirectoryCollectionIdentifier(String collectionIdentifier) {
-    if (collectionIdentifier == null)
-      return false;
-    String[] parts = collectionIdentifier.split(":");
-    if (parts.length != 5)
-      return false;
-    if ( ! parts[1].equals("ID"))
-      return false;
-    if ( ! parts[3].equals("collection"))
-      return false;
-    return true;
   }
 }

@@ -3,7 +3,7 @@ package de.samply.directory_sync_service.directory;
 import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 
-import de.samply.directory_sync_service.directory.model.BbmriEricId;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
@@ -81,7 +81,7 @@ public class DirectoryApi {
 
     Biobank biobank = (Biobank) directoryRest.get(buildBiobankApiUrl(id.getCountryCode()) + "/" + id, Biobank.class);
     if (biobank == null)
-      return Either.left(DirectoryUtils.error(id.toString(), "No Biobank in Directory with id: " + id));
+      return Either.left(DirectoryUtils.error("No Biobank in Directory with id: " + id));
     return Either.right(biobank);
   }
 
@@ -107,10 +107,10 @@ public class DirectoryApi {
     for (String collectionId: collectionIds) {
       DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRest.get(buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null)
-        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: ", collectionId));
+        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId));
       Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
       if (item == null)
-        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: ", collectionId));
+        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId));
       directoryCollectionGet.getItems().add(item);
     }
 
@@ -130,7 +130,7 @@ public class DirectoryApi {
 
     String response = directoryRest.put(buildCollectionApiUrl(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null)
-      return DirectoryUtils.error("entity update", "PUT problem");
+      return DirectoryUtils.error("entity update, PUT problem");
 
     return DirectoryUtils.success("DirectoryApi.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
   }
@@ -174,7 +174,7 @@ public class DirectoryApi {
       body.put("entities", factTablesBlock);
       String response = directoryRest.post(buildApiUrl(countryCode, "facts"), body);
       if (response == null)
-        return DirectoryUtils.error("updateStarModel", "failed, block: " + i);
+        return DirectoryUtils.error("updateStarModel, failed, block: " + i);
     }
 
     return DirectoryUtils.success("DirectoryApi.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
@@ -200,9 +200,9 @@ public class DirectoryApi {
           Map factWrapper = (Map) directoryRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
 
           if (factWrapper == null)
-            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=", collectionId);
+            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
           if (!factWrapper.containsKey("items"))
-            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, no item key present: ", collectionId);
+            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, no item key present: " + collectionId);
           List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
           if (facts.size() == 0)
             break;
@@ -218,7 +218,7 @@ public class DirectoryApi {
         } while (true);
       }
     } catch(Exception e) {
-      return DirectoryUtils.error("deleteStarModel: Exception during delete", Util.traceFromException(e));
+      return DirectoryUtils.error("deleteStarModel: Exception during delete: " + Util.traceFromException(e));
     }
 
     return new OperationOutcome();
@@ -239,7 +239,7 @@ public class DirectoryApi {
     String result = directoryRest.delete(apiUrl, factIds);
 
     if (result == null)
-      return DirectoryUtils.error("deleteFactsByIds", "Problem during delete of factIds");
+      return DirectoryUtils.error("deleteFactsByIds, Problem during delete of factIds");
 
     return new OperationOutcome();
   }

@@ -15,13 +15,12 @@ public class DirectoryUtils {
    * It includes a detailed diagnostic message that describes the action that failed and the cause of the error.
    * </p>
    *
-   * @param action  a brief description of the action that was being performed when the error occurred
    * @param message a detailed message describing the cause of the error
    * @return an {@link OperationOutcome} object populated with the error details
    */
-  public static OperationOutcome error(String action, String message) {
+  public static OperationOutcome error(String message) {
     OperationOutcome outcome = new OperationOutcome();
-    outcome.addIssue().setSeverity(ERROR).setDiagnostics(errorMsg(action, message));
+    outcome.addIssue().setSeverity(ERROR).setDiagnostics(message);
     return outcome;
   }
 
@@ -40,20 +39,5 @@ public class DirectoryUtils {
             .setSeverity(INFORMATION)
             .setDiagnostics(message);
     return outcome;
-  }
-
-  /**
-   * Generates a formatted error message for use in {@link OperationOutcome} diagnostics.
-   * <p>
-   * This method formats the error message to include the action that was being performed and the specific cause of the error.
-   * </p>
-   *
-   * @param action  a brief description of the action that was being performed
-   * @param message a detailed message describing the cause of the error
-   * @return a formatted error message as a {@link String}
-   */
-  private static String errorMsg(String action, String message) {
-    return String.format("Error in BBMRI Directory response for %s, cause: %s", action,
-        message);
   }
 }
