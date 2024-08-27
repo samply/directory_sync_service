@@ -14,7 +14,6 @@ import de.samply.directory_sync_service.fhir.FhirReporting;
 import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
 import de.samply.directory_sync_service.model.StarModelData;
-import de.samply.directory_sync_service.service.Configuration;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 
@@ -131,46 +130,26 @@ public class Sync {
     }
 
     public boolean syncWithDirectory() {
+        // Re-initialize helper classes every time this method gets called
         fhirApi = new FhirApi(fhirStoreUrl);
-        directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
         fhirReporting = new FhirReporting(fhirApi);
-        List<OperationOutcome> operationOutcomes;
-        operationOutcomes = generateDiagnosisCorrections(directoryDefaultCollectionId);
-        for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-            if (errorMessage.length() > 0) {
-                logger.error("__________ syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
+        directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+
+        if (!Util.reportOperationOutcomes(generateDiagnosisCorrections(directoryDefaultCollectionId))) {
+                logger.warn("syncWithDirectory: there was a problem during diagnosis corrections");
+            return false;
+        }
+        if (directoryAllowStarModel)
+            if (!Util.reportOperationOutcomes(sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts))) {
+                logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
                 return false;
             }
-        }
-        if (directoryAllowStarModel) {
-            operationOutcomes = sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts);
-            for (OperationOutcome operationOutcome : operationOutcomes) {
-                String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-                if (errorMessage.length() > 0) {
-                    logger.error("__________ syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
-                    return false;
-                }
-            }
-        }
-        operationOutcomes = sendUpdatesToDirectory(directoryDefaultCollectionId);
-        boolean failed = false;
-        for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-            if (errorMessage.length() > 0) {
-                logger.error("__________ syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
-                failed = true;
-            }
-        }
-        if (failed)
+        if (!Util.reportOperationOutcomes(sendUpdatesToDirectory(directoryDefaultCollectionId))) {
+            logger.warn("syncWithDirectory: there was a problem during sync to Directory");
             return false;
-        operationOutcomes = updateAllBiobanksOnFhirServerIfNecessary();
-        for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-            if (errorMessage.length() > 0) {
-                logger.error("__________ syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
-//                return false;
-            }
+        }
+        if (!Util.reportOperationOutcomes(updateAllBiobanksOnFhirServerIfNecessary())) {
+            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
         }
 
         logger.info("__________ syncWithDirectory: all synchronization tasks finished");
