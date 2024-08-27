@@ -78,7 +78,7 @@ public class DirectorySync {
             logger.error("__________ syncWithDirectory: createDirectoryApi failed: " + Util.traceFromException(e));
             return false;
         }
-        FhirApi fhirApi = createFhirApi(fhirStoreUrl);
+        FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi);
         Either<String, Void> initResourcesOutcome = sync.initResources();
@@ -156,18 +156,5 @@ public class DirectorySync {
     private Either<OperationOutcome, DirectoryApi> createDirectoryApi(String directoryUserName, String directoryPassCode, String directoryUrl, boolean directoryMock) {
         CloseableHttpClient client = HttpClients.createDefault();
         return Either.right(new DirectoryApi(client, directoryUrl, directoryMock, directoryUserName, directoryPassCode));
-    }
-
-    /**
-     * Create a connection to the FHIR store (e.g. Blaze).
-     *
-     * @param fhirStoreUrl       URL for Bridgehead Blaze store
-     * @return
-     */
-    private FhirApi createFhirApi(String fhirStoreUrl) {
-        IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
-        client.registerInterceptor(new LoggingInterceptor(true));
- 
-        return new FhirApi(client);
     }
 }

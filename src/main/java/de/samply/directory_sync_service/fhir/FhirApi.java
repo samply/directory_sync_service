@@ -5,10 +5,12 @@ import static ca.uhn.fhir.rest.api.SummaryEnum.COUNT;
 import static java.util.Collections.emptyList;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
+import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.gclient.ICreateTyped;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.gclient.IUpdateExecutable;
@@ -21,7 +23,6 @@ import io.vavr.control.Either;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Map;
@@ -60,17 +61,23 @@ import org.slf4j.LoggerFactory;
  * Provides convenience methods for selected FHIR operations.
  */
 public class FhirApi {
-
+  private static final Logger logger = LoggerFactory.getLogger(FhirApi.class);
   private static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
   private static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
   private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   private static final String DEFAULT_COLLECTION_ID = "DEFAULT";
-
-  private static final Logger logger = LoggerFactory.getLogger(FhirApi.class);
-
   Map<String, List<Specimen>> specimensByCollection = null;
   Map<String, List<Patient>> patientsByCollection = null;
-  
+  private final IGenericClient fhirClient;
+
+  public FhirApi(String fhirStoreUrl) {
+    FhirContext ctx = FhirContext.forR4();
+    IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
+    client.registerInterceptor(new LoggingInterceptor(true));
+
+    this.fhirClient =  client;
+  }
+
   /**
    * Returns the BBMRI-ERIC identifier of {@code collection} if some valid one could be found.
    *
@@ -81,12 +88,6 @@ public class FhirApi {
     return collection.getIdentifier().stream()
         .filter(i -> "http://www.bbmri-eric.eu/".equals(i.getSystem()))
         .findFirst().map(Identifier::getValue).flatMap(BbmriEricId::valueOf);
-  }
-
-  private final IGenericClient fhirClient;
-
-  public FhirApi(IGenericClient fhirClient) {
-    this.fhirClient = Objects.requireNonNull(fhirClient);
   }
 
   public OperationOutcome updateResource(IBaseResource theResource) {
