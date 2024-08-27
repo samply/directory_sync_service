@@ -55,12 +55,10 @@ public class FhirReporting {
   private static final String MEASURE_URI = "https://fhir.bbmri.de/Measure/collection-size";
   private static final String STORAGE_TEMPERATURE_URI = "https://fhir.bbmri.de/StructureDefinition/StorageTemperature";
   private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
-
-  private final FhirContext fhirContext;
+  private final FhirContext fhirContext = FhirContext.forR4();
   private final FhirApi fhirApi;
 
-  public FhirReporting(FhirContext fhirContext, FhirApi fhirApi) {
-    this.fhirContext = Objects.requireNonNull(fhirContext);
+  public FhirReporting(FhirApi fhirApi) {
     this.fhirApi = Objects.requireNonNull(fhirApi);
   }
 

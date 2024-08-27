@@ -19,7 +19,6 @@ import java.util.List;
  */
 public class DirectorySync {
     private static Logger logger = LogManager.getLogger(DirectorySync.class);
-    private final FhirContext ctx = FhirContext.forR4();
 
     /**
      * Attempts to perform synchronization with the Directory repeatedly, until it either
@@ -63,7 +62,7 @@ public class DirectorySync {
 
         DirectoryApi directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
-        FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
+        FhirReporting fhirReporting = new FhirReporting(fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi);
         List<OperationOutcome> operationOutcomes;
         operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId);

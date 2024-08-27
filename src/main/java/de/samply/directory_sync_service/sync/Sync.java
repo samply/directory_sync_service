@@ -71,16 +71,16 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
  * sync.updateAllBiobanksOnFhirServerIfNecessary();
  */
 public class Sync {
-  private static final Logger logger = LoggerFactory.getLogger(Sync.class);
-
+    private static final Logger logger = LoggerFactory.getLogger(Sync.class);
+    private Map<String, String> correctedDiagnoses = null;
+    private final FhirApi fhirApi;
+    private final FhirReporting fhirReporting;
+    private DirectoryApi directoryApi;
     public static final Function<BiobankTuple, BiobankTuple> UPDATE_BIOBANK_NAME = t -> {
         t.fhirBiobank.setName(t.dirBiobank.getName());
         return t;
     };
 
-    private final FhirApi fhirApi;
-    private final FhirReporting fhirReporting;
-    private DirectoryApi directoryApi;
 
     public Sync(FhirApi fhirApi, FhirReporting fhirReporting, DirectoryApi directoryApi) {
         this.fhirApi = fhirApi;
@@ -170,8 +170,6 @@ public class Sync {
         // Step 8: Return the result of the update, folding Either to an OperationOutcome
         return updateOutcomeEither.fold(Function.identity(), Function.identity());
     }
-
-    private Map<String, String> correctedDiagnoses = null;
 
     /**
      * Generates corrections to the diagnoses obtained from the FHIR store, to make them
