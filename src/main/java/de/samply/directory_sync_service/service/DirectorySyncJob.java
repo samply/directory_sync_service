@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.service;
 
+import de.samply.directory_sync_service.sync.Sync;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.JobDataMap;
@@ -39,7 +40,20 @@ public class DirectorySyncJob implements StatefulJob  {
      * @throws JobExecutionException
      */
     public void execute(Configuration configuration) {
-        new DirectorySync().syncWithDirectoryFailover(configuration);
+        String retryMax = configuration.getRetryMax();
+        String retryInterval = configuration.getRetryInterval();
+        String directoryUrl = configuration.getDirectoryUrl();
+        String fhirStoreUrl = configuration.getFhirStoreUrl();
+        String directoryUserName = configuration.getDirectoryUserName();
+        String directoryUserPass = configuration.getDirectoryUserPass();
+        String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
+        boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
+        int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
+        int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
+        boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
+
+        Sync sync = new Sync(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock);
+        sync.syncWithDirectoryFailover();
     }
 
     /**

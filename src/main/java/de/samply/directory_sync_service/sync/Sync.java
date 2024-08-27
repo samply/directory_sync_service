@@ -14,8 +14,11 @@ import de.samply.directory_sync_service.fhir.FhirReporting;
 import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
 import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.service.Configuration;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
+
+import java.io.IOException;
 import java.util.Map;
 
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -72,6 +75,17 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
  */
 public class Sync {
     private static final Logger logger = LoggerFactory.getLogger(Sync.class);
+    private final String retryMax;
+    private final String retryInterval;
+    private final String fhirStoreUrl;
+    private final String directoryUrl;
+    private final String directoryUserName;
+    private final String directoryUserPass;
+    private final String directoryDefaultCollectionId;
+    private final boolean directoryAllowStarModel;
+    private final int directoryMinDonors;
+    private final int directoryMaxFacts;
+    private final boolean directoryMock;
     private Map<String, String> correctedDiagnoses = null;
     private FhirApi fhirApi;
     private FhirReporting fhirReporting;
@@ -81,12 +95,44 @@ public class Sync {
         return t;
     };
 
-    public Sync() {
+    public Sync(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
+        this.retryMax = retryMax;
+        this.retryInterval = retryInterval;
+        this.fhirStoreUrl = fhirStoreUrl;
+        this.directoryUrl = directoryUrl;
+        this.directoryUserName = directoryUserName;
+        this.directoryUserPass = directoryUserPass;
+        this.directoryDefaultCollectionId = directoryDefaultCollectionId;
+        this.directoryAllowStarModel = directoryAllowStarModel;
+        this.directoryMinDonors = directoryMinDonors;
+        this.directoryMaxFacts = directoryMaxFacts;
+        this.directoryMock = directoryMock;
     }
 
-    public boolean syncWithDirectory(String directoryUrl, String fhirStoreUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
-        directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+    /**
+     * Attempts to perform synchronization with the Directory repeatedly, until it either
+     * succeeds, or the number of attempts exceeds a threshold.
+     *
+     * @throws IOException
+     */
+    public void syncWithDirectoryFailover() {
+        for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
+            if (retryNum > 0) {
+                try {
+                    Thread.sleep(Integer.parseInt(retryInterval) * 1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
+            }
+            if (syncWithDirectory())
+                break;
+        }
+    }
+
+    public boolean syncWithDirectory() {
         fhirApi = new FhirApi(fhirStoreUrl);
+        directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
         fhirReporting = new FhirReporting(fhirApi);
         List<OperationOutcome> operationOutcomes;
         operationOutcomes = generateDiagnosisCorrections(directoryDefaultCollectionId);
