@@ -1,16 +1,11 @@
 package de.samply.directory_sync_service.service;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import de.samply.directory_sync_service.sync.Sync;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.fhir.FhirReporting;
-import io.vavr.control.Either;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -70,12 +65,6 @@ public class DirectorySync {
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
         Sync sync = new Sync(fhirApi, fhirReporting, directoryApi);
-        Either<String, Void> initResourcesOutcome = sync.initResources();
-        if (initResourcesOutcome.isLeft()) {
-            logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());
-            logger.error("__________ syncWithDirectory: fhirStoreUrl: " + fhirStoreUrl);
-            return false;
-        }
         List<OperationOutcome> operationOutcomes;
         operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId);
         for (OperationOutcome operationOutcome : operationOutcomes) {

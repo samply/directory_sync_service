@@ -17,7 +17,6 @@ import de.samply.directory_sync_service.model.StarModelData;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Organization;
@@ -74,7 +73,7 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
 public class Sync {
   private static final Logger logger = LoggerFactory.getLogger(Sync.class);
 
-    private static final Function<BiobankTuple, BiobankTuple> UPDATE_BIOBANK_NAME = t -> {
+    public static final Function<BiobankTuple, BiobankTuple> UPDATE_BIOBANK_NAME = t -> {
         t.fhirBiobank.setName(t.dirBiobank.getName());
         return t;
     };
@@ -87,16 +86,11 @@ public class Sync {
         this.fhirApi = fhirApi;
         this.fhirReporting = fhirReporting;
         this.directoryApi = directoryApi;
-    }
-
-    /**
-     * Initializes necessary resources for the synchronization process.
-     *
-     * @return An {@link Either} containing either a success message or an error message.
-     */
-    public Either<String, Void> initResources() {
-        logger.info("initResources: Initializes necessary resources for the synchronization process");
-        return fhirReporting.initLibrary().flatMap(_void -> fhirReporting.initMeasure());
+        Either<String, Void> initResourcesOutcome = fhirReporting.initLibrary().flatMap(_void -> fhirReporting.initMeasure());
+        if (initResourcesOutcome.isLeft()) {
+            logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());
+            throw new RuntimeException(initResourcesOutcome.getLeft());
+        }
     }
 
     private static OperationOutcome missingIdentifierOperationOutcome() {
@@ -349,22 +343,6 @@ public class Sync {
             return outcomes;
         } catch (Exception e) {
             return Util.createErrorOutcome("sendUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
-        }
-    }
-
-    private static class BiobankTuple {
-        private final Organization fhirBiobank;
-        private final Organization fhirBiobankCopy;
-        private final Biobank dirBiobank;
-
-        private BiobankTuple(Organization fhirBiobank, Biobank dirBiobank) {
-            this.fhirBiobank = Objects.requireNonNull(fhirBiobank);
-            this.fhirBiobankCopy = fhirBiobank.copy();
-            this.dirBiobank = Objects.requireNonNull(dirBiobank);
-        }
-
-        private boolean hasChanged() {
-            return !fhirBiobank.equalsDeep(fhirBiobankCopy);
         }
     }
 }
