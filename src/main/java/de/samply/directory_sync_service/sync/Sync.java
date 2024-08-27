@@ -73,24 +73,62 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
 public class Sync {
     private static final Logger logger = LoggerFactory.getLogger(Sync.class);
     private Map<String, String> correctedDiagnoses = null;
-    private final FhirApi fhirApi;
-    private final FhirReporting fhirReporting;
+    private FhirApi fhirApi;
+    private FhirReporting fhirReporting;
     private DirectoryApi directoryApi;
     public static final Function<BiobankTuple, BiobankTuple> UPDATE_BIOBANK_NAME = t -> {
         t.fhirBiobank.setName(t.dirBiobank.getName());
         return t;
     };
 
+    public Sync() {
+    }
 
-    public Sync(FhirApi fhirApi, FhirReporting fhirReporting, DirectoryApi directoryApi) {
-        this.fhirApi = fhirApi;
-        this.fhirReporting = fhirReporting;
-        this.directoryApi = directoryApi;
-        Either<String, Void> initResourcesOutcome = fhirReporting.initLibrary().flatMap(_void -> fhirReporting.initMeasure());
-        if (initResourcesOutcome.isLeft()) {
-            logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());
-            throw new RuntimeException(initResourcesOutcome.getLeft());
+    public boolean syncWithDirectory(String directoryUrl, String fhirStoreUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
+        directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+        fhirApi = new FhirApi(fhirStoreUrl);
+        fhirReporting = new FhirReporting(fhirApi);
+        List<OperationOutcome> operationOutcomes;
+        operationOutcomes = generateDiagnosisCorrections(directoryDefaultCollectionId);
+        for (OperationOutcome operationOutcome : operationOutcomes) {
+            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
+            if (errorMessage.length() > 0) {
+                logger.error("__________ syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
+                return false;
+            }
         }
+        if (directoryAllowStarModel) {
+            operationOutcomes = sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts);
+            for (OperationOutcome operationOutcome : operationOutcomes) {
+                String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
+                if (errorMessage.length() > 0) {
+                    logger.error("__________ syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
+                    return false;
+                }
+            }
+        }
+        operationOutcomes = sendUpdatesToDirectory(directoryDefaultCollectionId);
+        boolean failed = false;
+        for (OperationOutcome operationOutcome : operationOutcomes) {
+            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
+            if (errorMessage.length() > 0) {
+                logger.error("__________ syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
+                failed = true;
+            }
+        }
+        if (failed)
+            return false;
+        operationOutcomes = updateAllBiobanksOnFhirServerIfNecessary();
+        for (OperationOutcome operationOutcome : operationOutcomes) {
+            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
+            if (errorMessage.length() > 0) {
+                logger.error("__________ syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
+//                return false;
+            }
+        }
+
+        logger.info("__________ syncWithDirectory: all synchronization tasks finished");
+        return true;
     }
 
     private static OperationOutcome missingIdentifierOperationOutcome() {
@@ -111,7 +149,7 @@ public class Sync {
      *
      * @return the individual {@link OperationOutcome}s from each update
      */
-    public List<OperationOutcome> updateAllBiobanksOnFhirServerIfNecessary() {
+    private List<OperationOutcome> updateAllBiobanksOnFhirServerIfNecessary() {
         return fhirApi.listAllBiobanks()
                 .map(orgs -> orgs.stream().map(this::updateBiobankOnFhirServerIfNecessary).collect(Collectors.toList()))
                 .fold(Collections::singletonList, Function.identity());
@@ -123,7 +161,7 @@ public class Sync {
      * @param fhirBiobank the biobank to update.
      * @return the {@link OperationOutcome} from the FHIR server update
      */
-    OperationOutcome updateBiobankOnFhirServerIfNecessary(Organization fhirBiobank) {
+    private OperationOutcome updateBiobankOnFhirServerIfNecessary(Organization fhirBiobank) {
         logger.info("updateBiobankOnFhirServerIfNecessary: Step 1: Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization");
 
         // Step 1: Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
@@ -187,7 +225,7 @@ public class Sync {
      * @return A list containing a single OperationOutcome indicating the success of the diagnosis corrections process.
      *         If any errors occur during the process, an OperationOutcome with error details is returned.
      */
-    public List<OperationOutcome> generateDiagnosisCorrections(String defaultCollectionId) {
+    private List<OperationOutcome> generateDiagnosisCorrections(String defaultCollectionId) {
         correctedDiagnoses = new HashMap<String, String>();
         try {
             // Convert string version of collection ID into a BBMRI ERIC ID.
@@ -239,7 +277,7 @@ public class Sync {
      *
      * @throws IllegalArgumentException if the defaultCollectionId is not a valid BbmriEricId.
      */
-    public List<OperationOutcome> sendStarModelUpdatesToDirectory(String defaultCollectionId, int minDonors, int maxFacts) {
+    private List<OperationOutcome> sendStarModelUpdatesToDirectory(String defaultCollectionId, int minDonors, int maxFacts) {
         logger.info("__________ sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
@@ -300,7 +338,7 @@ public class Sync {
      * @param defaultCollectionId The default collection ID to use for fetching collections from the FHIR store.
      * @return A list of OperationOutcome objects indicating the outcome of the update operation.
      */
-    public List<OperationOutcome> sendUpdatesToDirectory(String defaultCollectionId) {
+     private List<OperationOutcome> sendUpdatesToDirectory(String defaultCollectionId) {
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
                 .valueOf(defaultCollectionId)

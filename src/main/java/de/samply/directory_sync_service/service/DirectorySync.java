@@ -1,17 +1,13 @@
 package de.samply.directory_sync_service.service;
 
-import ca.uhn.fhir.context.FhirContext;
 import de.samply.directory_sync_service.sync.Sync;
-import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.fhir.FhirReporting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hl7.fhir.r4.model.OperationOutcome;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * This class sets up connections to the FHIR store and to the Directory and
@@ -60,50 +56,7 @@ public class DirectorySync {
         int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
         boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
 
-        DirectoryApi directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-        FhirApi fhirApi = new FhirApi(fhirStoreUrl);
-        FhirReporting fhirReporting = new FhirReporting(fhirApi);
-        Sync sync = new Sync(fhirApi, fhirReporting, directoryApi);
-        List<OperationOutcome> operationOutcomes;
-        operationOutcomes = sync.generateDiagnosisCorrections(directoryDefaultCollectionId);
-        for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-            if (errorMessage.length() > 0) {
-                logger.error("__________ syncWithDirectory: there was a problem during diagnosis corrections: " + errorMessage);
-                return false;
-            }
-        }
-        if (directoryAllowStarModel) {
-            operationOutcomes = sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts);
-            for (OperationOutcome operationOutcome : operationOutcomes) {
-                String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-                if (errorMessage.length() > 0) {
-                    logger.error("__________ syncWithDirectory: there was a problem during star model update to Directory: " + errorMessage);
-                    return false;
-                }
-            }
-        }
-        operationOutcomes = sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
-        boolean failed = false;
-        for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-            if (errorMessage.length() > 0) {
-                logger.error("__________ syncWithDirectory: there was a problem during sync to Directory: " + errorMessage);
-                failed = true;
-            }
-        }
-        if (failed)
-            return false;
-       operationOutcomes = sync.updateAllBiobanksOnFhirServerIfNecessary();
-       for (OperationOutcome operationOutcome : operationOutcomes) {
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(operationOutcome);
-            if (errorMessage.length() > 0) {
-                logger.error("__________ syncWithDirectory: there was a problem during sync from Directory: " + errorMessage);
-//                return false;
-            }
-       }
-
-       logger.info("__________ syncWithDirectory: all synchronization tasks finished");
-       return true;
+        Sync sync = new Sync();
+        return sync.syncWithDirectory(directoryUrl, fhirStoreUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock);
     }
 }

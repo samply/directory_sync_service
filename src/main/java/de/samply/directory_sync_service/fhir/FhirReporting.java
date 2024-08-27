@@ -60,6 +60,11 @@ public class FhirReporting {
 
   public FhirReporting(FhirApi fhirApi) {
     this.fhirApi = Objects.requireNonNull(fhirApi);
+    Either<String, Void> initResourcesOutcome = initLibrary().flatMap(_void -> initMeasure());
+    if (initResourcesOutcome.isLeft()) {
+      logger.error("__________ syncWithDirectory: problem initializing FHIR resources: " + initResourcesOutcome.getLeft());
+      throw new RuntimeException(initResourcesOutcome.getLeft());
+    }
   }
 
   /**
