@@ -7,7 +7,6 @@ import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
-import io.vavr.control.Either;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,17 +70,19 @@ public class DirectoryApi {
    * Fetches the Biobank with the given {@code id}.
    *
    * @param id the ID of the Biobank to fetch.
-   * @return either the Biobank or an error
+   * @return either the Biobank or null if an error occurs
    */
-  public Either<OperationOutcome, Biobank> fetchBiobank(BbmriEricId id) {
+  public Biobank fetchBiobank(BbmriEricId id) {
     if (mockDirectory)
       // Return a fake Biobank if we are mocking
-      return Either.right(new Biobank());
+      return new Biobank();
 
     Biobank biobank = (Biobank) directoryRest.get(buildBiobankApiUrl(id.getCountryCode()) + "/" + id, Biobank.class);
-    if (biobank == null)
-      return Either.left(DirectoryUtils.error("No Biobank in Directory with id: " + id));
-    return Either.right(biobank);
+    if (biobank == null) {
+      logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
+      return null;
+    }
+    return biobank;
   }
 
   /**
@@ -93,34 +94,38 @@ public class DirectoryApi {
    * @param collectionIds IDs of the collections whose data will be harvested.
    * @return
    */
-  public Either<OperationOutcome, DirectoryCollectionGet> fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
+  public DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
     DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
     directoryCollectionGet.init();
 
     if (mockDirectory) {
       // Dummy return if we're in mock mode
       directoryCollectionGet.setMockDirectory(true);
-      return Either.right(directoryCollectionGet);
+      return directoryCollectionGet;
     }
 
     for (String collectionId: collectionIds) {
       DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRest.get(buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
-      if (singleDirectoryCollectionGet == null)
-        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId));
+      if (singleDirectoryCollectionGet == null) {
+        logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+        return null;
+      }
       Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
-      if (item == null)
-        return Either.left(DirectoryUtils.error("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId));
+      if (item == null) {
+        logger.warn("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId);
+        return null;
+      }
       directoryCollectionGet.getItems().add(item);
     }
 
-    return Either.right(directoryCollectionGet);
+    return directoryCollectionGet;
   }
 
   /**
    * Send aggregated collection information to the Directory.
    *
    * @param directoryCollectionPut Summary information about one or more collections
-   * @return an outcome, either successful or an error
+   * @return an outcome, either successful or null
    */
   public OperationOutcome updateEntities(DirectoryCollectionPut directoryCollectionPut) {
     if (mockDirectory)

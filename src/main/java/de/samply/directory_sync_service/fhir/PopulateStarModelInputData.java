@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
-import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.BbmriEricId;
-import io.vavr.control.Either;
 
 /**
  * Pull data about Patients, Specimens and Dieseases from the FHIR store and
@@ -44,12 +42,11 @@ public class PopulateStarModelInputData {
    */
   public StarModelData populate(BbmriEricId defaultBbmriEricCollectionId) {
     // Group specimens according to collection.
-    Either<OperationOutcome, Map<String, List<Specimen>>> specimensByCollectionOutcome = fhirApi.fetchSpecimensByCollection(defaultBbmriEricCollectionId);
-    if (specimensByCollectionOutcome.isLeft()) {
+    Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+    if (specimensByCollection == null) {
       logger.error("Problem finding specimens");
       return null;
     }
-    Map<String, List<Specimen>> specimensByCollection = specimensByCollectionOutcome.get();
 
     StarModelData starModelInputData = new StarModelData();
     for (String collectionId: specimensByCollection.keySet())

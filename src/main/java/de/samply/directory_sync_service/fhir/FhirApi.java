@@ -1,24 +1,21 @@
 package de.samply.directory_sync_service.fhir;
 
 import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
-import static ca.uhn.fhir.rest.api.SummaryEnum.COUNT;
-import static java.util.Collections.emptyList;
+import static ca.uhn.fhir.rest.api.PreferReturnEnum.REPRESENTATION;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
-import ca.uhn.fhir.rest.gclient.ICreateTyped;
 import ca.uhn.fhir.rest.gclient.IQuery;
+import ca.uhn.fhir.rest.gclient.IUpdate;
 import ca.uhn.fhir.rest.gclient.IUpdateExecutable;
-import ca.uhn.fhir.rest.gclient.UriClientParam;
+import ca.uhn.fhir.rest.gclient.IUpdateTyped;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.BbmriEricId;
-import io.vavr.control.Either;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -40,18 +37,13 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.DateType;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Organization;
-import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.Specimen;
-import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Condition;
 import org.slf4j.Logger;
@@ -66,12 +58,13 @@ public class FhirApi {
   private static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
   private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   private static final String DEFAULT_COLLECTION_ID = "DEFAULT";
-  Map<String, List<Specimen>> specimensByCollection = null;
-  Map<String, List<Patient>> patientsByCollection = null;
+  private Map<String, List<Specimen>> specimensByCollection = null;
+  private Map<String, List<Patient>> patientsByCollection = null;
   private final IGenericClient fhirClient;
+  private FhirContext ctx;
 
   public FhirApi(String fhirStoreUrl) {
-    FhirContext ctx = FhirContext.forR4();
+    ctx = FhirContext.forR4();
     IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
     client.registerInterceptor(new LoggingInterceptor(true));
 
@@ -91,63 +84,70 @@ public class FhirApi {
   }
 
   public OperationOutcome updateResource(IBaseResource theResource) {
+    logger.info("updateResource: @@@@@@@@@@ entered");
+    logger.info("updateResource: @@@@@@@@@@ theResource: " + ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(theResource));
+
     try {
-      logger.info("updateResource: run resourceUpdate");
-      IUpdateExecutable resourceUpdater = resourceUpdate(theResource);
-      logger.info("updateResource: run getOperationOutcome");
-      IBaseOperationOutcome outcome = resourceUpdater.execute().getOperationOutcome();
+      fhirClient.update().resource(theResource).execute().getOperationOutcome();
+      logger.info("updateResource: @@@@@@@@@@ bup");
+      IBaseOperationOutcome outcome = fhirClient.update().resource(theResource).prefer(OPERATION_OUTCOME).execute().getOperationOutcome();
+      logger.info("updateResource: @@@@@@@@@@ return outcome: " +outcome);
       return (OperationOutcome) outcome;
     } catch (Exception e) {
-      logger.info("updateResource: exception: " + Util.traceFromException(e));
+      logger.info("updateResource: @@@@@@@@@@ exception: " + Util.traceFromException(e));
       OperationOutcome outcome = new OperationOutcome();
       outcome.addIssue().setSeverity(ERROR).setDiagnostics(e.getMessage());
       return outcome;
     }
   }
 
-  private IUpdateExecutable resourceUpdate(IBaseResource theResource) {
-    return fhirClient.update().resource(theResource).prefer(OPERATION_OUTCOME);
-  }
-
-  public Either<String, Void> createResource(IBaseResource resource) {
-    logger.info("createResource: entered");
-    try {
-      MethodOutcome outcome = resourceCreate(resource).execute();
-      if (outcome.getCreated()) {
-        return Either.right(null);
-      } else {
-        return Either.left("error while creating a resource");
-      }
-    } catch (Exception e) {
-      return Either.left(e.getMessage());
-    }
-  }
-
-  private ICreateTyped resourceCreate(IBaseResource resource) {
-    logger.info("resourceCreate: entered");
-    return fhirClient.create().resource(resource).prefer(OPERATION_OUTCOME);
-  }
-
   /**
    * Lists all Organization resources with the biobank profile.
    *
-   * @return either a list of {@link Organization} resources or an {@link OperationOutcome} on *
+   * @return a list of {@link Organization} resources or null on *
    * errors
    */
-  public Either<OperationOutcome, List<Organization>> listAllBiobanks() {
-    return listAllOrganizations(BIOBANK_PROFILE_URI)
-        .map(bundle -> extractOrganizations(bundle, BIOBANK_PROFILE_URI));
+  public List<Organization> listAllBiobanks() {
+    // List all organizations with the specified biobank profile URI
+    Bundle organizationBundle = listAllOrganizations(BIOBANK_PROFILE_URI);
+
+    // Check if the operation was successful
+    if (organizationBundle == null) {
+      logger.warn("listAllBiobanks: there was a problem during listAllOrganizations");
+      return null;
+    }
+
+    // Extract the organizations from the Bundle
+    List<Organization> organizations = extractOrganizations(organizationBundle, BIOBANK_PROFILE_URI);
+
+    // Return the list of organizations
+    return organizations;
   }
 
-  private Either<OperationOutcome, Bundle> listAllOrganizations(String profileUri) {
+  public List<Organization> listAllCollections() {
+    // List all organizations with the specified biobank profile URI
+    Bundle organizationBundle = listAllOrganizations(COLLECTION_PROFILE_URI);
+
+    // Check if the operation was successful
+    if (organizationBundle == null) {
+      logger.warn("listAllCollections: there was a problem during listAllOrganizations");
+      return null;
+    }
+
+    // Extract the organizations from the Bundle
+    List<Organization> organizations = extractOrganizations(organizationBundle, COLLECTION_PROFILE_URI);
+
+    // Return the list of organizations
+    return organizations;
+  }
+
+  private Bundle listAllOrganizations(String profileUri) {
     try {
-      return Either.right((Bundle) fhirClient.search().forResource(Organization.class)
-          .withProfile(profileUri).execute());
+      return (Bundle) fhirClient.search().forResource(Organization.class)
+              .withProfile(profileUri).execute();
     } catch (Exception e) {
-      OperationOutcome outcome = new OperationOutcome();
-      outcome.addIssue().setSeverity(ERROR)
-          .setDiagnostics(e.getMessage());
-      return Either.left(outcome);
+      Util.traceFromException(e);
+      return null;
     }
   }
 
@@ -161,112 +161,19 @@ public class FhirApi {
   }
 
   /**
-   * Lists all Organization resources with the collection profile.
-   *
-   * @return either a list of {@link Organization} resources or an {@link OperationOutcome} on
-   * errors
-   */
-  public Either<OperationOutcome, List<Organization>> listAllCollections() {
-    return listAllOrganizations(COLLECTION_PROFILE_URI)
-        .map(bundle -> extractOrganizations(bundle, COLLECTION_PROFILE_URI));
-  }
-
-  /**
-   * Checks whether a resource of {@code type} and canonical {@code uri} exists.
-   *
-   * @param type the resource type
-   * @param uri  the canonical URI
-   * @return a Right with {@code true} if the resource exists or a Left in case of an error
-   */
-  public Either<String, Boolean> resourceExists(Class<? extends IBaseResource> type, String uri) {
-    logger.info("Check whether " + type + " with canonical URI " + uri + " exists.");
-    try {
-      return Either.right(resourceQuery(type, uri).execute().getTotal() == 1);
-    } catch (Exception e) {
-      logger.info("Problem running check");
-      return Either.left(e.getMessage());
-    }
-  }
-
-  private IQuery<Bundle> resourceQuery(Class<? extends IBaseResource> type, String uri) {
-    logger.info("resourceQuery: uri: " + uri);
-    return fhirClient.search().forResource(type)
-        .where(new UriClientParam("url").matches().value(uri))
-        .summaryMode(COUNT)
-        .returnBundle(Bundle.class);
-  }
-
-  /**
-   * Executes the Measure with the given canonical URL.
-   *
-   * @param url canonical URL of the Measure to be executed
-   * @return MeasureReport or OperationOutcome in case of error.
-   */
-  Either<OperationOutcome, MeasureReport> evaluateMeasure(String url) {
-    // Create the input parameters to pass to the server
-    Parameters inParams = new Parameters();
-    inParams.addParameter().setName("periodStart").setValue(new DateType("1900"));
-    inParams.addParameter().setName("periodEnd").setValue(new DateType("2100"));
-    inParams.addParameter().setName("measure").setValue(new StringType(url));
-
-    try {
-      Parameters outParams = fhirClient
-          .operation()
-          .onType(Measure.class)
-          .named("$evaluate-measure")
-          .withParameters(inParams)
-          .useHttpGet()
-          .execute();
-
-      return Either.right((MeasureReport) outParams.getParameter().get(0).getResource());
-    } catch (Exception e) {
-      OperationOutcome outcome = new OperationOutcome();
-      outcome.addIssue().setSeverity(ERROR)
-          .setDiagnostics(e.getMessage());
-      return Either.left(outcome);
-    }
-  }
-
-  /**
-   * Loads the Organization resource for each of the FHIR ids given.
-   *
-   * @param ids logical ids of the Organization resources to load
-   * @return List of Organization Resources or OperationOutcome in case of failure.
-   */
-  Either<OperationOutcome, List<Organization>> fetchCollections(Set<String> ids) {
-    if (ids.isEmpty()) {
-      return Either.right(emptyList());
-    }
-    try {
-      Bundle response = (Bundle) fhirClient.search().forResource(Organization.class)
-          .where(Organization.RES_ID.exactly().codes(ids)).execute();
-
-      return Either.right(response.getEntry().stream()
-          .filter(e -> ResourceType.Organization == e.getResource().getResourceType())
-          .map(e -> (Organization) e.getResource())
-          .collect(Collectors.toList()));
-    } catch (Exception e) {
-      OperationOutcome outcome = new OperationOutcome();
-      outcome.addIssue().setSeverity(ERROR)
-          .setDiagnostics(e.getMessage());
-      return Either.left(outcome);
-    }
-  }
-
-  /**
    * Fetches specimens from the FHIR server and groups them by their collection id.
    * If no default collection id is provided, tries to find one from the available collections.
    * If the default collection id is invalid or not found, removes the specimens without a collection id from the result.
    *
    * @param defaultBbmriEricCollectionId the default collection id supplied by the site, to be used for specimens without a collection id. May be null
-   * @return an Either object containing either a map of collection id to list of specimens, or an OperationOutcome object in case of an error
+   * @return a map of collection id to list of specimens, or null in case of an error
    */
-  public Either<OperationOutcome, Map<String,List<Specimen>>> fetchSpecimensByCollection(BbmriEricId defaultBbmriEricCollectionId) {
+  public Map<String,List<Specimen>> fetchSpecimensByCollection(BbmriEricId defaultBbmriEricCollectionId) {
     logger.info("__________ fetchSpecimensByCollection: entered");
 
     // This method is slow, so use cached value if available.
     if (specimensByCollection != null)
-      return Either.right(specimensByCollection);
+      return specimensByCollection;
 
     logger.info("__________ fetchSpecimensByCollection: get specimens from FHIR store");
 
@@ -299,11 +206,11 @@ public class FhirApi {
 
       logger.info("__________ fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
 
-      return Either.right(specimensByCollection);
+      return specimensByCollection;
     } catch (Exception e) {
       OperationOutcome outcome = new OperationOutcome();
       outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR).setDiagnostics(Util.traceFromException(e));
-      return Either.left(outcome);
+      return null;
     }
   }
 
@@ -359,16 +266,16 @@ public class FhirApi {
    * @param specimensByCollection
    * @return
    */
-  Either<OperationOutcome, Map<String,List<Patient>>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {
+  Map<String,List<Patient>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {
     // This method is slow, so use cached value if available.
     if (patientsByCollection != null)
-      return Either.right(patientsByCollection);
+      return patientsByCollection;
 
     patientsByCollection = specimensByCollection.entrySet().stream()
               .map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(), extractPatientListFromSpecimenList(entry.getValue())))
               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)) ;
 
-    return Either.right(patientsByCollection);
+    return patientsByCollection;
   }
 
   /**
@@ -488,7 +395,6 @@ public class FhirApi {
     return conditionCodes;
   }
 
-
   /**
      * Determines a plausible collection id for specimens that do not have a collection id.
      * If no default collection id is provided, tries to find one from the available collections.
@@ -508,11 +414,10 @@ public class FhirApi {
     if (defaultBbmriEricCollectionId == null && specimensByCollection.size() == 1 && specimensByCollection.containsKey(DEFAULT_COLLECTION_ID)) {
       logger.info("determineDefaultCollectionId: first conditional succeeded");
 
-      Either<OperationOutcome, List<Organization>> collectionsOutcome = listAllCollections();
-      if (collectionsOutcome.isRight()) {
+      List<Organization> collections = listAllCollections();
+      if (collections != null) {
         logger.info("determineDefaultCollectionId: second conditional succeeded");
 
-        List<Organization> collections = collectionsOutcome.get();
         if (collections.size() == 1) {
           logger.info("determineDefaultCollectionId: third conditional succeeded");
 

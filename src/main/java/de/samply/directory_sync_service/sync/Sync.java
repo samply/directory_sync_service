@@ -14,8 +14,6 @@ import de.samply.directory_sync_service.fhir.FhirReporting;
 import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
 import de.samply.directory_sync_service.model.StarModelData;
-import io.vavr.control.Either;
-import io.vavr.control.Option;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,9 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
 
 /**
@@ -59,9 +55,6 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
  * sync.generateDiagnosisCorrections(directoryDefaultCollectionId); // directoryDefaultCollectionId may be null
  * <p>
  * Now you can start to do some synchronization, e.g.:
- * <p>
- * Only send the collection sizes to the Directory (deprecated):
- * sync.syncCollectionSizesToDirectory
  * <p>
  * Send all standard attributes to Directory:
  * sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
@@ -148,25 +141,15 @@ public class Sync {
             logger.warn("syncWithDirectory: there was a problem during sync to Directory");
             return false;
         }
-        if (!Util.reportOperationOutcomes(updateAllBiobanksOnFhirServerIfNecessary())) {
-            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
-        }
+
+// Updating is not working right now due to a conflict between the Jackson versions being used for Spring Boot and HAPI FHIR.
+//        if (!updateAllBiobanksOnFhirServerIfNecessary()) {
+//            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
+//            return false;
+//        }
 
         logger.info("__________ syncWithDirectory: all synchronization tasks finished");
         return true;
-    }
-
-    private static OperationOutcome missingIdentifierOperationOutcome() {
-        OperationOutcome outcome = new OperationOutcome();
-        outcome.addIssue().setSeverity(ERROR).setDiagnostics("No BBMRI Identifier for Organization");
-        return outcome;
-    }
-
-    private static OperationOutcome noUpdateNecessaryOperationOutcome() {
-        OperationOutcome outcome = new OperationOutcome();
-        outcome.addIssue().setSeverity(INFORMATION).setDiagnostics("No Update " +
-                "necessary");
-        return outcome;
     }
 
     /**
@@ -174,10 +157,28 @@ public class Sync {
      *
      * @return the individual {@link OperationOutcome}s from each update
      */
-    private List<OperationOutcome> updateAllBiobanksOnFhirServerIfNecessary() {
-        return fhirApi.listAllBiobanks()
-                .map(orgs -> orgs.stream().map(this::updateBiobankOnFhirServerIfNecessary).collect(Collectors.toList()))
-                .fold(Collections::singletonList, Function.identity());
+    private boolean updateAllBiobanksOnFhirServerIfNecessary() {
+        // Retrieve the list of all biobanks
+        List<Organization> organizations = fhirApi.listAllBiobanks();
+
+        // Check if the result is a failure or success
+        boolean succeeded = true;
+        if (organizations == null) {
+            logger.warn("error retrieving the biobanks");
+            succeeded = false;
+        } else {
+            // If successful, process each biobank and update it on the FHIR server if necessary
+            for (Organization organization : organizations) {
+                // Update each biobank and collect the OperationOutcome
+                OperationOutcome outcome = updateBiobankOnFhirServerIfNecessary(organization);
+                // Print message from outcome
+                if (outcome.hasIssue())
+                    logger.warn("updateBiobankOnFhirServerIfNecessary: " + outcome.getIssue().get(0).getDiagnostics());
+                succeeded = false;
+            }
+        }
+
+        return succeeded;
     }
 
     /**
@@ -187,51 +188,59 @@ public class Sync {
      * @return the {@link OperationOutcome} from the FHIR server update
      */
     private OperationOutcome updateBiobankOnFhirServerIfNecessary(Organization fhirBiobank) {
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 1: Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization");
+        logger.info("updateBiobankOnFhirServerIfNecessary: entered");
 
-        // Step 1: Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
+        // Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
         Optional<BbmriEricId> bbmriEricIdOpt = FhirApi.bbmriEricId(fhirBiobank);
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 2: Convert the Optional to an Either type");
+        logger.info("updateBiobankOnFhirServerIfNecessary: bbmriEricIdOpt: " + bbmriEricIdOpt);
 
-        // Step 2: Convert the Optional to an Either type
-        Either<OperationOutcome, BbmriEricId> bbmriEricIdEither = Option.ofOptional(bbmriEricIdOpt)
-                .toEither(missingIdentifierOperationOutcome());
+        // Check if the identifier is present, if not, return a missing identifier OperationOutcome
+        if (!bbmriEricIdOpt.isPresent()) {
+            logger.warn("updateBiobankOnFhirServerIfNecessary: Missing BBMRI-ERIC identifier");
+            return Util.missingIdentifierOperationOutcome();
+        }
+        BbmriEricId bbmriEricId = bbmriEricIdOpt.get();
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 3: Fetch the corresponding biobank from the Directory API");
+        logger.info("updateBiobankOnFhirServerIfNecessary: bbmriEricId: " + bbmriEricId);
 
-        // Step 3: Fetch the corresponding biobank from the Directory API
-        Either<OperationOutcome, Biobank> dirBiobankEither = bbmriEricIdEither
-                .flatMap(directoryApi::fetchBiobank);
+        // Fetch the corresponding biobank from the Directory API
+        Biobank directoryBiobank = directoryApi.fetchBiobank(bbmriEricId);
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 4: Create a BiobankTuple containing the FHIR biobank and the Directory biobank");
+        logger.info("updateBiobankOnFhirServerIfNecessary: directoryBiobank: " + directoryBiobank);
 
-        // Step 4: Create a BiobankTuple containing the FHIR biobank and the Directory biobank
-        Either<OperationOutcome, BiobankTuple> biobankTupleEither = dirBiobankEither
-                .map(dirBiobank -> new BiobankTuple(fhirBiobank, dirBiobank));
+        // Check if fetching the biobank was successful, if not, return the error
+        if (directoryBiobank == null) {
+            logger.warn("updateBiobankOnFhirServerIfNecessary: Failed to fetch biobank from Directory API");
+            return Util.createOutcomeWithError("updateBiobankOnFhirServerIfNecessary: Failed to fetch biobank from Directory API");
+        }
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 5: Update the biobank name if necessary");
+        logger.info("updateBiobankOnFhirServerIfNecessary: Create a BiobankTuple containing the FHIR biobank and the Directory biobank");
 
-        // Step 5: Update the biobank name if necessary
-        Either<OperationOutcome, BiobankTuple> updatedBiobankTupleEither = biobankTupleEither
-                .map(UPDATE_BIOBANK_NAME);
+        // Create a BiobankTuple containing the FHIR biobank and the Directory biobank
+        BiobankTuple biobankTuple = new BiobankTuple(fhirBiobank, directoryBiobank);
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 6: Check if any changes have been made; if not, return a no-update necessary outcome");
+        logger.info("updateBiobankOnFhirServerIfNecessary: Update the biobank name if necessary");
 
-        // Step 6: Check if any changes have been made; if not, return a no-update necessary outcome
-        Either<OperationOutcome, BiobankTuple> finalBiobankTupleEither = updatedBiobankTupleEither
-                .filterOrElse(BiobankTuple::hasChanged, tuple -> noUpdateNecessaryOperationOutcome());
+        // Update the biobank name if necessary
+        BiobankTuple updatedBiobankTuple = UPDATE_BIOBANK_NAME.apply(biobankTuple);
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 7: Update the biobank resource on the FHIR server if changes were made");
+        logger.info("updateBiobankOnFhirServerIfNecessary: Check if any changes have been made; if not, return a no-update necessary outcome");
 
-        // Step 7: Update the biobank resource on the FHIR server if changes were made
-        Either<OperationOutcome, OperationOutcome> updateOutcomeEither = finalBiobankTupleEither
-                .map(tuple -> fhirApi.updateResource(tuple.fhirBiobank));
+        // Check if any changes have been made; if not, return a no-update necessary outcome
+        if (!updatedBiobankTuple.hasChanged()) {
+            logger.info("updateBiobankOnFhirServerIfNecessary: No update necessary");
+            return Util.noUpdateNecessaryOperationOutcome();
+        }
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Step 8: Return the result of the update, folding Either to an OperationOutcome");
+        logger.info("updateBiobankOnFhirServerIfNecessary: Update the biobank resource on the FHIR server if changes were made");
 
-        // Step 8: Return the result of the update, folding Either to an OperationOutcome
-        return updateOutcomeEither.fold(Function.identity(), Function.identity());
+        // Update the biobank resource on the FHIR server
+        OperationOutcome updateOutcome = fhirApi.updateResource(updatedBiobankTuple.fhirBiobank);
+
+        logger.info("updateBiobankOnFhirServerIfNecessary: done!");
+
+        return updateOutcome;
     }
 
     /**
@@ -260,10 +269,10 @@ public class Sync {
 
             // Get all diagnoses from the FHIR store for specemins with identifiable
             // collections and their associated patients.
-            Either<OperationOutcome, List<String>> fhirDiagnosesOutcome = fhirReporting.fetchDiagnoses(defaultBbmriEricCollectionId);
-            if (fhirDiagnosesOutcome.isLeft())
-                return Util.createErrorOutcome("Problem getting diagnosis information from FHIR store, " + Util.getErrorMessageFromOperationOutcome(fhirDiagnosesOutcome.getLeft()));
-            List<String> fhirDiagnoses = fhirDiagnosesOutcome.get();
+            List<String> fhirDiagnoses = fhirReporting.fetchDiagnoses(defaultBbmriEricCollectionId);
+            if (fhirDiagnoses == null) {
+                logger.warn("Problem getting diagnosis information from FHIR store");
+            }
             logger.info("__________ generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
             // Convert the raw ICD 10 codes into MIRIAM-compatible codes and put the
@@ -311,10 +320,9 @@ public class Sync {
 
             // Pull data from the FHIR store and save it in a format suitable for generating
             // star model hypercubes.
-            Either<OperationOutcome, StarModelData> starModelInputDataOutcome = fhirReporting.fetchStarModelInputData(defaultBbmriEricCollectionId);
-            if (starModelInputDataOutcome.isLeft())
-                return Util.createErrorOutcome("Problem getting star model information from FHIR store, " + Util.getErrorMessageFromOperationOutcome(starModelInputDataOutcome.getLeft()));
-            StarModelData starModelInputData = starModelInputDataOutcome.get();
+            StarModelData starModelInputData = fhirReporting.fetchStarModelInputData(defaultBbmriEricCollectionId);
+            if (starModelInputData == null)
+                return Util.createErrorOutcome("Problem getting star model information from FHIR store");
             logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
             directoryApi.relogin();
@@ -369,12 +377,12 @@ public class Sync {
                 .valueOf(defaultCollectionId)
                 .orElse(null);
 
-            Either<OperationOutcome, List<FhirCollection>> fhirCollectionOutcomes = fhirReporting.fetchFhirCollections(defaultBbmriEricCollectionId);
-            if (fhirCollectionOutcomes.isLeft())
-                return Util.createErrorOutcome("Problem getting collections from FHIR store, " + Util.getErrorMessageFromOperationOutcome(fhirCollectionOutcomes.getLeft()));
-            logger.info("__________ sendUpdatesToDirectory: FHIR collection count): " + fhirCollectionOutcomes.get().size());
+            List<FhirCollection> fhirCollection = fhirReporting.fetchFhirCollections(defaultBbmriEricCollectionId);
+            if (fhirCollection == null)
+                return Util.createErrorOutcome("Problem getting collections from FHIR store");
+            logger.info("__________ sendUpdatesToDirectory: FHIR collection count): " + fhirCollection.size());
 
-            DirectoryCollectionPut directoryCollectionPut = FhirCollectionToDirectoryCollectionPutConverter.convert(fhirCollectionOutcomes.get());
+            DirectoryCollectionPut directoryCollectionPut = FhirCollectionToDirectoryCollectionPutConverter.convert(fhirCollection);
             if (directoryCollectionPut == null) 
                 return Util.createErrorOutcome("Problem converting FHIR attributes to Directory attributes");
             logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
@@ -382,10 +390,9 @@ public class Sync {
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
             directoryApi.relogin();
-            Either<OperationOutcome, DirectoryCollectionGet> directoryCollectionGetOutcomes = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
-            if (directoryCollectionGetOutcomes.isLeft())
-                return Util.createErrorOutcome("Problem getting collections from Directory, " + Util.getErrorMessageFromOperationOutcome(directoryCollectionGetOutcomes.getLeft()));
-            DirectoryCollectionGet directoryCollectionGet = directoryCollectionGetOutcomes.get();
+            DirectoryCollectionGet directoryCollectionGet = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
+            if (directoryCollectionGet == null)
+                return Util.createErrorOutcome("Problem getting collections from Directory");
             logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
 
             if (!MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut))

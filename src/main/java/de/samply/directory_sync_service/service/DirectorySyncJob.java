@@ -13,9 +13,10 @@ import org.quartz.DisallowConcurrentExecution;
  * Job for starting a synchronization with the Directory.
  * <p>
  * Can handle single-run or repeated run operations.
+ * <p>
+ * Will not allow multiple instances of this job to run at the same time.
  */
 @DisallowConcurrentExecution
-//public class DirectorySyncJob implements Job {
 public class DirectorySyncJob implements StatefulJob  {
     private static Logger logger = LogManager.getLogger(DirectorySyncJob.class);
 
