@@ -63,12 +63,6 @@ public class Util {
         return Collections.singletonList(outcome);
     }
 
-    public static OperationOutcome createOutcomeWithError(String message) {
-        OperationOutcome outcome = new OperationOutcome();
-        outcome.addIssue().setSeverity(ERROR).setDiagnostics(message);
-        return outcome;
-    }
-
     /**
      * Extracts and concatenates error messages from an {@link OperationOutcome}.
      * <p>
@@ -114,35 +108,5 @@ public class Util {
             }
         }
         return !failed;
-    }
-
-    /**
-     * Creates an {@link OperationOutcome} indicating that a BBMRI identifier is missing for an organization.
-     * <p>
-     * This method constructs an {@code OperationOutcome} object with a single issue.
-     * The issue is marked with a severity level of {@code ERROR} and includes a diagnostic message
-     * stating that no BBMRI identifier was found for the organization.
-     *
-     * @return An {@code OperationOutcome} object representing the missing identifier error.
-     */
-    public static OperationOutcome missingIdentifierOperationOutcome() {
-        OperationOutcome outcome = new OperationOutcome();
-        outcome.addIssue().setSeverity(ERROR).setDiagnostics("No BBMRI Identifier for Organization");
-        return outcome;
-    }
-
-    /**
-     * Creates an {@link OperationOutcome} indicating that no update is necessary.
-     * <p>
-     * This method constructs an {@code OperationOutcome} object with a single issue.
-     * The issue is marked with a severity level of {@code INFORMATION} and includes a diagnostic message
-     * stating that no update is necessary.
-     *
-     * @return An {@code OperationOutcome} object representing the informational message that no update is necessary.
-     */
-    public static OperationOutcome noUpdateNecessaryOperationOutcome() {
-        OperationOutcome outcome = new OperationOutcome();
-        outcome.addIssue().setSeverity(INFORMATION).setDiagnostics("No Update necessary");
-        return outcome;
     }
 }

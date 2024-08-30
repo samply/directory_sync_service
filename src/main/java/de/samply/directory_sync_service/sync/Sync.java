@@ -127,13 +127,10 @@ public class Sync {
             return false;
         }
 
-// Updating is not working right now, Blaze reports:
-// "Precondition `\"1\"` failed on `Organization/biobank-0`.", :cognitect.anomalies/category :cognitect.anomalies/conflict, :http/status 412}
-// According to Alex: . Diese Fehlermeldung kommt, wenn Du entweder beim Laden einen If-Match header mitschickst oder im Request Teil vom Transaction Bundle eine ifMatch Property angibst
-//        if (!updateAllBiobanksOnFhirServerIfNecessary()) {
-//            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
-//            return false;
-//        }
+        if (!updateAllBiobanksOnFhirServerIfNecessary()) {
+            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
+            return false;
+        }
 
         logger.info("__________ syncWithDirectory: all synchronization tasks finished");
         return true;
@@ -156,12 +153,11 @@ public class Sync {
         } else {
             // If successful, process each biobank and update it on the FHIR server if necessary
             for (Organization organization : organizations) {
-                // Update each biobank and collect the OperationOutcome
-                OperationOutcome outcome = updateBiobankOnFhirServerIfNecessary(organization);
-                // Print message from outcome
-                if (outcome.hasIssue())
-                    logger.warn("updateBiobankOnFhirServerIfNecessary: " + outcome.getIssue().get(0).getDiagnostics());
-                succeeded = false;
+                // Update each biobank and report any errors
+                if (!updateBiobankOnFhirServerIfNecessary(organization)) {
+                    logger.warn("updateBiobankOnFhirServerIfNecessary: problem updating: " + organization.getIdElement().getValue());
+                    succeeded = false;
+                }
             }
         }
 
@@ -174,7 +170,7 @@ public class Sync {
      * @param fhirBiobank the biobank to update.
      * @return the {@link OperationOutcome} from the FHIR server update
      */
-    private OperationOutcome updateBiobankOnFhirServerIfNecessary(Organization fhirBiobank) {
+    private boolean updateBiobankOnFhirServerIfNecessary(Organization fhirBiobank) {
         logger.info("updateBiobankOnFhirServerIfNecessary: entered");
 
         // Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
@@ -182,10 +178,10 @@ public class Sync {
 
         logger.info("updateBiobankOnFhirServerIfNecessary: bbmriEricIdOpt: " + bbmriEricIdOpt);
 
-        // Check if the identifier is present, if not, return a missing identifier OperationOutcome
+        // Check if the identifier is present, if not, return false
         if (!bbmriEricIdOpt.isPresent()) {
             logger.warn("updateBiobankOnFhirServerIfNecessary: Missing BBMRI-ERIC identifier");
-            return Util.missingIdentifierOperationOutcome();
+            return false;
         }
         BbmriEricId bbmriEricId = bbmriEricIdOpt.get();
 
@@ -196,10 +192,10 @@ public class Sync {
 
         logger.info("updateBiobankOnFhirServerIfNecessary: directoryBiobank: " + directoryBiobank);
 
-        // Check if fetching the biobank was successful, if not, return the error
+        // Check if fetching the biobank was successful, if not, return false
         if (directoryBiobank == null) {
             logger.warn("updateBiobankOnFhirServerIfNecessary: Failed to fetch biobank from Directory API");
-            return Util.createOutcomeWithError("updateBiobankOnFhirServerIfNecessary: Failed to fetch biobank from Directory API");
+            return false;
         }
 
         logger.info("updateBiobankOnFhirServerIfNecessary: Create a BiobankTuple containing the FHIR biobank and the Directory biobank");
@@ -214,10 +210,10 @@ public class Sync {
 
         logger.info("updateBiobankOnFhirServerIfNecessary: Check if any changes have been made; if not, return a no-update necessary outcome");
 
-        // Check if any changes have been made; if not, return a no-update necessary outcome
+        // Check if any changes have been made; if not, return true (because this outcome is OK)
         if (!updatedBiobankTuple.hasChanged()) {
             logger.info("updateBiobankOnFhirServerIfNecessary: No update necessary");
-            return Util.noUpdateNecessaryOperationOutcome();
+            return true;
         }
 
         logger.info("updateBiobankOnFhirServerIfNecessary: Update the biobank resource on the FHIR server if changes were made");
@@ -225,9 +221,16 @@ public class Sync {
         // Update the biobank resource on the FHIR server
         OperationOutcome updateOutcome = fhirApi.updateResource(updatedBiobankTuple.fhirBiobank);
 
+        String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
+
+        if (!errorMessage.isEmpty()) {
+            logger.warn("updateBiobankOnFhirServerIfNecessary: Problem during FHIR store update");
+            return false;
+        }
+
         logger.info("updateBiobankOnFhirServerIfNecessary: done!");
 
-        return updateOutcome;
+        return true;
     }
 
     /**

@@ -83,12 +83,23 @@ public class FhirApi {
         .findFirst().map(Identifier::getValue).flatMap(BbmriEricId::valueOf);
   }
 
-  public OperationOutcome updateResource(IBaseResource theResource) {
+  public OperationOutcome updateResource(IBaseResource resource) {
     logger.info("updateResource: @@@@@@@@@@ entered");
-    logger.info("updateResource: @@@@@@@@@@ theResource: " + ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(theResource));
+    logger.info("updateResource: @@@@@@@@@@ theResource: " + ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resource));
+
+    // Remove the version ID, so that no If-Match header gets added to the request
+    // If you don't do this, Blaze will throw an exception like this:
+    // "Precondition `\"1\"` failed on `Organization/biobank-0`.", :cognitect.anomalies/category :cognitect.anomalies/conflict, :http/status 412}
+    // According to Alex: . Diese Fehlermeldung kommt, wenn Du entweder beim Laden einen If-Match header mitschickst oder im Request Teil vom Transaction Bundle eine ifMatch Property angibst
+    resource.setId(resource.getIdElement().toUnqualifiedVersionless());
 
     try {
-      IBaseOperationOutcome outcome = fhirClient.update().resource(theResource).prefer(OPERATION_OUTCOME).execute().getOperationOutcome();
+      IBaseOperationOutcome outcome = fhirClient
+              .update()
+              .resource(resource)
+              .prefer(OPERATION_OUTCOME)
+              .execute()
+              .getOperationOutcome();
       logger.info("updateResource: @@@@@@@@@@ return outcome: " +outcome);
       return (OperationOutcome) outcome;
     } catch (Exception e) {
