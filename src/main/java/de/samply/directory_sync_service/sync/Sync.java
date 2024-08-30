@@ -39,31 +39,16 @@ import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
  * <p>
  * Usage:
  * <p>
- * You will need to first do the initial set up of the Sync class, which includes
- * connecting to the FHIR store and to the Directory. Your code might look something like
+ * You will need to supply a set of parameters to control exactly how synchronization should operate. These
+ * are set in the constructor. Your code might look something like
  * this:
  * <p>
- * DirectoryService directoryService = new DirectoryService(DirectoryApi.createWithLogin(HttpClients.createDefault(), directoryUrl, directoryUserName, directoryPassCode));
- * FhirReporting fhirReporting = new FhirReporting(ctx, fhirApi);
- * Sync sync = new Sync(fhirApi, fhirReporting, directoryApi, directoryService);
- * sync.initResources()
- * <p>
- * Next, if your FHIR store does not use WHO ICD 10 codes for diagnosis, you should
- * first generate a map, mapping your local ICD 10 codes onto WHO, which are used by
- * the Directory:
- * <p>
- * sync.generateDiagnosisCorrections(directoryDefaultCollectionId); // directoryDefaultCollectionId may be null
+ * Sync sync = new Sync(<Parameters>);
  * <p>
  * Now you can start to do some synchronization, e.g.:
  * <p>
- * Send all standard attributes to Directory:
- * sync.sendUpdatesToDirectory(directoryDefaultCollectionId);
+ * sync.syncWithDirectoryFailover();
  * <p>
- * Send star model to Directory:
- * sync.sendStarModelUpdatesToDirectory(directoryDefaultCollectionId, directoryMinDonors); // e.g. directoryMinDonors=10
- * <p>
- * Get biobank information from Directory and put into local FHIR store:
- * sync.updateAllBiobanksOnFhirServerIfNecessary();
  */
 public class Sync {
     private static final Logger logger = LoggerFactory.getLogger(Sync.class);
