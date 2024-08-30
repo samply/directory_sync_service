@@ -142,7 +142,9 @@ public class Sync {
             return false;
         }
 
-// Updating is not working right now due to a conflict between the Jackson versions being used for Spring Boot and HAPI FHIR.
+// Updating is not working right now, Blaze reports:
+// "Precondition `\"1\"` failed on `Organization/biobank-0`.", :cognitect.anomalies/category :cognitect.anomalies/conflict, :http/status 412}
+// According to Alex: . Diese Fehlermeldung kommt, wenn Du entweder beim Laden einen If-Match header mitschickst oder im Request Teil vom Transaction Bundle eine ifMatch Property angibst
 //        if (!updateAllBiobanksOnFhirServerIfNecessary()) {
 //            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
 //            return false;

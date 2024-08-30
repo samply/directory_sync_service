@@ -88,8 +88,6 @@ public class FhirApi {
     logger.info("updateResource: @@@@@@@@@@ theResource: " + ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(theResource));
 
     try {
-      fhirClient.update().resource(theResource).execute().getOperationOutcome();
-      logger.info("updateResource: @@@@@@@@@@ bup");
       IBaseOperationOutcome outcome = fhirClient.update().resource(theResource).prefer(OPERATION_OUTCOME).execute().getOperationOutcome();
       logger.info("updateResource: @@@@@@@@@@ return outcome: " +outcome);
       return (OperationOutcome) outcome;
