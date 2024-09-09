@@ -56,7 +56,10 @@ public class DirectoryRest {
    */
   public void login() {
     DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post("/api/v1/login", DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
-    if (loginResponse != null)
+    if (loginResponse == null) {
+      logger.error("login: failed to log in to Directory");
+      throw new RuntimeException("login: failed to log in to Directory");
+    } else
       directoryCredentials.setToken(loginResponse.token);
   }
 

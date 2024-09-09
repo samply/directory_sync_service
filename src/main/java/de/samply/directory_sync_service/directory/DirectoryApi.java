@@ -44,6 +44,7 @@ public class DirectoryApi {
     this.mockDirectory = mockDirectory;
     this.directoryRest = new DirectoryRest(baseUrl, username, password);
     if (!mockDirectory)
+      // Log in if we are not in mock mode
       this.directoryRest.login();
   }
 

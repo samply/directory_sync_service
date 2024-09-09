@@ -9,13 +9,16 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
@@ -155,15 +158,21 @@ public FhirReporting(FhirApi fhirApi) {
    * @param specimenList A list of {@code Specimen} objects from which to extract material codes.
    * @return A list of unique material codes (as strings) extracted from the specimens.
    */
-  private List<String> extractMaterialsFromSpecimenList(List<Specimen> specimenList) {
-      return specimenList.stream()
-              // Map each specimen to its type
-              .map(Specimen::getType)
-              // Map each CodeableConcept to its display name
-              .map(c -> c.getCoding().get(0).getCode())
-              // Collect the results into a non-duplicating list
-              .collect(Collectors.toSet()).stream().collect(Collectors.toList());
-  }
+    private List<String> extractMaterialsFromSpecimenList(List<Specimen> specimenList) {
+        if (specimenList == null)
+            logger.info("extractMaterialsFromSpecimenList: specimenList is null");
+        else
+            logger.info("extractMaterialsFromSpecimenList: specimenList.size: " + specimenList.size());
+        Set<String> materialSet = new HashSet<>();
+        for (Specimen specimen : specimenList) {
+            CodeableConcept codeableConcept = specimen.getType();
+            if (codeableConcept != null && codeableConcept.getCoding().size() > 0) {
+                materialSet.add(codeableConcept.getCoding().get(0).getCode());
+            }
+        }
+
+        return new ArrayList<>(materialSet);
+    }
 
     private List<String> extractSexFromPatientList(List<Patient> patients) {
     return patients.stream()
