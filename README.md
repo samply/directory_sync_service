@@ -6,8 +6,6 @@ This service keeps the [BBMRI Directory](https://directory.bbmri-eric.eu/) up to
 kept in the biobank. It also updates the local FHIR store with the latest contact
 details etc. from the Directory.
 
-It is implemented as a standalone component that encapsulates the [Directory sync library](https://github.com/samply/directory-sync).
-
 It is assumed that you have access to a FHIR store containing information about patients
 and samples, as well as the details of your biobank. The data in this store should conform to
 the [GBA profile](https://simplifier.net/bbmri.de/~resources?category=Profile).
@@ -78,7 +76,9 @@ you simultaneously start Directroy sync and FHIR store. It takes some time
 for a FHIR store to start, whereas Directory sync starts immediately, so
 Directory sync needs to have a way to poll the store until is ready.
 
-For your convenience, we recommend that you store these in a .env file.
+If DS_DIRECTORY_MOCK is set to 'True', the Directory will not be contacted, but you will still need to specify login credentials (which will then be ignored).
+
+For your convenience, we recommend that you store these variables in a .env file.
 The file could look like this:
 
 ```
@@ -135,7 +135,7 @@ java -jar target/directory_sync_service\*.jar
 
 ## License
         
-Copyright 2022 The Samply Community
+Copyright 2024 The Samply Community
         
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
         

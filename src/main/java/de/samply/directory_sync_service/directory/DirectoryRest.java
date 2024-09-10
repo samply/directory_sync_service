@@ -40,7 +40,6 @@ public class DirectoryRest {
    * This constructor initializes the HTTP client, base URL, and credentials for interacting with the Directory service.
    * It also triggers the login process to authenticate and obtain a session token.
    *
-   * @param httpClient the HTTP client to use for requests
    * @param baseUrl the base URL for the Directory service
    * @param username the username for Directory authentication
    * @param password the password for Directory authentication

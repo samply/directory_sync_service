@@ -1,7 +1,6 @@
 package de.samply.directory_sync_service.fhir;
 
 import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
-import static ca.uhn.fhir.rest.api.PreferReturnEnum.REPRESENTATION;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
 import ca.uhn.fhir.context.FhirContext;
@@ -10,16 +9,18 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.gclient.IQuery;
-import ca.uhn.fhir.rest.gclient.IUpdate;
-import ca.uhn.fhir.rest.gclient.IUpdateExecutable;
-import ca.uhn.fhir.rest.gclient.IUpdateTyped;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.function.Predicate;
 import java.util.function.Function;
 import java.util.HashSet;
 
+import de.samply.directory_sync_service.model.StarModelData;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -54,9 +56,10 @@ import org.slf4j.LoggerFactory;
  */
 public class FhirApi {
   private static final Logger logger = LoggerFactory.getLogger(FhirApi.class);
+  private static final String STORAGE_TEMPERATURE_URI = "https://fhir.bbmri.de/StructureDefinition/StorageTemperature";
+  private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   private static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
   private static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
-  private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   private static final String DEFAULT_COLLECTION_ID = "DEFAULT";
   private Map<String, List<Specimen>> specimensByCollection = null;
   private Map<String, List<Patient>> patientsByCollection = null;
@@ -83,6 +86,16 @@ public class FhirApi {
         .findFirst().map(Identifier::getValue).flatMap(BbmriEricId::valueOf);
   }
 
+  /**
+   * Updates the provided resource on the FHIR server.
+   *
+   * This method updates the specified resource on the FHIR server and returns the operation outcome.
+   *
+   * @param resource The resource to be updated on the FHIR server.
+   * @return The operation outcome of the update operation.
+   *         If the update is successful, the operation outcome will contain information about the update.
+   *         If an exception occurs during the update process, an error operation outcome will be returned.
+   */
   public OperationOutcome updateResource(IBaseResource resource) {
     logger.info("updateResource: @@@@@@@@@@ entered");
     logger.info("updateResource: @@@@@@@@@@ theResource: " + ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resource));
@@ -133,7 +146,7 @@ public class FhirApi {
     return organizations;
   }
 
-  public List<Organization> listAllCollections() {
+  private List<Organization> listAllCollections() {
     // List all organizations with the specified biobank profile URI
     Bundle organizationBundle = listAllOrganizations(COLLECTION_PROFILE_URI);
 
@@ -275,7 +288,7 @@ public class FhirApi {
    * @param specimensByCollection
    * @return
    */
-  Map<String,List<Patient>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {
+  private Map<String,List<Patient>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {
     // This method is slow, so use cached value if available.
     if (patientsByCollection != null)
       return patientsByCollection;
@@ -513,7 +526,7 @@ public class FhirApi {
    * @param url the URL of the extension element to extract
    * @return a list of strings that contains the code value of each extension element with the given URL, or an empty list if none is found
    */
-  public List<String> extractExtensionElementValuesFromSpecimen(Specimen specimen, String url) {
+  private List<String> extractExtensionElementValuesFromSpecimen(Specimen specimen, String url) {
     List<Extension> extensions = specimen.getExtensionsByUrl(url);
     List<String> elementValues = new ArrayList<String>();
 
@@ -535,12 +548,191 @@ public class FhirApi {
    * @param url the URL of the extension elements to extract
    * @return a list of strings that contains the distinct code values of the extension elements with the given URL, or an empty list if none are found
    */
-  public List<String> extractExtensionElementValuesFromSpecimens(List<Specimen> specimens, String url) {
+  private List<String> extractExtensionElementValuesFromSpecimens(List<Specimen> specimens, String url) {
     return specimens.stream()
             // Flatten each specimen's extension elements into a single stream
             .flatMap(s -> extractExtensionElementValuesFromSpecimen(s, url).stream())
             // Collect the results into a non-duplicating list
             .distinct()
             .collect(Collectors.toList());
+  }
+
+  /**
+   * Pulls information relevant to collections from the FHIR store.
+   * <p>
+   * Returns a list of FhirCollection objects, one per collection.
+   *
+   * @param defaultBbmriEricCollectionId
+   * @return
+   */
+  public List<FhirCollection> fetchFhirCollections(BbmriEricId defaultBbmriEricCollectionId) {
+    Map<String,FhirCollection> fhirCollectionMap = new HashMap<String,FhirCollection>();
+
+    // Group specimens according to collection, extract aggregated information
+    // from each group, and put this information into FhirCollection objects.
+    Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+    if (specimensByCollection == null) {
+      logger.warn("fetchFhirCollections: Problem finding specimens");
+      return null;
+    }
+    updateFhirCollectionsWithSpecimenData(fhirCollectionMap, specimensByCollection);
+
+    // Group patients according to collection, extract aggregated information
+    // from each group, and put this information into FhirCollection objects.
+    Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
+    if (patientsByCollection == null) {
+      logger.warn("fetchFhirCollections: Problem finding patients");
+      return null;
+    }
+    updateFhirCollectionsWithPatientData(fhirCollectionMap, patientsByCollection);
+
+    return new ArrayList<FhirCollection>(fhirCollectionMap.values());
+  }
+
+  private void updateFhirCollectionsWithSpecimenData(Map<String,FhirCollection> entities, Map<String, List<Specimen>> specimensByCollection) {
+    for (String key: specimensByCollection.keySet()) {
+      List<Specimen> specimenList = specimensByCollection.get(key);
+      FhirCollection fhirCollection = entities.getOrDefault(key, new FhirCollection());
+      fhirCollection.setId(key);
+      fhirCollection.setSize(specimenList.size());
+      fhirCollection.setMaterials(extractMaterialsFromSpecimenList(specimenList));
+      fhirCollection.setStorageTemperatures(extractExtensionElementValuesFromSpecimens(specimenList, STORAGE_TEMPERATURE_URI));
+      fhirCollection.setDiagnosisAvailable(extractExtensionElementValuesFromSpecimens(specimenList, SAMPLE_DIAGNOSIS_URI));
+      entities.put(key, fhirCollection);
+    }
+  }
+
+  private void updateFhirCollectionsWithPatientData(Map<String,FhirCollection> entities, Map<String, List<Patient>> patientsByCollection) {
+    for (String key: patientsByCollection.keySet()) {
+      List<Patient> patientList = patientsByCollection.get(key);
+      FhirCollection fhirCollection = entities.getOrDefault(key, new FhirCollection());
+      fhirCollection.setNumberOfDonors(patientList.size());
+      fhirCollection.setSex(extractSexFromPatientList(patientList));
+      fhirCollection.setAgeLow(extractAgeLowFromPatientList(patientList));
+      fhirCollection.setAgeHigh(extractAgeHighFromPatientList(patientList));
+      entities.put(key, fhirCollection);
+    }
+  }
+
+  /**
+   * Fetches diagnoses from Specimens and Patients to which collections can be assigned.
+   * <p>
+   * This method retrieves specimens grouped by collection.
+   * <p>
+   * It then extracts diagnoses from Specimen extensions and Patient condition codes, eliminating duplicates,
+   * and combines the results into a list of unique diagnoses.
+   *
+   * @param defaultBbmriEricCollectionId The BBMRI ERIC collection ID to fetch specimens and diagnoses.
+   * @return a List of unique diagnoses.
+   */
+  public List<String> fetchDiagnoses(BbmriEricId defaultBbmriEricCollectionId) {
+    logger.info("fetchDiagnoses: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
+    // Group specimens according to collection.
+    Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+    if (specimensByCollection == null) {
+      logger.warn("fetchDiagnoses: Problem finding specimens");
+      return null;
+    }
+
+    // Get diagnoses from Specimen extensions
+    List<String> diagnoses = specimensByCollection.values().stream()
+            .flatMap(List::stream)
+            .map(s -> extractDiagnosesFromSpecimen(s))
+            .flatMap(List::stream)
+            .distinct()
+            .collect(Collectors.toList());
+
+    // Get diagnoses from Patients
+    Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
+    List<String> patientDiagnoses = patientsByCollection.values().stream()
+            .flatMap(List::stream)
+            .map(s -> extractConditionCodesFromPatient(s))
+            .flatMap(List::stream)
+            .distinct()
+            .collect(Collectors.toList());
+
+    // Combine diagnoses from specimens and patients, ensuring that there
+    // are no duplicates.
+    diagnoses = Stream.concat(diagnoses.stream(), patientDiagnoses.stream())
+            .distinct()
+            .collect(Collectors.toList());
+
+    return diagnoses;
+  }
+
+  /**
+   * Extracts unique material codes from a list of specimens.
+   *
+   * @param specimenList A list of {@code Specimen} objects from which to extract material codes.
+   * @return A list of unique material codes (as strings) extracted from the specimens.
+   */
+  private List<String> extractMaterialsFromSpecimenList(List<Specimen> specimenList) {
+    if (specimenList == null)
+      logger.info("extractMaterialsFromSpecimenList: specimenList is null");
+    else
+      logger.info("extractMaterialsFromSpecimenList: specimenList.size: " + specimenList.size());
+    Set<String> materialSet = new HashSet<>();
+    for (Specimen specimen : specimenList) {
+      CodeableConcept codeableConcept = specimen.getType();
+      if (codeableConcept != null && codeableConcept.getCoding().size() > 0) {
+        materialSet.add(codeableConcept.getCoding().get(0).getCode());
+      }
+    }
+
+    return new ArrayList<>(materialSet);
+  }
+
+  private List<String> extractSexFromPatientList(List<Patient> patients) {
+    return patients.stream()
+            .filter(patient -> Objects.nonNull(patient.getGenderElement())) // Filter out patients with null gender
+            .map(patient -> patient.getGenderElement().getValueAsString()) // Map each patient to their gender
+            .collect(Collectors.toSet()).stream().collect(Collectors.toList()); // Collect the results into a new list
+  }
+
+  private Integer extractAgeLowFromPatientList(List<Patient> patients) {
+    return patients.stream()
+            // Filter out patients with null age
+            .filter(p -> Objects.nonNull(determinePatientAge(p)))
+            // Map each patient to their age
+            .mapToInt(p -> determinePatientAge(p))
+            // Find the minimum age
+            .min()
+            // Get the result as an int or a default value
+            .orElse(-1);
+  }
+
+  private Integer extractAgeHighFromPatientList(List<Patient> patients) {
+    return patients.stream()
+            // Filter out patients with null age
+            .filter(p -> Objects.nonNull(determinePatientAge(p)))
+            // Map each patient to their age
+            .mapToInt(p -> determinePatientAge(p))
+            // Find the maximum age
+            .max()
+            // Get the result as an int or a default value
+            .orElse(-1);
+  }
+
+  private Integer determinePatientAge(Patient patient) {
+    if (!patient.hasBirthDate())
+      return null;
+
+    // Get the patient's date of birth as a Date object
+    Date birthDate = patient.getBirthDate();
+
+    // Convert the Date object to a LocalDate object
+    LocalDate birthDateLocal = birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+    // Get the current date as a LocalDate object
+    LocalDate currentDate = LocalDate.now();
+
+    // Calculate the difference between the two dates in years
+    int age = currentDate.getYear() - birthDateLocal.getYear();
+
+    // Adjust the age if the current date is before the patient's birthday
+    if (currentDate.getDayOfYear() < birthDateLocal.getDayOfYear())
+      age--;
+
+    return age;
   }
 }

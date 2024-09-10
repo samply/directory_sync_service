@@ -5,12 +5,12 @@ import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryColle
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
+import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.fhir.FhirApi;
-import de.samply.directory_sync_service.fhir.FhirReporting;
 import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
 import de.samply.directory_sync_service.model.StarModelData;
@@ -65,7 +65,6 @@ public class Sync {
     private final boolean directoryMock;
     private Map<String, String> correctedDiagnoses = null;
     private FhirApi fhirApi;
-    private FhirReporting fhirReporting;
     private DirectoryApi directoryApi;
     public static final Function<BiobankTuple, BiobankTuple> UPDATE_BIOBANK_NAME = t -> {
         t.fhirBiobank.setName(t.dirBiobank.getName());
@@ -110,7 +109,6 @@ public class Sync {
     public boolean syncWithDirectory() {
         // Re-initialize helper classes every time this method gets called
         fhirApi = new FhirApi(fhirStoreUrl);
-        fhirReporting = new FhirReporting(fhirApi);
         directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 
         if (!Util.reportOperationOutcomes(generateDiagnosisCorrections(directoryDefaultCollectionId))) {
@@ -259,7 +257,7 @@ public class Sync {
 
             // Get all diagnoses from the FHIR store for specemins with identifiable
             // collections and their associated patients.
-            List<String> fhirDiagnoses = fhirReporting.fetchDiagnoses(defaultBbmriEricCollectionId);
+            List<String> fhirDiagnoses = fhirApi.fetchDiagnoses(defaultBbmriEricCollectionId);
             if (fhirDiagnoses == null) {
                 logger.warn("Problem getting diagnosis information from FHIR store");
             }
@@ -310,7 +308,7 @@ public class Sync {
 
             // Pull data from the FHIR store and save it in a format suitable for generating
             // star model hypercubes.
-            StarModelData starModelInputData = fhirReporting.fetchStarModelInputData(defaultBbmriEricCollectionId);
+            StarModelData starModelInputData = (new PopulateStarModelInputData(fhirApi)).populate(defaultBbmriEricCollectionId);
             if (starModelInputData == null)
                 return Util.createErrorOutcome("Problem getting star model information from FHIR store");
             logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
@@ -367,7 +365,7 @@ public class Sync {
                 .valueOf(defaultCollectionId)
                 .orElse(null);
 
-            List<FhirCollection> fhirCollection = fhirReporting.fetchFhirCollections(defaultBbmriEricCollectionId);
+            List<FhirCollection> fhirCollection = fhirApi.fetchFhirCollections(defaultBbmriEricCollectionId);
             if (fhirCollection == null)
                 return Util.createErrorOutcome("Problem getting collections from FHIR store");
             logger.info("__________ sendUpdatesToDirectory: FHIR collection count): " + fhirCollection.size());
