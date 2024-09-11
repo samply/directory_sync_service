@@ -272,10 +272,12 @@ public class StarModelData {
      * <p>
      * Note: This method directly modifies the factTables in-place.
      * 
-     * @param diagnoses Maps FHIR diagnoses onto Directory diagnoses.
+     * @param diagnoses Maps FHIR diagnoses onto Directory diagnoses. If null, no corrections are applied.
      * @throws NullPointerException if diagnoses or any fact in factTables is null.
      */
     public void applyDiagnosisCorrections(Map<String,String> diagnoses) {
+        if (diagnoses == null)
+            return;
          for (Map<String, String> fact: factTables) {
             if (!fact.containsKey("disease"))
                 continue;

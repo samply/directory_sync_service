@@ -31,7 +31,6 @@ import java.util.function.Predicate;
 import java.util.function.Function;
 import java.util.HashSet;
 
-import de.samply.directory_sync_service.model.StarModelData;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;

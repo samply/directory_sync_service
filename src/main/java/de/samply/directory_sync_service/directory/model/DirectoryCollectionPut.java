@@ -364,9 +364,12 @@ public class DirectoryCollectionPut extends HashMap {
      *
      * @param correctedDiagnoses A map containing diagnosis corrections, where the keys
      *                           represent the original diagnoses and the values represent
-     *                           the corrected diagnoses.
+     *                           the corrected diagnoses. Return without applying corrections
+     *                           if this parameter is null.
      */
     public void applyDiagnosisCorrections(Map<String, String> correctedDiagnoses) {
+        if (correctedDiagnoses == null)
+            return;
         for (Entity entity: getEntities()) {
             List<String> directoryDiagnoses = entity.getDiagnosisAvailable().stream()
                 .filter(diagnosis -> diagnosis != null && correctedDiagnoses.containsKey(diagnosis) && correctedDiagnoses.get(diagnosis) != null)

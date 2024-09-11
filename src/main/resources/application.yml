@@ -8,7 +8,7 @@ ds:
     store:
       url: "http://bridgehead-bbmri-blaze:8080/fhir"
   directory:
-    url: "https://directory.bbmri-eric.eu"
+    url: "https://directory-backend.molgenis.net"
     user:
       name: ""
       pass: ""
