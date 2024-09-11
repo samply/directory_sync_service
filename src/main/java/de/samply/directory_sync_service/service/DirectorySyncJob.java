@@ -53,8 +53,7 @@ public class DirectorySyncJob implements StatefulJob  {
         int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
         boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
 
-        Sync sync = new Sync(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock);
-        sync.syncWithDirectoryFailover();
+        Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock);
     }
 
     /**

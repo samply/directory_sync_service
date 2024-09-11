@@ -30,31 +30,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Sync {
     private static final Logger logger = LoggerFactory.getLogger(Sync.class);
-    private final String retryMax;
-    private final String retryInterval;
-    private final String fhirStoreUrl;
-    private final String directoryUrl;
-    private final String directoryUserName;
-    private final String directoryUserPass;
-    private final String directoryDefaultCollectionId;
-    private final boolean directoryAllowStarModel;
-    private final int directoryMinDonors;
-    private final int directoryMaxFacts;
-    private final boolean directoryMock;
-
-    public Sync(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
-        this.retryMax = retryMax;
-        this.retryInterval = retryInterval;
-        this.fhirStoreUrl = fhirStoreUrl;
-        this.directoryUrl = directoryUrl;
-        this.directoryUserName = directoryUserName;
-        this.directoryUserPass = directoryUserPass;
-        this.directoryDefaultCollectionId = directoryDefaultCollectionId;
-        this.directoryAllowStarModel = directoryAllowStarModel;
-        this.directoryMinDonors = directoryMinDonors;
-        this.directoryMaxFacts = directoryMaxFacts;
-        this.directoryMock = directoryMock;
-    }
 
     /**
      * Attempts to perform synchronization with the Directory repeatedly, until it either
@@ -62,7 +37,7 @@ public class Sync {
      *
      * @throws IOException
      */
-    public void syncWithDirectoryFailover() {
+    public static void syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
         for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             if (retryNum > 0) {
                 try {
@@ -72,12 +47,12 @@ public class Sync {
                 }
                 logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
             }
-            if (syncWithDirectory())
+            if (syncWithDirectory(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock))
                 break;
         }
     }
 
-    private boolean syncWithDirectory() {
+    private static boolean syncWithDirectory(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
         Map<String, String> correctedDiagnoses = null;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
