@@ -37,7 +37,7 @@ public class Sync {
      *
      * @throws IOException
      */
-    public static void syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
+    public static void syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
         for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             if (retryNum > 0) {
                 try {
@@ -47,16 +47,22 @@ public class Sync {
                 }
                 logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
             }
-            if (syncWithDirectory(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock))
+            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin))
                 break;
         }
     }
 
-    private static boolean syncWithDirectory(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock) {
+    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
         Map<String, String> correctedDiagnoses = null;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+
+        // Login test. Don't perform any further actions on the Directory.
+        if (directoryOnlyLogin) {
+            logger.info(">>>>>>>>>>>>>>> syncWithDirectory: login was successful, now quitting because onlyLogin was set to true");
+            return true;
+        }
 
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {
@@ -78,7 +84,7 @@ public class Sync {
             return false;
         }
 
-        logger.info("__________ syncWithDirectory: all synchronization tasks finished");
+        logger.info(">>>>>>>>>>>>>>> syncWithDirectory: all synchronization tasks finished");
         return true;
     }
 }

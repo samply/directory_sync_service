@@ -43,22 +43,15 @@ public class DirectoryApi {
   public DirectoryApi(String baseUrl, boolean mockDirectory, String username, String password) {
     this.mockDirectory = mockDirectory;
     this.directoryRest = new DirectoryRest(baseUrl, username, password);
-    if (!mockDirectory)
-      // Log in if we are not in mock mode
-      this.directoryRest.login();
+    relogin();
   }
 
   /**
    * Log back in to the Directory. This is typically used in situations where there has
-   * been a long pause since the last API call to the Directory. It returns a fresh
-   * DirectoryApi object, which you should use to replace the existing one.
-   * <p>
-   * Returns null if something goes wrong.
-   *
-   * @return new DirectoryApi object.
+   * been a long pause since the last API call to the Directory.
    */
   public void relogin() {
-    logger.info("login: logging back in");
+    logger.info("login: logging  in");
 
     if (mockDirectory)
       // Don't try logging in if we are mocking

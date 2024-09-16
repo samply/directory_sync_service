@@ -52,8 +52,9 @@ public class DirectorySyncJob implements StatefulJob  {
         int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
         int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
         boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
+        boolean directoryOnlyLogin = Boolean.parseBoolean(configuration.getDirectoryOnlyLogin());
 
-        Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock);
+        Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin);
     }
 
     /**

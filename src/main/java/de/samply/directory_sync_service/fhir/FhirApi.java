@@ -97,7 +97,6 @@ public class FhirApi {
    */
   public OperationOutcome updateResource(IBaseResource resource) {
     logger.info("updateResource: @@@@@@@@@@ entered");
-    logger.info("updateResource: @@@@@@@@@@ theResource: " + ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resource));
 
     // Remove the version ID, so that no If-Match header gets added to the request
     // If you don't do this, Blaze will throw an exception like this:

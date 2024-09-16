@@ -40,7 +40,11 @@ public class Configuration {
 
     @Value("${ds.directory.max_facts}")
     private String directoryMaxFacts;
-
+    
     @Value("${ds.directory.mock}")
     private String directoryMock;
+
+    @Value("${ds.directory.only_login}")
+    private String directoryOnlyLogin;
+
 }

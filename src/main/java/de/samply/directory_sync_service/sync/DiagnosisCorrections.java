@@ -26,7 +26,7 @@ public class DiagnosisCorrections {
      * * Retrieves diagnoses from the FHIR store for specimens with identifiable collections and their associated patients.
      * * Converts raw ICD-10 codes into MIRIAM-compatible codes.
      * * Collects corrected diagnosis codes from the Directory API based on the MIRIAM-compatible codes.
-     *
+     * <p>
      * @param fhirApi
      * @param directoryApi
      * @param defaultCollectionId Default collection ID. May be null.
