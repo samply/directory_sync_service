@@ -3,9 +3,11 @@ package de.samply.directory_sync_service.directory;
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -50,11 +52,44 @@ public class DirectoryRest {
   }
 
   /**
+   * Checks if a given REST endpoint exists by sending an OPTIONS request.
+   *
+   * @param url the URL of the REST endpoint to check
+   * @return true if the endpoint exists, false otherwise
+   */
+  public boolean doesEndpointExist(String url) {
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    HttpOptions request = new HttpOptions(url);
+
+    boolean returnStatus = true;
+    try {
+      HttpResponse response = httpClient.execute(request);
+
+      int statusCode = response.getStatusLine().getStatusCode();
+      if (statusCode != 200 && statusCode != 204) {
+        // The endpoint neither exists nor has the server responded with allowed methods.
+        returnStatus = false;
+      }
+    } catch (IOException e) {
+      logger.warn("doesEndpointExist: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
+      returnStatus = false;
+    } finally {
+      try {
+        httpClient.close();
+      } catch (IOException e) {
+        logger.warn("doesEndpointExist: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
+      }
+    }
+
+    return returnStatus;
+  }
+
+  /**
    * Logs in to the Directory, using local credentials.
    * Updates the token in the directory credentials upon successful login.
    */
   public void login() {
-    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post("/api/v1/login", DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
+    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(DirectoryRestEndpoints.getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
     if (loginResponse == null) {
       logger.error("login: failed to log in to Directory");
       throw new RuntimeException("login: failed to log in to Directory");

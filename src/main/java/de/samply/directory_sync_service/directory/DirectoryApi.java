@@ -71,7 +71,7 @@ public class DirectoryApi {
       // Return a fake Biobank if we are mocking
       return new Biobank();
 
-    Biobank biobank = (Biobank) directoryRest.get(buildBiobankApiUrl(id.getCountryCode()) + "/" + id, Biobank.class);
+    Biobank biobank = (Biobank) directoryRest.get(DirectoryRestEndpoints.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
     if (biobank == null) {
       logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
       return null;
@@ -99,7 +99,7 @@ public class DirectoryApi {
     }
 
     for (String collectionId: collectionIds) {
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRest.get(buildCollectionApiUrl(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRest.get(DirectoryRestEndpoints.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
         logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
         return null;
@@ -126,7 +126,7 @@ public class DirectoryApi {
       // Dummy return if we're in mock mode
       return DirectoryUtils.success("DirectoryApi.updateEntities: in mock mode, skip update");
 
-    String response = directoryRest.put(buildCollectionApiUrl(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    String response = directoryRest.put(DirectoryRestEndpoints.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null)
       return DirectoryUtils.error("entity update, PUT problem");
 
@@ -170,7 +170,7 @@ public class DirectoryApi {
 
       Map<String,Object> body = new HashMap<String,Object>();
       body.put("entities", factTablesBlock);
-      String response = directoryRest.post(buildApiUrl(countryCode, "facts"), body);
+      String response = directoryRest.post(DirectoryRestEndpoints.getFactEndpoint(countryCode), body);
       if (response == null)
         return DirectoryUtils.error("updateStarModel, failed, block: " + i);
     }
@@ -185,7 +185,7 @@ public class DirectoryApi {
    * @return An OperationOutcome indicating the success or failure of the deletion.
    */
   private OperationOutcome deleteStarModel(StarModelData starModelInputData) {
-    String apiUrl = buildApiUrl(starModelInputData.getCountryCode(), "facts");
+    String apiUrl = DirectoryRestEndpoints.getFactEndpoint(starModelInputData.getCountryCode());
 
     try {
       for (String collectionId: starModelInputData.getInputCollectionIds()) {
@@ -287,7 +287,7 @@ public class DirectoryApi {
    * @return true if the diagnosis code is a valid ICD value, false if not, or if an error condition was encountered.
    */
   private boolean isValidIcdValue(String diagnosis) {
-    String url = "/api/v2/eu_bbmri_eric_disease_types?q=id=='" + diagnosis + "'";
+    String url = DirectoryRestEndpoints.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
     Map body = (Map) directoryRest.get(url, Map.class);
     if (body != null) {
       if (body.containsKey("total")) {
@@ -304,41 +304,5 @@ public class DirectoryApi {
       logger.warn("isValidIcdValue: get response is null");
 
     return false;
-  }
-
-  /**
-   * Constructs the URL for accessing the biobank endpoint of the Directory API based on the country code.
-   *
-   * @param countryCode The country code (e.g., "DE").
-   * @return the constructed biobank API URL.
-   */
-  private String buildBiobankApiUrl(String countryCode) {
-    return buildApiUrl(countryCode, "biobanks");
-  }
-
-  /**
-   * Constructs the URL for accessing the collection endpoint of the Directory API based on the country code.
-   *
-   * @param countryCode The country code (e.g., "DE").
-   * @return the constructed collection API URL.
-   */
-  private String buildCollectionApiUrl(String countryCode) {
-    return buildApiUrl(countryCode, "collections");
-  }
-
-  /**
-   * Create a URL for a specific Directory API endpoint.
-   * 
-   * @param countryCode a code such as "DE" specifying the country the URL should address. May be null.
-   * @param function specifies the type of the endpoint, e.g. "collections".
-   * @return
-   */
-  private String buildApiUrl(String countryCode, String function) {
-    String countryCodeInsert = "";
-    if (countryCode != null && !countryCode.isEmpty())
-      countryCodeInsert = countryCode + "_";
-    String collectionApiUrl = "/api/v2/eu_bbmri_eric_" + countryCodeInsert + function;
-
-    return collectionApiUrl;
   }
 }
