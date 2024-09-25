@@ -84,7 +84,7 @@ public abstract class DirectoryApi {
    * @param starModelInputData The input data for updating the Star Model.
    * @return An OperationOutcome indicating the success or failure of the update.
    */
-  public abstract OperationOutcome updateStarModel(StarModelData starModelInputData);
+  public abstract boolean updateStarModel(StarModelData starModelInputData);
 
   /**
    * Collects diagnosis corrections from the Directory.

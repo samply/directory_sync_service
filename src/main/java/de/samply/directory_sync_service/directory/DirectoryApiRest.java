@@ -159,20 +159,21 @@ public class DirectoryApiRest extends DirectoryApi {
    * @param starModelInputData The input data for updating the Star Model.
    * @return An OperationOutcome indicating the success or failure of the update.
    */
-  public OperationOutcome updateStarModel(StarModelData starModelInputData) {
-    if (mockDirectory)
+  public boolean updateStarModel(StarModelData starModelInputData) {
+    if (mockDirectory) {
       // Dummy return if we're in mock mode
-      return DirectoryUtils.success("DirectoryApiRest.updateStarModel: in mock mode, skip update");
+      logger.info("DirectoryApiRest.updateStarModel: in mock mode, skip update");
+      return true;
+    }
 
     // Get rid of previous star models first. This is necessary, because:
     // 1. A new star model may be decomposed into different hypercubes.
     // 2. The new fact IDs may be different from the old ones.
     // 3. We will be using a POST and it will return an error if we try
     //    to overwrite an existing fact.
-    OperationOutcome deleteOutcome = deleteStarModel(starModelInputData);
-    if (deleteOutcome.getIssue().size() > 0) {
+    if (!deleteStarModel(starModelInputData)) {
       logger.warn("updateStarModel: Problem deleting star models");
-      return deleteOutcome;
+      return false;
     }
 
     String countryCode = starModelInputData.getCountryCode();
@@ -187,20 +188,24 @@ public class DirectoryApiRest extends DirectoryApi {
       Map<String,Object> body = new HashMap<String,Object>();
       body.put("entities", factTablesBlock);
       String response = directoryRestCalls.post(DirectoryRestEndpoints.getFactEndpoint(countryCode), body);
-      if (response == null)
-        return DirectoryUtils.error("updateStarModel, failed, block: " + i);
+      if (response == null) {
+        logger.warn("updateStarModel, failed, block: " + i);
+        return false;
+      }
     }
 
-    return DirectoryUtils.success("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
+    logger.info("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
+
+    return true;
   }
 
   /**
    * Deletes existing star models from the Directory service for each of the collection IDs in the supplied StarModelInputData object.
    *
    * @param starModelInputData The input data for deleting existing star models.
-   * @return An OperationOutcome indicating the success or failure of the deletion.
+   * @return An boolean indicating the success or failure of the deletion.
    */
-  private OperationOutcome deleteStarModel(StarModelData starModelInputData) {
+  private boolean deleteStarModel(StarModelData starModelInputData) {
     String apiUrl = DirectoryRestEndpoints.getFactEndpoint(starModelInputData.getCountryCode());
 
     try {
@@ -213,10 +218,14 @@ public class DirectoryApiRest extends DirectoryApi {
           // First get a list of fact IDs for this collection
           Map factWrapper = (Map) directoryRestCalls.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
 
-          if (factWrapper == null)
-            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
-          if (!factWrapper.containsKey("items"))
-            return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, no item key present: " + collectionId);
+          if (factWrapper == null) {
+            logger.warn("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
+            return false;
+          }
+          if (!factWrapper.containsKey("items")) {
+            logger.warn("deleteStarModel: Problem getting facts for collection, no item key present: " + collectionId);
+            return false;
+          }
           List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
           if (facts.size() == 0)
             break;
@@ -226,16 +235,18 @@ public class DirectoryApiRest extends DirectoryApi {
 
           // Take the list of fact IDs and delete all of the corresponding facts
           // at the Directory.
-          OperationOutcome deleteOutcome = deleteFactsByIds(apiUrl, factIds);
-          if (deleteOutcome.getIssue().size() > 0)
-            return deleteOutcome;
+          if (!deleteFactsByIds(apiUrl, factIds)) {
+            logger.info("deleteStarModel: Problem deleting facts for collection: " + collectionId);
+            return false;
+          }
         } while (true);
       }
     } catch(Exception e) {
-      return DirectoryUtils.error("deleteStarModel: Exception during delete: " + Util.traceFromException(e));
+      logger.warn("deleteStarModel: Exception during delete: " + Util.traceFromException(e));
+      return false;
     }
 
-    return new OperationOutcome();
+    return true;
   }
 
   /**
@@ -245,17 +256,19 @@ public class DirectoryApiRest extends DirectoryApi {
    * @param factIds   The list of fact IDs to be deleted.
    * @return An OperationOutcome indicating the success or failure of the deletion.
    */
-  private OperationOutcome deleteFactsByIds(String apiUrl, List<String> factIds) {
+  private boolean deleteFactsByIds(String apiUrl, List<String> factIds) {
     if (factIds.size() == 0)
       // Nothing to delete
-      return new OperationOutcome();
+      return true;
 
     String result = directoryRestCalls.delete(apiUrl, factIds);
 
-    if (result == null)
-      return DirectoryUtils.error("deleteFactsByIds, Problem during delete of factIds");
+    if (result == null) {
+      logger.warn("deleteFactsByIds, Problem during delete of factIds");
+      return false;
+    }
 
-    return new OperationOutcome();
+    return true;
   }
 
   /**

@@ -70,10 +70,8 @@ public class StarModelUpdater {
 
             // Send fact tables to Direcory.
             directoryApi.login();
-            OperationOutcome updateOutcome = directoryApi.updateStarModel(starModelInputData);
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
 
-            if (!errorMessage.isEmpty()) {
+            if (!directoryApi.updateStarModel(starModelInputData)) {
                 logger.warn("sendStarModelUpdatesToDirectory: Problem during star model update");
                 return false;
             }
