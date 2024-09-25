@@ -2,7 +2,7 @@ package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
-import de.samply.directory_sync_service.directory.DirectoryApi;
+import de.samply.directory_sync_service.directory.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.BbmriEricId;
@@ -27,7 +27,7 @@ public class StarModelUpdater {
      * The method handles errors by returning a list of OperationOutcome objects describing the issues.
      * </p>
      * @param fhirApi
-     * @param directoryApi
+     * @param directoryApiRest
      * @param correctedDiagnoses
      * @param defaultCollectionId The default BBMRI-ERIC collection ID for fetching data from the FHIR store.
      * @param minDonors The minimum number of donors required for a fact to be included in the star model output.
@@ -36,7 +36,7 @@ public class StarModelUpdater {
      *
      * @throws IllegalArgumentException if the defaultCollectionId is not a valid BbmriEricId.
      */
-    public static boolean sendStarModelUpdatesToDirectory(FhirApi fhirApi, DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, String defaultCollectionId, int minDonors, int maxFacts) {
+    public static boolean sendStarModelUpdatesToDirectory(FhirApi fhirApi, DirectoryApiRest directoryApiRest, Map<String, String> correctedDiagnoses, String defaultCollectionId, int minDonors, int maxFacts) {
         logger.info("__________ sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
@@ -52,7 +52,7 @@ public class StarModelUpdater {
             }
             logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
-            directoryApi.login();
+            directoryApiRest.login();
 
             // Hypercubes containing less than the minimum number of donors will not be
             // included in the star model output.
@@ -69,8 +69,8 @@ public class StarModelUpdater {
             logger.info("__________ sendStarModelUpdatesToDirectory: 2 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
 
             // Send fact tables to Direcory.
-            directoryApi.login();
-            OperationOutcome updateOutcome = directoryApi.updateStarModel(starModelInputData);
+            directoryApiRest.login();
+            OperationOutcome updateOutcome = directoryApiRest.updateStarModel(starModelInputData);
             String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
 
             if (!errorMessage.isEmpty()) {

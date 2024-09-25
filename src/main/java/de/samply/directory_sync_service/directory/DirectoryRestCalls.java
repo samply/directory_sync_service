@@ -29,15 +29,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * It provides methods to perform HTTP GET, POST, PUT, and DELETE operations on a Directory service.
  * It handles authentication via a login method and manages session tokens for authorized requests.
  */
-public class DirectoryRest {
-  private static final Logger logger = LoggerFactory.getLogger(DirectoryRest.class);
+public class DirectoryRestCalls {
+  private static final Logger logger = LoggerFactory.getLogger(DirectoryRestCalls.class);
   private final Gson gson = new Gson();
   private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final String baseUrl;
   private DirectoryCredentials directoryCredentials;
 
   /**
-   * Constructs a DirectoryRest object.
+   * Constructs a DirectoryRestCalls object.
    * <p>
    * This constructor initializes the HTTP client, base URL, and credentials for interacting with the Directory service.
    * It also triggers the login process to authenticate and obtain a session token.
@@ -46,7 +46,7 @@ public class DirectoryRest {
    * @param username the username for Directory authentication
    * @param password the password for Directory authentication
    */
-  public DirectoryRest(String baseUrl, String username, String password) {
+  public DirectoryRestCalls(String baseUrl, String username, String password) {
     this.baseUrl = baseUrl.replaceFirst("/*$", "");
     this.directoryCredentials = new DirectoryCredentials(username, password);
   }

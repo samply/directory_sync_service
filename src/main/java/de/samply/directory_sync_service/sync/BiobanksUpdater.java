@@ -1,7 +1,7 @@
 package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.directory.DirectoryApi;
+import de.samply.directory_sync_service.directory.DirectoryApiRest;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.model.BbmriEricId;
@@ -29,7 +29,7 @@ public class BiobanksUpdater {
      *
      * @return the individual {@link OperationOutcome}s from each update
      */
-    public static boolean updateBiobanksInFhirStore(FhirApi fhirApi, DirectoryApi directoryApi) {
+    public static boolean updateBiobanksInFhirStore(FhirApi fhirApi, DirectoryApiRest directoryApiRest) {
         // Retrieve the list of all biobanks
         List<Organization> organizations = fhirApi.listAllBiobanks();
 
@@ -42,7 +42,7 @@ public class BiobanksUpdater {
             // If successful, process each biobank and update it on the FHIR server if necessary
             for (Organization organization : organizations) {
                 // Update each biobank and report any errors
-                if (!updateBiobankInFhirStore(fhirApi, directoryApi, organization)) {
+                if (!updateBiobankInFhirStore(fhirApi, directoryApiRest, organization)) {
                     logger.warn("updateBiobankOnFhirServerIfNecessary: problem updating: " + organization.getIdElement().getValue());
                     succeeded = false;
                 }
@@ -58,7 +58,7 @@ public class BiobanksUpdater {
      * @param fhirBiobank the biobank to update.
      * @return the {@link OperationOutcome} from the FHIR server update
      */
-    private static boolean updateBiobankInFhirStore(FhirApi fhirApi, DirectoryApi directoryApi, Organization fhirBiobank) {
+    private static boolean updateBiobankInFhirStore(FhirApi fhirApi, DirectoryApiRest directoryApiRest, Organization fhirBiobank) {
         logger.info("updateBiobankOnFhirServerIfNecessary: entered");
 
         // Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
@@ -76,7 +76,7 @@ public class BiobanksUpdater {
         logger.info("updateBiobankOnFhirServerIfNecessary: bbmriEricId: " + bbmriEricId);
 
         // Fetch the corresponding biobank from the Directory API
-        Biobank directoryBiobank = directoryApi.fetchBiobank(bbmriEricId);
+        Biobank directoryBiobank = directoryApiRest.fetchBiobank(bbmriEricId);
 
         logger.info("updateBiobankOnFhirServerIfNecessary: directoryBiobank: " + directoryBiobank);
 

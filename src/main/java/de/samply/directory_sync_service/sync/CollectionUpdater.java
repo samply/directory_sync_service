@@ -2,7 +2,7 @@ package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryCollectionPutConverter;
-import de.samply.directory_sync_service.directory.DirectoryApi;
+import de.samply.directory_sync_service.directory.DirectoryApiRest;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
@@ -40,7 +40,7 @@ public class CollectionUpdater {
      * @param defaultCollectionId The default collection ID to use for fetching collections from the FHIR store.
      * @return A list of OperationOutcome objects indicating the outcome of the update operation.
      */
-    public static boolean sendUpdatesToDirectory(FhirApi fhirApi, DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, String defaultCollectionId) {
+    public static boolean sendUpdatesToDirectory(FhirApi fhirApi, DirectoryApiRest directoryApiRest, Map<String, String> correctedDiagnoses, String defaultCollectionId) {
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
                     .valueOf(defaultCollectionId)
@@ -62,8 +62,8 @@ public class CollectionUpdater {
 
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
-            directoryApi.login();
-            DirectoryCollectionGet directoryCollectionGet = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
+            directoryApiRest.login();
+            DirectoryCollectionGet directoryCollectionGet = directoryApiRest.fetchCollectionGetOutcomes(countryCode, collectionIds);
             if (directoryCollectionGet == null) {
                 logger.warn("Problem getting collections from Directory");
                 return false;
@@ -81,8 +81,8 @@ public class CollectionUpdater {
             directoryCollectionPut.applyDiagnosisCorrections(correctedDiagnoses);
             logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
-            directoryApi.login();
-            OperationOutcome updateOutcome = directoryApi.updateEntities(directoryCollectionPut);
+            directoryApiRest.login();
+            OperationOutcome updateOutcome = directoryApiRest.updateEntities(directoryCollectionPut);
             String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
 
             if (!errorMessage.isEmpty()) {

@@ -18,21 +18,21 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * The DirectoryApi class provides an interface for interacting with the Directory service.
+ * The DirectoryApiRest class provides an interface for interacting with the Directory service.
  * This class allows for fetching and updating biobank and collection information, managing star models,
  * and performing various validation and correction operations.
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
  */
-public class DirectoryApi {
-  private static final Logger logger = LoggerFactory.getLogger(DirectoryApi.class);
-  private DirectoryRest directoryRest;
+public class DirectoryApiRest {
+  private static final Logger logger = LoggerFactory.getLogger(DirectoryApiRest.class);
+  private DirectoryRestCalls directoryRestCalls;
 
   // Setting this variable to true will prevent any contact being made to the Directory.
   // All public methods will return feasible fake results.
   private boolean mockDirectory = false;
 
   /**
-   * Constructs a new DirectoryApi instance.
+   * Constructs a new DirectoryApiRest instance.
    * If we are not in mocking mode, log in to the Directory.
    *
    * @param baseUrl The base URL of the Directory service.
@@ -40,9 +40,9 @@ public class DirectoryApi {
    * @param username The username for authenticating with the Directory.
    * @param password The password for authenticating with the Directory.
    */
-  public DirectoryApi(String baseUrl, boolean mockDirectory, String username, String password) {
+  public DirectoryApiRest(String baseUrl, boolean mockDirectory, String username, String password) {
     this.mockDirectory = mockDirectory;
-    this.directoryRest = new DirectoryRest(baseUrl, username, password);
+    this.directoryRestCalls = new DirectoryRestCalls(baseUrl, username, password);
   }
 
   /**
@@ -52,7 +52,7 @@ public class DirectoryApi {
     List<String> endpoints = DirectoryRestEndpoints.getAllEndpoints();
 
     for (String endpoint: endpoints)
-      if (!directoryRest.endpointExists(endpoint)) {
+      if (!directoryRestCalls.endpointExists(endpoint)) {
         logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
         return false;
       }
@@ -72,7 +72,7 @@ public class DirectoryApi {
       // Don't try logging in if we are mocking
       return true;
 
-    return directoryRest.login();
+    return directoryRestCalls.login();
   }
 
   /**
@@ -86,7 +86,7 @@ public class DirectoryApi {
       // Return a fake Biobank if we are mocking
       return new Biobank();
 
-    Biobank biobank = (Biobank) directoryRest.get(DirectoryRestEndpoints.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
+    Biobank biobank = (Biobank) directoryRestCalls.get(DirectoryRestEndpoints.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
     if (biobank == null) {
       logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
       return null;
@@ -114,7 +114,7 @@ public class DirectoryApi {
     }
 
     for (String collectionId: collectionIds) {
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRest.get(DirectoryRestEndpoints.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRestCalls.get(DirectoryRestEndpoints.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
         logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
         return null;
@@ -139,13 +139,13 @@ public class DirectoryApi {
   public OperationOutcome updateEntities(DirectoryCollectionPut directoryCollectionPut) {
     if (mockDirectory)
       // Dummy return if we're in mock mode
-      return DirectoryUtils.success("DirectoryApi.updateEntities: in mock mode, skip update");
+      return DirectoryUtils.success("DirectoryApiRest.updateEntities: in mock mode, skip update");
 
-    String response = directoryRest.put(DirectoryRestEndpoints.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    String response = directoryRestCalls.put(DirectoryRestEndpoints.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null)
       return DirectoryUtils.error("entity update, PUT problem");
 
-    return DirectoryUtils.success("DirectoryApi.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
+    return DirectoryUtils.success("DirectoryApiRest.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
   }
 
   /**
@@ -161,7 +161,7 @@ public class DirectoryApi {
   public OperationOutcome updateStarModel(StarModelData starModelInputData) {
     if (mockDirectory)
       // Dummy return if we're in mock mode
-      return DirectoryUtils.success("DirectoryApi.updateStarModel: in mock mode, skip update");
+      return DirectoryUtils.success("DirectoryApiRest.updateStarModel: in mock mode, skip update");
 
     // Get rid of previous star models first. This is necessary, because:
     // 1. A new star model may be decomposed into different hypercubes.
@@ -185,12 +185,12 @@ public class DirectoryApi {
 
       Map<String,Object> body = new HashMap<String,Object>();
       body.put("entities", factTablesBlock);
-      String response = directoryRest.post(DirectoryRestEndpoints.getFactEndpoint(countryCode), body);
+      String response = directoryRestCalls.post(DirectoryRestEndpoints.getFactEndpoint(countryCode), body);
       if (response == null)
         return DirectoryUtils.error("updateStarModel, failed, block: " + i);
     }
 
-    return DirectoryUtils.success("DirectoryApi.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
+    return DirectoryUtils.success("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
   }
 
   /**
@@ -210,7 +210,7 @@ public class DirectoryApi {
         // and a single pass may not get all facts.
         do {
           // First get a list of fact IDs for this collection
-          Map factWrapper = (Map) directoryRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
+          Map factWrapper = (Map) directoryRestCalls.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
 
           if (factWrapper == null)
             return DirectoryUtils.error("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
@@ -249,7 +249,7 @@ public class DirectoryApi {
       // Nothing to delete
       return new OperationOutcome();
 
-    String result = directoryRest.delete(apiUrl, factIds);
+    String result = directoryRestCalls.delete(apiUrl, factIds);
 
     if (result == null)
       return DirectoryUtils.error("deleteFactsByIds, Problem during delete of factIds");
@@ -303,7 +303,7 @@ public class DirectoryApi {
    */
   private boolean isValidIcdValue(String diagnosis) {
     String url = DirectoryRestEndpoints.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
-    Map body = (Map) directoryRest.get(url, Map.class);
+    Map body = (Map) directoryRestCalls.get(url, Map.class);
     if (body != null) {
       if (body.containsKey("total")) {
         Object total = body.get("total");
