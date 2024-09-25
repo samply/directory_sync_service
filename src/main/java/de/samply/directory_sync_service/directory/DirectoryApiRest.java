@@ -23,13 +23,8 @@ import org.slf4j.LoggerFactory;
  * and performing various validation and correction operations.
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
  */
-public class DirectoryApiRest {
-  private static final Logger logger = LoggerFactory.getLogger(DirectoryApiRest.class);
+public class DirectoryApiRest extends DirectoryApi {
   private DirectoryRestCalls directoryRestCalls;
-
-  // Setting this variable to true will prevent any contact being made to the Directory.
-  // All public methods will return feasible fake results.
-  private boolean mockDirectory = false;
 
   /**
    * Constructs a new DirectoryApiRest instance.
@@ -41,7 +36,7 @@ public class DirectoryApiRest {
    * @param password The password for authenticating with the Directory.
    */
   public DirectoryApiRest(String baseUrl, boolean mockDirectory, String username, String password) {
-    this.mockDirectory = mockDirectory;
+    super(baseUrl, mockDirectory, username, password);
     this.directoryRestCalls = new DirectoryRestCalls(baseUrl, username, password);
   }
 
@@ -136,16 +131,22 @@ public class DirectoryApiRest {
    * @param directoryCollectionPut Summary information about one or more collections
    * @return an outcome, either successful or null
    */
-  public OperationOutcome updateEntities(DirectoryCollectionPut directoryCollectionPut) {
-    if (mockDirectory)
+  public boolean updateEntities(DirectoryCollectionPut directoryCollectionPut) {
+    if (mockDirectory) {
       // Dummy return if we're in mock mode
-      return DirectoryUtils.success("DirectoryApiRest.updateEntities: in mock mode, skip update");
+      logger.info("DirectoryApiRest.updateEntities: in mock mode, skip update");
+      return true;
+    }
 
     String response = directoryRestCalls.put(DirectoryRestEndpoints.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
-    if (response == null)
-      return DirectoryUtils.error("entity update, PUT problem");
+    if (response == null) {
+      logger.warn("entity update, PUT problem");
+      return false;
+    }
 
-    return DirectoryUtils.success("DirectoryApiRest.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
+    logger.info("DirectoryApiRest.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
+
+    return true;
   }
 
   /**

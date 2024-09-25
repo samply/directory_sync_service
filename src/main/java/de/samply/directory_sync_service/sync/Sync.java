@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.sync;
 
+import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
@@ -56,14 +57,14 @@ public class Sync {
         Map<String, String> correctedDiagnoses = null;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
-        DirectoryApiRest directoryApiRest = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+        DirectoryApi directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 
-        if (!directoryApiRest.isAvailable()) {
+        if (!directoryApi.isAvailable()) {
             logger.warn("syncWithDirectory: Directory REST API is not available");
             return false;
         }
 
-        if (!directoryApiRest.login()) {
+        if (!directoryApi.login()) {
             logger.warn("syncWithDirectory: there was a problem during login to Directory");
             return false;
         }
@@ -74,22 +75,22 @@ public class Sync {
             return true;
         }
 
-        correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApiRest, directoryDefaultCollectionId);
+        correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {
             logger.warn("syncWithDirectory: there was a problem during diagnosis corrections");
             return false;
         }
         if (directoryAllowStarModel)
-            if (!StarModelUpdater.sendStarModelUpdatesToDirectory(fhirApi, directoryApiRest, correctedDiagnoses, directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts)) {
+            if (!StarModelUpdater.sendStarModelUpdatesToDirectory(fhirApi, directoryApi, correctedDiagnoses, directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts)) {
                 logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
                 return false;
             }
-        if (!CollectionUpdater.sendUpdatesToDirectory(fhirApi, directoryApiRest, correctedDiagnoses, directoryDefaultCollectionId)) {
+        if (!CollectionUpdater.sendUpdatesToDirectory(fhirApi, directoryApi, correctedDiagnoses, directoryDefaultCollectionId)) {
             logger.warn("syncWithDirectory: there was a problem during sync to Directory");
             return false;
         }
 
-        if (!BiobanksUpdater.updateBiobanksInFhirStore(fhirApi, directoryApiRest)) {
+        if (!BiobanksUpdater.updateBiobanksInFhirStore(fhirApi, directoryApi)) {
             logger.warn("syncWithDirectory: there was a problem during sync from Directory");
             return false;
         }

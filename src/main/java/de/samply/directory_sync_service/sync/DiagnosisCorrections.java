@@ -2,7 +2,7 @@ package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
-import de.samply.directory_sync_service.directory.DirectoryApiRest;
+import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import org.slf4j.Logger;
@@ -28,12 +28,12 @@ public class DiagnosisCorrections {
      * * Collects corrected diagnosis codes from the Directory API based on the MIRIAM-compatible codes.
      * <p>
      * @param fhirApi
-     * @param directoryApiRest
+     * @param directoryApi
      * @param defaultCollectionId Default collection ID. May be null.
      * @return A list containing diagnosis corrections.
      *         If any errors occur during the process, null is returned.
      */
-    public static Map<String, String> generateDiagnosisCorrections(FhirApi fhirApi, DirectoryApiRest directoryApiRest, String defaultCollectionId) {
+    public static Map<String, String> generateDiagnosisCorrections(FhirApi fhirApi, DirectoryApi directoryApi, String defaultCollectionId) {
         try {
             Map<String, String> correctedDiagnoses = new HashMap<String, String>();
             // Convert string version of collection ID into a BBMRI ERIC ID.
@@ -59,7 +59,7 @@ public class DiagnosisCorrections {
             logger.info("__________ generateDiagnosisCorrections: 1 correctedDiagnoses.size(): " + correctedDiagnoses.size());
 
             // Get corrected diagnosis codes from the Directory
-            directoryApiRest.collectDiagnosisCorrections(correctedDiagnoses);
+            directoryApi.collectDiagnosisCorrections(correctedDiagnoses);
             logger.info("__________ generateDiagnosisCorrections: 2 correctedDiagnoses.size(): " + correctedDiagnoses.size());
 
             return correctedDiagnoses;

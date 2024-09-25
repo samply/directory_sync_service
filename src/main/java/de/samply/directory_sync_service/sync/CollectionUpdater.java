@@ -2,14 +2,13 @@ package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryCollectionPutConverter;
-import de.samply.directory_sync_service.directory.DirectoryApiRest;
+import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.model.BbmriEricId;
-import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,7 @@ public class CollectionUpdater {
      * @param defaultCollectionId The default collection ID to use for fetching collections from the FHIR store.
      * @return A list of OperationOutcome objects indicating the outcome of the update operation.
      */
-    public static boolean sendUpdatesToDirectory(FhirApi fhirApi, DirectoryApiRest directoryApiRest, Map<String, String> correctedDiagnoses, String defaultCollectionId) {
+    public static boolean sendUpdatesToDirectory(FhirApi fhirApi, DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, String defaultCollectionId) {
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
                     .valueOf(defaultCollectionId)
@@ -62,8 +61,8 @@ public class CollectionUpdater {
 
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
-            directoryApiRest.login();
-            DirectoryCollectionGet directoryCollectionGet = directoryApiRest.fetchCollectionGetOutcomes(countryCode, collectionIds);
+            directoryApi.login();
+            DirectoryCollectionGet directoryCollectionGet = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
             if (directoryCollectionGet == null) {
                 logger.warn("Problem getting collections from Directory");
                 return false;
@@ -81,12 +80,10 @@ public class CollectionUpdater {
             directoryCollectionPut.applyDiagnosisCorrections(correctedDiagnoses);
             logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
-            directoryApiRest.login();
-            OperationOutcome updateOutcome = directoryApiRest.updateEntities(directoryCollectionPut);
-            String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
+            directoryApi.login();
 
-            if (!errorMessage.isEmpty()) {
-                logger.warn("sendUpdatesToDirectory: Problem during star model update");
+            if (!directoryApi.updateEntities(directoryCollectionPut)) {
+                logger.warn("sendUpdatesToDirectory: Problem during collection update");
                 return false;
             }
 
