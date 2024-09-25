@@ -54,10 +54,11 @@ public class DirectoryRest {
   /**
    * Checks if a given REST endpoint exists by sending an OPTIONS request.
    *
-   * @param url the URL of the REST endpoint to check
+   * @param endpoint the URL of the REST endpoint to check
    * @return true if the endpoint exists, false otherwise
    */
-  public boolean doesEndpointExist(String url) {
+  public boolean endpointExists(String endpoint) {
+    String url = urlCombine(baseUrl, endpoint);
     CloseableHttpClient httpClient = HttpClients.createDefault();
     HttpOptions request = new HttpOptions(url);
 
@@ -88,13 +89,14 @@ public class DirectoryRest {
    * Logs in to the Directory, using local credentials.
    * Updates the token in the directory credentials upon successful login.
    */
-  public void login() {
+  public boolean login() {
     DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(DirectoryRestEndpoints.getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
     if (loginResponse == null) {
       logger.error("login: failed to log in to Directory");
-      throw new RuntimeException("login: failed to log in to Directory");
+      return false;
     } else
       directoryCredentials.setToken(loginResponse.token);
+    return true;
   }
 
   /**

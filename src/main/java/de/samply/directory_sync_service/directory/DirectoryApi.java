@@ -43,21 +43,36 @@ public class DirectoryApi {
   public DirectoryApi(String baseUrl, boolean mockDirectory, String username, String password) {
     this.mockDirectory = mockDirectory;
     this.directoryRest = new DirectoryRest(baseUrl, username, password);
-    relogin();
   }
 
   /**
-   * Log back in to the Directory. This is typically used in situations where there has
-   * been a long pause since the last API call to the Directory.
+   * @return true if this API is accessible, false otherwise.
    */
-  public void relogin() {
+  public boolean isAvailable() {
+    List<String> endpoints = DirectoryRestEndpoints.getAllEndpoints();
+
+    for (String endpoint: endpoints)
+      if (!directoryRest.endpointExists(endpoint)) {
+        logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
+        return false;
+      }
+
+    logger.info("isAvailable: all availability tests have succeeded");
+
+    return true;
+  }
+
+  /**
+   * Log in to the Directory. You can log in as many times as you like.
+   */
+  public boolean login() {
     logger.info("login: logging  in");
 
     if (mockDirectory)
       // Don't try logging in if we are mocking
-      return;
+      return true;
 
-    directoryRest.login();
+    return directoryRest.login();
   }
 
   /**

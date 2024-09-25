@@ -63,18 +63,14 @@ public class DirectoryRestEndpoints {
   }
 
   /**
-   * Retrieves a list of all available REST endpoints in the Directory API for a specific country.
+   * Retrieves a list of all available REST endpoints in the Directory API that don't depend on a specific country.
    *
-   * @param countryCode The country code (e.g., "DE").
    * @return a list of endpoints.
    */
-  public static List<String> getAllEndpoints(String countryCode) {
+  public static List<String> getAllEndpoints() {
     List<String> endpoints = new ArrayList<>();
     endpoints.add(getLoginEndpoint());
     endpoints.add(getDiseaseTypeEndpoint());
-    endpoints.add(getBiobankEndpoint(countryCode));
-    endpoints.add(getCollectionEndpoint(countryCode));
-    endpoints.add(getFactEndpoint(countryCode));
 
     return endpoints;
   }

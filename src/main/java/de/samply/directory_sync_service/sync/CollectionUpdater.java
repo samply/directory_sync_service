@@ -62,7 +62,7 @@ public class CollectionUpdater {
 
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
-            directoryApi.relogin();
+            directoryApi.login();
             DirectoryCollectionGet directoryCollectionGet = directoryApi.fetchCollectionGetOutcomes(countryCode, collectionIds);
             if (directoryCollectionGet == null) {
                 logger.warn("Problem getting collections from Directory");
@@ -81,7 +81,7 @@ public class CollectionUpdater {
             directoryCollectionPut.applyDiagnosisCorrections(correctedDiagnoses);
             logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
-            directoryApi.relogin();
+            directoryApi.login();
             OperationOutcome updateOutcome = directoryApi.updateEntities(directoryCollectionPut);
             String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
 

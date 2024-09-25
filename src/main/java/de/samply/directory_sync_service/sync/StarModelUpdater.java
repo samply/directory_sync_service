@@ -11,8 +11,6 @@ import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,7 +52,7 @@ public class StarModelUpdater {
             }
             logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
-            directoryApi.relogin();
+            directoryApi.login();
 
             // Hypercubes containing less than the minimum number of donors will not be
             // included in the star model output.
@@ -71,7 +69,7 @@ public class StarModelUpdater {
             logger.info("__________ sendStarModelUpdatesToDirectory: 2 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
 
             // Send fact tables to Direcory.
-            directoryApi.relogin();
+            directoryApi.login();
             OperationOutcome updateOutcome = directoryApi.updateStarModel(starModelInputData);
             String errorMessage = Util.getErrorMessageFromOperationOutcome(updateOutcome);
 

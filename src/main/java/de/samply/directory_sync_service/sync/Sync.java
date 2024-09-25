@@ -58,6 +58,16 @@ public class Sync {
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApi(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 
+        if (!directoryApi.isAvailable()) {
+            logger.warn("syncWithDirectory: Directory REST API is not available");
+            return false;
+        }
+
+        if (!directoryApi.login()) {
+            logger.warn("syncWithDirectory: there was a problem during login to Directory");
+            return false;
+        }
+
         // Login test. Don't perform any further actions on the Directory.
         if (directoryOnlyLogin) {
             logger.info(">>>>>>>>>>>>>>> syncWithDirectory: login was successful, now quitting because onlyLogin was set to true");
