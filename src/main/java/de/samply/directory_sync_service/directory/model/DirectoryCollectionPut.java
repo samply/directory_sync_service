@@ -41,6 +41,10 @@ public class DirectoryCollectionPut extends HashMap {
         getEntity(collectionId).setCountry(country);
     }
 
+    public String getCountry(String collectionId) {
+        return getEntity(collectionId).getCountry();
+    }
+
     public void setName(String collectionId, String name) {
         getEntity(collectionId).setName(name);
     }
@@ -170,7 +174,7 @@ public class DirectoryCollectionPut extends HashMap {
      * @return The Entity with the specified collection ID. If not found, a new Entity
      *         is created and returned.
      */
-    private Entity getEntity(String collectionId) {
+    public Entity getEntity(String collectionId) {
         Entity entity = null;
 
         for (Entity e: getEntities())

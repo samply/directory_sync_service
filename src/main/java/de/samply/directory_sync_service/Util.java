@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service;
 
+import com.google.gson.Gson;
 import de.samply.directory_sync_service.sync.Sync;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -58,4 +59,16 @@ public class Util {
         return errorMessage;
     }
 
+    /**
+     * Converts an object into a JSON string representation using Gson library.
+     *
+     * @param object The object to convert into a JSON string.
+     * @return The JSON string representation of the object.
+     */
+    public static String jsonStringFomObject(Object object) {
+        if (object == null)
+            return null;
+        Gson gson = new Gson();
+        return gson.toJson(object);
+    }
 }

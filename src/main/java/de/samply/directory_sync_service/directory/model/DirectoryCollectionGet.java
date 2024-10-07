@@ -37,18 +37,26 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getCountryId(String id) {
+        if (!getItem(id).containsKey("country"))
+            return "";
         return (String) ((Map) getItem(id).get("country")).get("id");
     }
 
     public String getContactId(String id) {
+        if (!getItem(id).containsKey("contact"))
+            return "";
         return (String) ((Map) getItem(id).get("contact")).get("id");
     }
 
     public String getBiobankId(String id) {
+        if (!getItem(id).containsKey("biobank"))
+            return "";
         return (String) ((Map) getItem(id).get("biobank")).get("id");
     }
 
     public List<String> getTypeIds(String id) {
+        if (!getItem(id).containsKey("type"))
+            return new ArrayList<String>();
         Map item = getItem(id);
         List<Map<String,Object>> types = (List<Map<String,Object>>) item.get("type");
         List<String> typeLabels = new ArrayList<String>();
@@ -59,6 +67,8 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public List<String> getDataCategoryIds(String id) {
+        if (!getItem(id).containsKey("data_categories"))
+            return new ArrayList<String>();
         Map item = getItem(id);
         List<Map<String,Object>> dataCategories = (List<Map<String,Object>>) item.get("data_categories");
         List<String> dataCategoryLabels = new ArrayList<String>();
@@ -69,6 +79,8 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public List<String> getNetworkIds(String id) {
+        if (!getItem(id).containsKey("network"))
+            return new ArrayList<String>();
         Map item = getItem(id);
         List<Map<String,Object>> networks = (List<Map<String,Object>>) item.get("network");
         List<String> networkLabels = new ArrayList<String>();
@@ -79,10 +91,14 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getName(String id) {
+        if (!getItem(id).containsKey("name"))
+            return "";
         return (String) getItem(id).get("name");
     }
 
     public String getDescription(String id) {
+        if (!getItem(id).containsKey("description"))
+            return "";
         return (String) getItem(id).get("description");
     }
 
@@ -107,19 +123,31 @@ public class DirectoryCollectionGet extends HashMap {
         Map item = null;
 
         List<Map> items = getItems();
-        if (items == null)
+        if (items == null) {
+            logger.warn("DirectoryCollectionGet.getItem: getItems() returns null!");
             return null;
+        }
 
         for (Map e: items) {
             if (e == null) {
-                logger.warn("DirectoryCollectionGet.getItem: problem with getItems()");
+                logger.warn("DirectoryCollectionGet.getItem: one of the items is null, skipping it");
                 continue;
             }
-            if (e.get("id").equals(id)) {
+            String eId = null;
+            if (e.containsKey("id"))
+                eId = (String) e.get("id");
+            else {
+                logger.warn("DirectoryCollectionGet.getItem: one of the items has no id, skipping it");
+                continue;
+            }
+            if (eId.equals(id)) {
                 item = e;
                 break;
             }
         }
+
+        if (item == null)
+            logger.warn("DirectoryCollectionGet.getItem: could not find item with id " + id);
 
         return item;
     }

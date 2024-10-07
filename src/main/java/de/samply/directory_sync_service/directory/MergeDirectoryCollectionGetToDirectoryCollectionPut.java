@@ -32,14 +32,26 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
   public static boolean merge(DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
     List<String> collectionIds = directoryCollectionPut.getCollectionIds();
     // Only do a merge if we are not mocking
-    if (!directoryCollectionGet.isMockDirectory())
-      for (String collectionId: collectionIds)
-          if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null)
-            return false;
+    if (directoryCollectionGet.isMockDirectory())
+      return true;
+
+    for (String collectionId: collectionIds)
+        if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null) {
+          logger.warn("Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
+          return false;
+        }
     
     return true;
   }
 
+  /**
+   * Merges data from a DirectoryCollectionGet object into a DirectoryCollectionPut object.
+   *
+   * @param collectionId The ID of the collection to merge.
+   * @param directoryCollectionGet The DirectoryCollectionGet object containing data to merge.
+   * @param directoryCollectionPut The DirectoryCollectionPut object to merge data into.
+   * @return The DirectoryCollectionPut object with merged data, or null if an exception occurs.
+   */
   private static DirectoryCollectionPut merge(String collectionId, DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
     try {
       directoryCollectionPut.setName(collectionId, directoryCollectionGet.getName(collectionId));

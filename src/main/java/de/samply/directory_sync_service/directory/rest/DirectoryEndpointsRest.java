@@ -1,5 +1,6 @@
-package de.samply.directory_sync_service.directory;
+package de.samply.directory_sync_service.directory.rest;
 
+import de.samply.directory_sync_service.directory.DirectoryEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -8,8 +9,7 @@ import java.util.ArrayList;
 /**
  * Utility class that constructs various REST endpoints for the Directory API.
  */
-public class DirectoryRestEndpoints {
-  private static final Logger logger = LoggerFactory.getLogger(DirectoryRestEndpoints.class);
+public class DirectoryEndpointsRest extends DirectoryEndpoints {
   private static final String ENDPOINT_DISEASE_TYPE = "/api/v2/eu_bbmri_eric_disease_types";
   private static final String ENDPOINT_LOGIN = "/api/v1/login";
   private static final String ENDPOINT_FUNCTION = "/api/v2/eu_bbmri_eric_";
@@ -67,7 +67,7 @@ public class DirectoryRestEndpoints {
    *
    * @return a list of endpoints.
    */
-  public static List<String> getAllEndpoints() {
+  public List<String> getAllEndpoints() {
     List<String> endpoints = new ArrayList<>();
     endpoints.add(getLoginEndpoint());
     endpoints.add(getDiseaseTypeEndpoint());

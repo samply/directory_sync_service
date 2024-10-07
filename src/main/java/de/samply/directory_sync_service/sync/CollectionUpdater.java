@@ -68,6 +68,7 @@ public class CollectionUpdater {
                 return false;
             }
             logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
+            logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionGet: " + Util.jsonStringFomObject(directoryCollectionGet));
 
             if (!MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut)) {
                 logger.warn("Problem merging Directory GET attributes to Directory PUT attributes");

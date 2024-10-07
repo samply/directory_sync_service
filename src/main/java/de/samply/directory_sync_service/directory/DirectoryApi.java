@@ -5,7 +5,6 @@ import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.StarModelData;
-import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +19,8 @@ import java.util.Map;
  */
 public abstract class DirectoryApi {
   protected static final Logger logger = LoggerFactory.getLogger(DirectoryApi.class);
+  protected DirectoryCalls directoryCalls;
+  protected DirectoryEndpoints directoryEndpoints;
   // Setting this variable to true will prevent any contact being made to the Directory.
   // All public methods will return feasible fake results.
   protected boolean mockDirectory = false;
@@ -38,9 +39,24 @@ public abstract class DirectoryApi {
   }
 
   /**
-     * @return true if this API is accessible, false otherwise.
+   * @return true if this API is accessible, false otherwise.
    */
-  public abstract boolean isAvailable();
+  public boolean isAvailable() {
+    List<String> endpoints = directoryEndpoints.getAllEndpoints();
+
+    // Simply loop over all known endpoints for this API and check if they exist
+    boolean available = true;
+    for (String endpoint: endpoints)
+      if (!directoryCalls.endpointExists(endpoint)) {
+        logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
+        available = false;
+      }
+
+    if (available)
+      logger.info("isAvailable: all availability tests have succeeded");
+
+    return available;
+  }
 
   /**
    * Log in to the Directory. You can log in as many times as you like.
@@ -98,5 +114,31 @@ public abstract class DirectoryApi {
    *
    * @param diagnoses A string map containing diagnoses to be corrected.
    */
-  public abstract void collectDiagnosisCorrections(Map<String, String> diagnoses);
+  public void collectDiagnosisCorrections(Map<String, String> diagnoses) {
+    if (mockDirectory)
+      // Don't do anything if we're in mock mode
+      return;
+
+    int diagnosisCounter = 0; // for diagnostics only
+    int invalidIcdValueCounter = 0;
+    int correctedIcdValueCounter = 0;
+    for (String diagnosis: diagnoses.keySet()) {
+      if (diagnosisCounter%500 == 0)
+        logger.info("__________ collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
+      if (!isValidIcdValue(diagnosis)) {
+        invalidIcdValueCounter++;
+        String diagnosisCategory = diagnosis.split("\\.")[0];
+        if (isValidIcdValue(diagnosisCategory)) {
+          correctedIcdValueCounter++;
+          diagnoses.put(diagnosis, diagnosisCategory);
+        } else
+          diagnoses.put(diagnosis, null);
+      }
+      diagnosisCounter++;
+    }
+
+    logger.info("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter);
+  }
+
+  protected abstract boolean isValidIcdValue(String diagnosis);
 }

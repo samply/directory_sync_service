@@ -1,7 +1,9 @@
-package de.samply.directory_sync_service.directory;
+package de.samply.directory_sync_service.directory.rest;
 
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.directory.DirectoryCalls;
+import de.samply.directory_sync_service.directory.DirectoryCredentials;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -29,15 +31,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * It provides methods to perform HTTP GET, POST, PUT, and DELETE operations on a Directory service.
  * It handles authentication via a login method and manages session tokens for authorized requests.
  */
-public class DirectoryRestCalls {
-  private static final Logger logger = LoggerFactory.getLogger(DirectoryRestCalls.class);
-  private final Gson gson = new Gson();
-  private final CloseableHttpClient httpClient = HttpClients.createDefault();
-  private final String baseUrl;
-  private DirectoryCredentials directoryCredentials;
-
+public class DirectoryCallsRest extends DirectoryCalls {
   /**
-   * Constructs a DirectoryRestCalls object.
+   * Constructs a DirectoryCallsRest object.
    * <p>
    * This constructor initializes the HTTP client, base URL, and credentials for interacting with the Directory service.
    * It also triggers the login process to authenticate and obtain a session token.
@@ -46,43 +42,8 @@ public class DirectoryRestCalls {
    * @param username the username for Directory authentication
    * @param password the password for Directory authentication
    */
-  public DirectoryRestCalls(String baseUrl, String username, String password) {
-    this.baseUrl = baseUrl.replaceFirst("/*$", "");
-    this.directoryCredentials = new DirectoryCredentials(username, password);
-  }
-
-  /**
-   * Checks if a given REST endpoint exists by sending an OPTIONS request.
-   *
-   * @param endpoint the URL of the REST endpoint to check
-   * @return true if the endpoint exists, false otherwise
-   */
-  public boolean endpointExists(String endpoint) {
-    String url = urlCombine(baseUrl, endpoint);
-    CloseableHttpClient httpClient = HttpClients.createDefault();
-    HttpOptions request = new HttpOptions(url);
-
-    boolean returnStatus = true;
-    try {
-      HttpResponse response = httpClient.execute(request);
-
-      int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode != 200 && statusCode != 204) {
-        // The endpoint neither exists nor has the server responded with allowed methods.
-        returnStatus = false;
-      }
-    } catch (IOException e) {
-      logger.warn("doesEndpointExist: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
-      returnStatus = false;
-    } finally {
-      try {
-        httpClient.close();
-      } catch (IOException e) {
-        logger.warn("doesEndpointExist: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
-      }
-    }
-
-    return returnStatus;
+  public DirectoryCallsRest(String baseUrl, String username, String password) {
+    super(baseUrl, username, password);
   }
 
   /**
@@ -90,7 +51,7 @@ public class DirectoryRestCalls {
    * Updates the token in the directory credentials upon successful login.
    */
   public boolean login() {
-    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(DirectoryRestEndpoints.getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
+    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(DirectoryEndpointsRest.getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
     if (loginResponse == null) {
       logger.error("login: failed to log in to Directory");
       return false;
@@ -261,52 +222,6 @@ public class DirectoryRestCalls {
     StringEntity entity = new StringEntity(jsonBody, UTF_8);
 
     return entity;
-  }
-
-  /**
-   * Combines two URL parts, ensuring that there is exactly one slash between them.
-   *
-   * @param url1 the first part of the URL
-   * @param url2 the second part of the URL
-   * @return the combined URL as a {@code String}
-   */
-  private static String urlCombine(String url1, String url2) {
-    if (url1.endsWith("/") && url2.startsWith("/")) {
-      return url1 + url2.substring(1);
-    } else if (url1.endsWith("/") || url2.startsWith("/")) {
-      return url1 + url2;
-    } else {
-      return url1 + "/" + url2;
-    }
-  }
-
-  /**
-   * Executes an HTTP request and returns the response as a string.
-   * <p>
-   * Logs any exceptions or HTTP errors that occur during the request.
-   * </p>
-   *
-   * @param request the HTTP request to execute
-   * @return the response body as a {@code String}, or {@code null} if an error occurs
-   */
-  private String executeRequest(HttpUriRequest request) {
-    String result = null;
-    try {
-      CloseableHttpResponse response = httpClient.execute(request);
-      if (response.getStatusLine().getStatusCode() < 300) {
-        HttpEntity httpEntity = response.getEntity();
-        result = EntityUtils.toString(httpEntity);
-      } else if (response.getStatusLine().getStatusCode() == 404) {
-        logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + Integer.toString(response.getStatusLine().getStatusCode()));
-      } else
-        logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " +  Integer.toString(response.getStatusLine().getStatusCode()));
-    } catch (IOException e) {
-      logger.warn("executeRequest: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
-    } catch (Exception e) {
-      logger.warn("executeRequest: unknown exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
-    }
-
-    return result;
   }
 
   /**

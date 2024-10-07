@@ -1,5 +1,6 @@
-package de.samply.directory_sync_service.directory;
+package de.samply.directory_sync_service.directory.rest;
 
+import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 
@@ -12,10 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * The DirectoryApiRest class provides an interface for interacting with the Directory service.
@@ -24,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
  */
 public class DirectoryApiRest extends DirectoryApi {
-  private DirectoryRestCalls directoryRestCalls;
+  private DirectoryCallsRest directoryCallsRest;
 
   /**
    * Constructs a new DirectoryApiRest instance.
@@ -37,24 +34,9 @@ public class DirectoryApiRest extends DirectoryApi {
    */
   public DirectoryApiRest(String baseUrl, boolean mockDirectory, String username, String password) {
     super(baseUrl, mockDirectory, username, password);
-    this.directoryRestCalls = new DirectoryRestCalls(baseUrl, username, password);
-  }
-
-  /**
-   * @return true if this API is accessible, false otherwise.
-   */
-  public boolean isAvailable() {
-    List<String> endpoints = DirectoryRestEndpoints.getAllEndpoints();
-
-    for (String endpoint: endpoints)
-      if (!directoryRestCalls.endpointExists(endpoint)) {
-        logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
-        return false;
-      }
-
-    logger.info("isAvailable: all availability tests have succeeded");
-
-    return true;
+    this.directoryCallsRest = new DirectoryCallsRest(baseUrl, username, password);
+    directoryCalls = directoryCallsRest; // Used in superclass
+    directoryEndpoints = new DirectoryEndpointsRest();
   }
 
   /**
@@ -67,7 +49,7 @@ public class DirectoryApiRest extends DirectoryApi {
       // Don't try logging in if we are mocking
       return true;
 
-    return directoryRestCalls.login();
+    return directoryCallsRest.login();
   }
 
   /**
@@ -81,7 +63,7 @@ public class DirectoryApiRest extends DirectoryApi {
       // Return a fake Biobank if we are mocking
       return new Biobank();
 
-    Biobank biobank = (Biobank) directoryRestCalls.get(DirectoryRestEndpoints.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
+    Biobank biobank = (Biobank) directoryCallsRest.get(DirectoryEndpointsRest.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
     if (biobank == null) {
       logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
       return null;
@@ -109,7 +91,7 @@ public class DirectoryApiRest extends DirectoryApi {
     }
 
     for (String collectionId: collectionIds) {
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryRestCalls.get(DirectoryRestEndpoints.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(DirectoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
         logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
         return null;
@@ -119,6 +101,7 @@ public class DirectoryApiRest extends DirectoryApi {
         logger.warn("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId);
         return null;
       }
+      logger.info("fetchCollectionGetOutcomes: ????????? item: " + Util.jsonStringFomObject(item));
       directoryCollectionGet.getItems().add(item);
     }
 
@@ -138,7 +121,7 @@ public class DirectoryApiRest extends DirectoryApi {
       return true;
     }
 
-    String response = directoryRestCalls.put(DirectoryRestEndpoints.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    String response = directoryCallsRest.put(DirectoryEndpointsRest.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null) {
       logger.warn("entity update, PUT problem");
       return false;
@@ -187,7 +170,7 @@ public class DirectoryApiRest extends DirectoryApi {
 
       Map<String,Object> body = new HashMap<String,Object>();
       body.put("entities", factTablesBlock);
-      String response = directoryRestCalls.post(DirectoryRestEndpoints.getFactEndpoint(countryCode), body);
+      String response = directoryCallsRest.post(DirectoryEndpointsRest.getFactEndpoint(countryCode), body);
       if (response == null) {
         logger.warn("updateStarModel, failed, block: " + i);
         return false;
@@ -206,7 +189,7 @@ public class DirectoryApiRest extends DirectoryApi {
    * @return An boolean indicating the success or failure of the deletion.
    */
   private boolean deleteStarModel(StarModelData starModelInputData) {
-    String apiUrl = DirectoryRestEndpoints.getFactEndpoint(starModelInputData.getCountryCode());
+    String apiUrl = DirectoryEndpointsRest.getFactEndpoint(starModelInputData.getCountryCode());
 
     try {
       for (String collectionId: starModelInputData.getInputCollectionIds()) {
@@ -216,7 +199,7 @@ public class DirectoryApiRest extends DirectoryApi {
         // and a single pass may not get all facts.
         do {
           // First get a list of fact IDs for this collection
-          Map factWrapper = (Map) directoryRestCalls.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
+          Map factWrapper = (Map) directoryCallsRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
 
           if (factWrapper == null) {
             logger.warn("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
@@ -261,7 +244,7 @@ public class DirectoryApiRest extends DirectoryApi {
       // Nothing to delete
       return true;
 
-    String result = directoryRestCalls.delete(apiUrl, factIds);
+    String result = directoryCallsRest.delete(apiUrl, factIds);
 
     if (result == null) {
       logger.warn("deleteFactsByIds, Problem during delete of factIds");
@@ -272,52 +255,14 @@ public class DirectoryApiRest extends DirectoryApi {
   }
 
   /**
-   * Collects diagnosis corrections from the Directory.
-   * <p>
-   * It checks with the Directory if the diagnosis codes are valid ICD values and corrects them if necessary.
-   * <p>
-   * Two levels of correction are possible:
-   * <p>
-   * 1. If the full code is not correct, remove the number after the period and try again. If the new truncated code is OK, use it to replace the existing diagnosis.
-   * 2. If that doesn't work, replace the existing diagnosis with null.
-   *
-   * @param diagnoses A string map containing diagnoses to be corrected.
-   */
-  public void collectDiagnosisCorrections(Map<String, String> diagnoses) {
-    if (mockDirectory)
-      // Don't do anything if we're in mock mode
-      return;
-
-    int diagnosisCounter = 0; // for diagnostics only
-    int invalidIcdValueCounter = 0;
-    int correctedIcdValueCounter = 0;
-    for (String diagnosis: diagnoses.keySet()) {
-      if (diagnosisCounter%500 == 0)
-        logger.info("__________ collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
-      if (!isValidIcdValue(diagnosis)) {
-        invalidIcdValueCounter++;
-        String diagnosisCategory = diagnosis.split("\\.")[0];
-        if (isValidIcdValue(diagnosisCategory)) {
-          correctedIcdValueCounter++;
-          diagnoses.put(diagnosis, diagnosisCategory);
-        } else
-          diagnoses.put(diagnosis, null);
-      }
-      diagnosisCounter++;
-    }
-
-    logger.info("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter);
-  }
-
-  /**
    * Checks if a given diagnosis code is a valid ICD value by querying the Directory service.
    *
    * @param diagnosis The diagnosis code to be validated.
    * @return true if the diagnosis code is a valid ICD value, false if not, or if an error condition was encountered.
    */
-  private boolean isValidIcdValue(String diagnosis) {
-    String url = DirectoryRestEndpoints.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
-    Map body = (Map) directoryRestCalls.get(url, Map.class);
+  protected boolean isValidIcdValue(String diagnosis) {
+    String url = DirectoryEndpointsRest.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
+    Map body = (Map) directoryCallsRest.get(url, Map.class);
     if (body != null) {
       if (body.containsKey("total")) {
         Object total = body.get("total");

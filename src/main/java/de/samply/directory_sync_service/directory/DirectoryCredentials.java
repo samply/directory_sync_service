@@ -82,7 +82,7 @@ public class DirectoryCredentials {
    * </p>
    */
   public static class LoginResponse {
-    String username, token;
+    public String username, token;
 
     LoginResponse() {
     }
