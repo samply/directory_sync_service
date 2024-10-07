@@ -116,28 +116,76 @@ public class DirectoryApiGraphql extends DirectoryApi {
   public Biobank fetchBiobank(BbmriEricId id) {
     logger.info("fetchBiobank: entered");
 
+    Biobank biobank = new Biobank();
+
     if (mockDirectory)
       // Return a fake Biobank if we are mocking
-      return new Biobank();
+      return biobank;
 
-    String grapqlCommand = "query {\n" +
-            "  Biobanks( filter: { id: { equals: \"" + id.toString() + "\" } } ) {\n" +
-            "    id\n" +
-            "    name\n" +
-            "    description\n" +
-            "  }\n" +
-            "}";
+    try {
+      String grapqlCommand = "query {\n" +
+              "  Biobanks( filter: { id: { equals: \"" + id.toString() + "\" } } ) {\n" +
+              "    id\n" +
+              "    name\n" +
+              "  }\n" +
+              "}";
 
-    JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
 
-    if (result == null) {
-      logger.warn("fetchBiobank: result is null");
+      if (result == null) {
+        logger.warn("fetchBiobank: result is null");
+        return null;
+      }
+
+      logger.info("fetchBiobank: result: " + result);
+
+      Map<String, Object> biobanks = directoryCallsGraphql.convertJsonObjectToMap(result);
+
+      if (!biobanks.containsKey("Biobanks")) {
+        logger.warn("fetchBiobank: no Biobanks element found, skipping");
+        return null;
+      }
+
+      List<Map<String, Object>> biobankList = (List<Map<String, Object>>) biobanks.get("Biobanks");
+      if (biobankList == null || biobankList.size() == 0) {
+        logger.warn("fetchBiobank: Collections list is null or empty, skipping");
+        return null;
+      }
+
+      Map<String, Object> item = biobankList.get(0);
+
+      if (item == null) {
+        logger.warn("fetchBiobank: first element of biobankList is null");
+        return null;
+      }
+
+      if (!item.containsKey("id")) {
+        logger.warn("fetchBiobank: no id element found in item: " + Util.jsonStringFomObject(item));
+        return null;
+      }
+
+      String biobankId = (String) item.get("id");
+
+      if (!id.toString().equals(biobankId)) {
+        logger.warn("fetchBiobank: id in item: " + biobankId + " does not match id: " + id);
+        return null;
+      }
+
+      if (!item.containsKey("name")) {
+        logger.warn("fetchBiobank: no name element found in item: " + Util.jsonStringFomObject(item));
+        return null;
+      }
+
+      String name = (String) item.get("name");
+
+      biobank.setId(biobankId);
+      biobank.setName(name);
+    } catch (Exception e) {
+      logger.warn("fetchBiobank: Exception during biobank import: " + Util.traceFromException(e));
       return null;
     }
 
-    logger.info("fetchBiobank: result: " + result);
-
-    return new Biobank();
+    return biobank;
   }
 
   /**
