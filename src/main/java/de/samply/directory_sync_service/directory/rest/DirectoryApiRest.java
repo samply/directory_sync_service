@@ -1,18 +1,18 @@
 package de.samply.directory_sync_service.directory.rest;
 
 import de.samply.directory_sync_service.directory.DirectoryApi;
-import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.Util;
 
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 
 /**
  * The DirectoryApiRest class provides an interface for interacting with the Directory service.
@@ -133,116 +133,73 @@ public class DirectoryApiRest extends DirectoryApi {
   }
 
   /**
-   * Updates the Star Model data in the Directory service based on the provided StarModelInputData.
-   * <p>
-   * Before sending any star model data to the Directory, the original
-   * star model data for all known collections will be deleted from the
-   * Directory.
+   * Updates the fact tables block for a specific country with the provided data.
    *
-   * @param starModelInputData The input data for updating the Star Model.
-   * @return An OperationOutcome indicating the success or failure of the update.
+   * @param countryCode The country code, e.g. DE.
+   * @param factTablesBlock A list of maps representing the fact tables block data.
+   * @return true if the update was successful, false otherwise.
    */
-  public boolean updateStarModel(StarModelData starModelInputData) {
-    if (mockDirectory) {
-      // Dummy return if we're in mock mode
-      logger.info("DirectoryApiRest.updateStarModel: in mock mode, skip update");
-      return true;
-    }
-
-    // Get rid of previous star models first. This is necessary, because:
-    // 1. A new star model may be decomposed into different hypercubes.
-    // 2. The new fact IDs may be different from the old ones.
-    // 3. We will be using a POST and it will return an error if we try
-    //    to overwrite an existing fact.
-    if (!deleteStarModel(starModelInputData)) {
-      logger.warn("updateStarModel: Problem deleting star models");
+  @Override
+  protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
+    Map<String,Object> body = new HashMap<String,Object>();
+    body.put("entities", factTablesBlock);
+    String response = directoryCallsRest.post(DirectoryEndpointsRest.getFactEndpoint(countryCode), body);
+    if (response == null) {
+      logger.warn("updateFactTablesBlock: null response from REST call");
       return false;
     }
-
-    String countryCode = starModelInputData.getCountryCode();
-    List<Map<String, String>> factTables = starModelInputData.getFactTables();
-    int blockSize = 1000;
-
-    // Break the fact table into blocks of 1000 before sending to the Directory.
-    // This is the maximum number of facts allowed per Directory API call.
-    for (int i = 0; i < factTables.size(); i += blockSize) {
-      List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
-
-      Map<String,Object> body = new HashMap<String,Object>();
-      body.put("entities", factTablesBlock);
-      String response = directoryCallsRest.post(DirectoryEndpointsRest.getFactEndpoint(countryCode), body);
-      if (response == null) {
-        logger.warn("updateStarModel, failed, block: " + i);
-        return false;
-      }
-    }
-
-    logger.info("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
 
     return true;
   }
 
   /**
-   * Deletes existing star models from the Directory service for each of the collection IDs in the supplied StarModelInputData object.
+   * Retrieves a list of fact IDs from the Directory associated with a specific collection.
    *
-   * @param starModelInputData The input data for deleting existing star models.
-   * @return An boolean indicating the success or failure of the deletion.
+   * @param countryCode The country code, e.g. DE.
+   * @param collectionId The ID of the collection to retrieve fact IDs for.
+   * @return A list of fact IDs for the specified collection, or null if there is an issue retrieving the data. An empty list indicates that there are no more facts left to be retrieved.
    */
-  private boolean deleteStarModel(StarModelData starModelInputData) {
-    String apiUrl = DirectoryEndpointsRest.getFactEndpoint(starModelInputData.getCountryCode());
+  @Override
+  protected List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId) {
+    String apiUrl = DirectoryEndpointsRest.getFactEndpoint(countryCode);
 
-    try {
-      for (String collectionId: starModelInputData.getInputCollectionIds()) {
-        List<String> factIds;
-        // Loop until no more facts are left in the Directory.
-        // We need to do things this way, because the Directory implements paging
-        // and a single pass may not get all facts.
-        do {
-          // First get a list of fact IDs for this collection
-          Map factWrapper = (Map) directoryCallsRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
+    // Get a list of fact IDs for this collection
+    Map factWrapper = (Map) directoryCallsRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
 
-          if (factWrapper == null) {
-            logger.warn("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
-            return false;
-          }
-          if (!factWrapper.containsKey("items")) {
-            logger.warn("deleteStarModel: Problem getting facts for collection, no item key present: " + collectionId);
-            return false;
-          }
-          List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
-          if (facts.size() == 0)
-            break;
-          factIds = facts.stream()
+    if (factWrapper == null) {
+      logger.warn("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
+      return null;
+    }
+    if (!factWrapper.containsKey("items")) {
+      logger.warn("deleteStarModel: Problem getting facts for collection, no item key present: " + collectionId);
+      return null;
+    }
+    List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
+    if (facts.size() == 0)
+      // No more facts left
+      return new ArrayList<String>();
+
+    List<String> factIds = facts.stream()
             .map(map -> map.get("id"))
             .collect(Collectors.toList());
 
-          // Take the list of fact IDs and delete all of the corresponding facts
-          // at the Directory.
-          if (!deleteFactsByIds(apiUrl, factIds)) {
-            logger.info("deleteStarModel: Problem deleting facts for collection: " + collectionId);
-            return false;
-          }
-        } while (true);
-      }
-    } catch(Exception e) {
-      logger.warn("deleteStarModel: Exception during delete: " + Util.traceFromException(e));
-      return false;
-    }
-
-    return true;
+    return factIds;
   }
 
   /**
    * Deletes facts from the Directory service based on a list of fact IDs.
    *
-   * @param apiUrl    The base URL for the Directory API.
+   * @param countryCode    e.g. DE.
    * @param factIds   The list of fact IDs to be deleted.
    * @return An OperationOutcome indicating the success or failure of the deletion.
    */
-  private boolean deleteFactsByIds(String apiUrl, List<String> factIds) {
+  @Override
+  protected boolean deleteFactsByIds(String countryCode, List<String> factIds) {
     if (factIds.size() == 0)
       // Nothing to delete
       return true;
+
+    String apiUrl = DirectoryEndpointsRest.getFactEndpoint(countryCode);
 
     String result = directoryCallsRest.delete(apiUrl, factIds);
 

@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.directory;
 
+import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
@@ -100,7 +101,111 @@ public abstract class DirectoryApi {
    * @param starModelInputData The input data for updating the Star Model.
    * @return An OperationOutcome indicating the success or failure of the update.
    */
-  public abstract boolean updateStarModel(StarModelData starModelInputData);
+  public boolean updateStarModel(StarModelData starModelInputData) {
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      logger.info("DirectoryApiRest.updateStarModel: in mock mode, skip update");
+      return true;
+    }
+
+    // Get rid of previous star models first. This is necessary, because:
+    // 1. A new star model may be decomposed into different hypercubes.
+    // 2. The new fact IDs may be different from the old ones.
+    // 3. We will be using a POST and it will return an error if we try
+    //    to overwrite an existing fact.
+    if (!deleteStarModel(starModelInputData)) {
+      logger.warn("updateStarModel: Problem deleting star models");
+      return false;
+    }
+
+    String countryCode = starModelInputData.getCountryCode();
+    List<Map<String, String>> factTables = starModelInputData.getFactTables();
+    int blockSize = 1000;
+
+    // Break the fact table into blocks of 1000 before sending to the Directory.
+    // This is the maximum number of facts allowed per Directory API call.
+    for (int i = 0; i < factTables.size(); i += blockSize) {
+      List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
+
+      if (!updateFactTablesBlock(countryCode, factTablesBlock)) {
+        logger.warn("updateStarModel: failed, block: " + i);
+        return false;
+      }
+    }
+
+    logger.info("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
+
+    return true;
+  }
+
+  /**
+   * Updates the fact tables block for a specific country with the provided data.
+   *
+   * @param countryCode The country code, e.g. DE.
+   * @param factTablesBlock A list of maps representing the fact tables block data.
+   * @return true if the update was successful, false otherwise.
+   */
+  protected abstract boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock);
+
+  /**
+   * Deletes existing star models from the Directory service for each of the collection IDs in the supplied StarModelInputData object.
+   *
+   * @param starModelInputData The input data for deleting existing star models.
+   * @return An boolean indicating the success or failure of the deletion.
+   */
+  protected boolean deleteStarModel(StarModelData starModelInputData) {
+    String countryCode = starModelInputData.getCountryCode();
+
+    try {
+      for (String collectionId: starModelInputData.getInputCollectionIds()) {
+        // Loop until no more facts are left in the Directory.
+        // We need to do things this way, because the Directory implements paging
+        // and a single pass may not get all facts.
+        do {
+          List<String> factIds = getNextPageOfFactIdsForCollection(countryCode, collectionId);
+          if (factIds == null) {
+            logger.warn("deleteStarModel: Problem getting facts for collection: " + collectionId);
+            return false;
+          }
+          if (factIds.size() == 0) {
+            // Terminate the do loop if there are no more facts left.
+            logger.info("deleteStarModel: finished getting facts for collection: " + collectionId);
+            break;
+          }
+
+          // Take the list of fact IDs and delete all of the corresponding facts
+          // at the Directory.
+          if (!deleteFactsByIds(countryCode, factIds)) {
+            logger.info("deleteStarModel: Problem deleting facts for collection: " + collectionId);
+            return false;
+          }
+        } while (true);
+      }
+    } catch(Exception e) {
+      logger.warn("deleteStarModel: Exception during delete: " + Util.traceFromException(e));
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Retrieves a list of fact IDs from the Directory associated with a specific collection.
+   *
+   * @param countryCode The country code, e.g. DE.
+   * @param collectionId The ID of the collection to retrieve fact IDs for.
+   * @return A list of fact IDs for the specified collection, or null if there is an issue retrieving the data. An empty list indicates that there are no more facts left to be retrieved.
+   */
+  protected abstract List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId);
+
+  /**
+   * Deletes facts from the Directory service based on a list of fact IDs.
+   *
+   * @param countryCode    e.g. DE.
+   * @param factIds   The list of fact IDs to be deleted.
+   * @return An OperationOutcome indicating the success or failure of the deletion.
+   */
+  protected abstract boolean deleteFactsByIds(String countryCode, List<String> factIds);
 
   /**
    * Collects diagnosis corrections from the Directory.

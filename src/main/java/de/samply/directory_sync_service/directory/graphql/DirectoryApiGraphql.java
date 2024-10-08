@@ -476,6 +476,115 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return true;
   }
 
+//  /**
+//   * Deletes existing star models from the Directory service for each of the collection IDs in the supplied StarModelInputData object.
+//   *
+//   * @param starModelInputData The input data for deleting existing star models.
+//   * @return An boolean indicating the success or failure of the deletion.
+//   */
+//  private boolean deleteStarModel(StarModelData starModelInputData) {
+//    try {
+//      String grapqlCommand = "query {\n" +
+//              "  CollectionFacts( filter: { id: { equals: \"" + id.toString() + "\" } } ) {\n" +
+//              "    id\n" +
+//              "    name\n" +
+//              "  }\n" +
+//              "}";
+//
+//      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+//
+//      if (result == null) {
+//        logger.warn("deleteStarModel: result is null");
+//        return false;
+//      }
+//
+//      logger.info("deleteStarModel: result: " + result);
+//
+//      Map<String, Object> biobanks = directoryCallsGraphql.convertJsonObjectToMap(result);
+//
+//      if (!biobanks.containsKey("Biobanks")) {
+//        logger.warn("deleteStarModel: no Biobanks element found, skipping");
+//        return false;
+//      }
+//
+//      List<Map<String, Object>> biobankList = (List<Map<String, Object>>) biobanks.get("Biobanks");
+//      if (biobankList == null || biobankList.size() == 0) {
+//        logger.warn("deleteStarModel: Collections list is null or empty, skipping");
+//        return false;
+//      }
+//
+//      Map<String, Object> item = biobankList.get(0);
+//
+//      if (item == null) {
+//        logger.warn("deleteStarModel: first element of biobankList is null");
+//        return false;
+//      }
+//
+//      if (!item.containsKey("id")) {
+//        logger.warn("deleteStarModel: no id element found in item: " + Util.jsonStringFomObject(item));
+//        return false;
+//      }
+//
+//      String biobankId = (String) item.get("id");
+//
+//      if (!id.toString().equals(biobankId)) {
+//        logger.warn("deleteStarModel: id in item: " + biobankId + " does not match id: " + id);
+//        return false;
+//      }
+//
+//      if (!item.containsKey("name")) {
+//        logger.warn("deleteStarModel: no name element found in item: " + Util.jsonStringFomObject(item));
+//        return false;
+//      }
+//
+//      String name = (String) item.get("name");
+//
+//      biobank.setId(biobankId);
+//      biobank.setName(name);
+//    } catch (Exception e) {
+//      logger.warn("deleteStarModel: Exception during biobank import: " + Util.traceFromException(e));
+//      return false;
+//    }
+//
+//    return true;
+//  }
+
+  /**
+   * Updates the fact tables block for a specific country with the provided data.
+   *
+   * @param countryCode The country code, e.g. DE.
+   * @param factTablesBlock A list of maps representing the fact tables block data.
+   * @return true if the update was successful, false otherwise.
+   */
+  @Override
+  protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
+    return false;
+  }
+
+  /**
+   * Retrieves a list of fact IDs from the Directory associated with a specific collection.
+   *
+   * @param countryCode The country code, e.g. DE.
+   * @param collectionId The ID of the collection to retrieve fact IDs for.
+   * @return A list of fact IDs for the specified collection, or null if there is an issue retrieving the data. An empty list indicates that there are no more facts left to be retrieved.
+   */
+  @Override
+  protected List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId) {
+    return null;
+  }
+
+  /**
+   * Deletes facts from the Directory service based on a list of fact IDs.
+   *
+   * @param countryCode    e.g. DE.
+   * @param factIds   The list of fact IDs to be deleted.
+   * @return An OperationOutcome indicating the success or failure of the deletion.
+   */
+  @Override
+  protected boolean deleteFactsByIds(String countryCode, List<String> factIds) {
+    return false;
+  }
+
   /**
    * Checks if a given diagnosis code is a valid ICD value by querying the Directory service.
    *
