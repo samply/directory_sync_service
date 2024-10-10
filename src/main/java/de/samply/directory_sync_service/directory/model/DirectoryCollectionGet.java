@@ -8,6 +8,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.samply.directory_sync_service.Util;
+
 /**
  * This is a data transfer object that maps onto the JSON returned by a GET request
  * to the Directory API when you want to obtain information about collections.
@@ -61,7 +63,14 @@ public class DirectoryCollectionGet extends HashMap {
         List<Map<String,Object>> types = (List<Map<String,Object>>) item.get("type");
         List<String> typeLabels = new ArrayList<String>();
         for (Map type: types)
-            typeLabels.add((String) type.get("id"));
+            if (type.containsKey("id"))
+                typeLabels.add((String) type.get("id"));
+            else if (type.containsKey("name"))
+                typeLabels.add((String) type.get("name"));
+            else {
+                logger.warn("getTypeIds: one of the types has no id or name, type: " + Util.jsonStringFomObject(type));
+                return null;
+            }
 
         return typeLabels;
     }
@@ -72,8 +81,15 @@ public class DirectoryCollectionGet extends HashMap {
         Map item = getItem(id);
         List<Map<String,Object>> dataCategories = (List<Map<String,Object>>) item.get("data_categories");
         List<String> dataCategoryLabels = new ArrayList<String>();
-        for (Map type: dataCategories)
-            dataCategoryLabels.add((String) type.get("id"));
+        for (Map dataCategory: dataCategories)
+            if (dataCategory.containsKey("id"))
+                dataCategoryLabels.add((String) dataCategory.get("id"));
+            else if (dataCategory.containsKey("name"))
+                dataCategoryLabels.add((String) dataCategory.get("name"));
+            else {
+                logger.warn("getDataCategoryIds: one of the types has no id or name, type: " + Util.jsonStringFomObject(dataCategory));
+                return null;
+            }
 
         return dataCategoryLabels;
     }

@@ -104,7 +104,7 @@ public abstract class DirectoryApi {
   public boolean updateStarModel(StarModelData starModelInputData) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      logger.info("DirectoryApiRest.updateStarModel: in mock mode, skip update");
+      logger.info("updateStarModel: in mock mode, skip update");
       return true;
     }
 
@@ -132,8 +132,6 @@ public abstract class DirectoryApi {
         return false;
       }
     }
-
-    logger.info("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
 
     return true;
   }
@@ -163,10 +161,12 @@ public abstract class DirectoryApi {
         // and a single pass may not get all facts.
         do {
           List<String> factIds = getNextPageOfFactIdsForCollection(countryCode, collectionId);
+
           if (factIds == null) {
             logger.warn("deleteStarModel: Problem getting facts for collection: " + collectionId);
             return false;
           }
+          logger.info("deleteStarModel: number of facts found: " + factIds.size());
           if (factIds.size() == 0) {
             // Terminate the do loop if there are no more facts left.
             logger.info("deleteStarModel: finished getting facts for collection: " + collectionId);

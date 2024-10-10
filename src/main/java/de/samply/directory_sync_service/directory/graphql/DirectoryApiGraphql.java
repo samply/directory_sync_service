@@ -9,7 +9,6 @@ import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
-import de.samply.directory_sync_service.model.StarModelData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,35 +73,38 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * Log in to the Directory. You can log in as many times as you like.
    */
   public boolean login() {
-    logger.info("login: entered");
-
     if (mockDirectory)
       // Don't try logging in if we are mocking
       return true;
 
-    String grapqlCommand = "mutation {\n" +
-            "  signin(password: \"" + password + "\", email: \"" + username + "\") {\n" +
-            "    message\n" +
-            "    token\n" +
-            "  }\n" +
-            "}";
+    try {
+      String grapqlCommand = "mutation {\n" +
+              "  signin(password: \"" + password + "\", email: \"" + username + "\") {\n" +
+              "    message\n" +
+              "    token\n" +
+              "  }\n" +
+              "}";
 
-    JsonObject result = directoryCallsGraphql.runGraphqlCommand(grapqlCommand);
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(grapqlCommand);
 
-    if (result == null) {
-      logger.warn("login: result is null");
+      if (result == null) {
+        logger.warn("login: result is null");
+        return false;
+      }
+
+      logger.info("login: result: " + result);
+
+      String token = result.get("signin").getAsJsonObject().get("token").getAsString();
+      if (token == null) {
+        logger.warn("login: token is null");
+        return false;
+      }
+
+      directoryCallsGraphql.setToken(token);
+    } catch (Exception e) {
+      logger.warn("login: exception: " + Util.traceFromException(e));
       return false;
     }
-
-    logger.info("login: result: " + result);
-
-    String token = result.get("signin").getAsJsonObject().get("token").getAsString();
-    if (token == null) {
-      logger.warn("login: token is null");
-      return false;
-    }
-
-    directoryCallsGraphql.setToken(token);
 
     return true;
   }
@@ -123,56 +125,20 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return biobank;
 
     try {
-      String grapqlCommand = "query {\n" +
-              "  Biobanks( filter: { id: { equals: \"" + id.toString() + "\" } } ) {\n" +
-              "    id\n" +
-              "    name\n" +
-              "  }\n" +
-              "}";
-
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
-
-      if (result == null) {
-        logger.warn("fetchBiobank: result is null");
-        return null;
-      }
-
-      logger.info("fetchBiobank: result: " + result);
-
-      Map<String, Object> biobanks = directoryCallsGraphql.convertJsonObjectToMap(result);
-
-      if (!biobanks.containsKey("Biobanks")) {
-        logger.warn("fetchBiobank: no Biobanks element found, skipping");
-        return null;
-      }
-
-      List<Map<String, Object>> biobankList = (List<Map<String, Object>>) biobanks.get("Biobanks");
-      if (biobankList == null || biobankList.size() == 0) {
-        logger.warn("fetchBiobank: Collections list is null or empty, skipping");
-        return null;
-      }
-
-      Map<String, Object> item = biobankList.get(0);
-
+      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), "Biobanks", "filter: { id: { equals: \"" + id.toString() + "\" } }", new ArrayList<>(List.of("id", "name")));
       if (item == null) {
-        logger.warn("fetchBiobank: first element of biobankList is null");
+        logger.warn("fetchBiobank: item is null");
         return null;
       }
-
-      if (!item.containsKey("id")) {
-        logger.warn("fetchBiobank: no id element found in item: " + Util.jsonStringFomObject(item));
-        return null;
+      if (item.isEmpty()) {
+        logger.info("fetchBiobank: no results from query");
+        return biobank;
       }
 
       String biobankId = (String) item.get("id");
 
       if (!id.toString().equals(biobankId)) {
         logger.warn("fetchBiobank: id in item: " + biobankId + " does not match id: " + id);
-        return null;
-      }
-
-      if (!item.containsKey("name")) {
-        logger.warn("fetchBiobank: no name element found in item: " + Util.jsonStringFomObject(item));
         return null;
       }
 
@@ -241,25 +207,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  }\n" +
               "}";
 
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
-
-      logger.info("fetchCollectionGetOutcomes: result: " + result);
-
-      if (result == null) {
-        logger.warn("fetchBiobank: result is null");
-        return null;
-      }
-
-      Map<String, Object> collections = directoryCallsGraphql.convertJsonObjectToMap(result);
-
-      if (!collections.containsKey("Collections")) {
-        logger.warn("fetchCollectionGetOutcomes: no Collections element found, skipping");
+      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+      if (collectionsList == null) {
+        logger.warn("fetchCollectionGetOutcomes: biobankList list is null");
         continue;
       }
-
-      List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) collections.get("Collections");
-      if (collectionsList == null || collectionsList.size() == 0) {
-        logger.warn("fetchCollectionGetOutcomes: Collections list is null or empty, skipping");
+      if (collectionsList.size() == 0) {
+        logger.info("fetchCollectionGetOutcomes: collectionFactsList list is empty");
         continue;
       }
 
@@ -282,8 +236,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @return an outcome, either successful or null
    */
   public boolean updateEntities(DirectoryCollectionPut directoryCollectionPut) {
-    logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: entered");
-
     if (mockDirectory) {
       // Dummy return if we're in mock mode
       logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: in mock mode, skip update");
@@ -291,27 +243,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      logger.info("updateEntities: :::::::::::::::::::: collectionId: " + collectionId);
-
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
-
-      logger.info("updateEntities: :::::::::::::::::::: before cleanEntity: " + Util.jsonStringFomObject(entity));
-
       cleanEntity(entity);
-
-      logger.info("updateEntities: :::::::::::::::::::: before insertMissingAttributesIntoEntity: " + Util.jsonStringFomObject(entity));
-
       insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
-
-      logger.info("updateEntities: :::::::::::::::::::: before transformEntityForEmx2: " + Util.jsonStringFomObject(entity));
-
       transformEntityForEmx2(entity);
-
-      logger.info("updateEntities: :::::::::::::::::::: before mapToGraphQL: " + Util.jsonStringFomObject(entity));
-
       String entityGraphql = mapToGraphQL(entity);
-
-      logger.info("updateEntities: :::::::::::::::::::: entityGraphql: " + entityGraphql);
 
       String grapqlCommand = "mutation {\n" +
               "  update (Collections: \n" +
@@ -319,14 +255,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  ) { message }\n" +
               "}";
 
-      logger.info("updateEntities: :::::::::::::::::::: grapqlCommand: " + grapqlCommand);
-
       JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
-
-      logger.info("updateEntities: :::::::::::::::::::: result: " + result);
     }
-
-    logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: done");
 
     return true;
   }
@@ -372,7 +302,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
       entity.put("type", type);
     }
     if (!entity.containsKey("data_categories")) {
-      logger.info("updateEntities: :::::::::::::::::::: initial value of data_categories: " + entity.get("data_categories"));
       List<String> dataCategories = new ArrayList<>();
       dataCategories.add("BIOLOGICAL_SAMPLES");
       entity.put("data_categories", dataCategories);
@@ -442,7 +371,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   // Convert Java Map to GraphQL mutation-friendly string
-  public static String mapToGraphQL(Map<String, Object> map) {
+  private String mapToGraphQL(Map<String, Object> map) {
     // Convert Map to JSON using Gson
     Gson gson = new GsonBuilder().serializeNulls().create();  // Handles nulls if needed
     String json = gson.toJson(map);
@@ -455,101 +384,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * Updates the Star Model data in the Directory service based on the provided StarModelInputData.
-   * <p>
-   * Before sending any star model data to the Directory, the original
-   * star model data for all known collections will be deleted from the
-   * Directory.
-   *
-   * @param starModelInputData The input data for updating the Star Model.
-   * @return An OperationOutcome indicating the success or failure of the update.
-   */
-  public boolean updateStarModel(StarModelData starModelInputData) {
-    if (mockDirectory) {
-      // Dummy return if we're in mock mode
-      logger.info("DirectoryApiRest.updateStarModel: in mock mode, skip update");
-      return true;
-    }
-
-    logger.info("DirectoryApiRest.updateStarModel: successfully posted " + starModelInputData.getFactCount() + " facts to the Directory");
-
-    return true;
-  }
-
-//  /**
-//   * Deletes existing star models from the Directory service for each of the collection IDs in the supplied StarModelInputData object.
-//   *
-//   * @param starModelInputData The input data for deleting existing star models.
-//   * @return An boolean indicating the success or failure of the deletion.
-//   */
-//  private boolean deleteStarModel(StarModelData starModelInputData) {
-//    try {
-//      String grapqlCommand = "query {\n" +
-//              "  CollectionFacts( filter: { id: { equals: \"" + id.toString() + "\" } } ) {\n" +
-//              "    id\n" +
-//              "    name\n" +
-//              "  }\n" +
-//              "}";
-//
-//      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
-//
-//      if (result == null) {
-//        logger.warn("deleteStarModel: result is null");
-//        return false;
-//      }
-//
-//      logger.info("deleteStarModel: result: " + result);
-//
-//      Map<String, Object> biobanks = directoryCallsGraphql.convertJsonObjectToMap(result);
-//
-//      if (!biobanks.containsKey("Biobanks")) {
-//        logger.warn("deleteStarModel: no Biobanks element found, skipping");
-//        return false;
-//      }
-//
-//      List<Map<String, Object>> biobankList = (List<Map<String, Object>>) biobanks.get("Biobanks");
-//      if (biobankList == null || biobankList.size() == 0) {
-//        logger.warn("deleteStarModel: Collections list is null or empty, skipping");
-//        return false;
-//      }
-//
-//      Map<String, Object> item = biobankList.get(0);
-//
-//      if (item == null) {
-//        logger.warn("deleteStarModel: first element of biobankList is null");
-//        return false;
-//      }
-//
-//      if (!item.containsKey("id")) {
-//        logger.warn("deleteStarModel: no id element found in item: " + Util.jsonStringFomObject(item));
-//        return false;
-//      }
-//
-//      String biobankId = (String) item.get("id");
-//
-//      if (!id.toString().equals(biobankId)) {
-//        logger.warn("deleteStarModel: id in item: " + biobankId + " does not match id: " + id);
-//        return false;
-//      }
-//
-//      if (!item.containsKey("name")) {
-//        logger.warn("deleteStarModel: no name element found in item: " + Util.jsonStringFomObject(item));
-//        return false;
-//      }
-//
-//      String name = (String) item.get("name");
-//
-//      biobank.setId(biobankId);
-//      biobank.setName(name);
-//    } catch (Exception e) {
-//      logger.warn("deleteStarModel: Exception during biobank import: " + Util.traceFromException(e));
-//      return false;
-//    }
-//
-//    return true;
-//  }
-
-  /**
    * Updates the fact tables block for a specific country with the provided data.
    *
    * @param countryCode The country code, e.g. DE.
@@ -558,9 +392,87 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   @Override
   protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
-    return false;
+    logger.info("updateFactTablesBlock: <><><><><><><><><><> entered");
+
+    if (factTablesBlock.size() == 0)
+      // Nothing to insert
+      return true;
+
+    for (Map<String, String> factTable : factTablesBlock)
+      try {
+        if (!factTable.containsKey("national_node") && countryCode != null && !countryCode.isEmpty())
+          factTable.put("national_node", countryCode);
+        String factTableAttributeString = buildFactTableAttributeString(factTable);
+
+        String grapqlCommand = "mutation {\n" +
+                "  insert( CollectionFacts: { " + factTableAttributeString + " } ) {\n" +
+                "    message\n" +
+                "  }\n" +
+                "}";
+
+        logger.info("updateFactTablesBlock: grapqlCommand: " + grapqlCommand);
+
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+
+        if (result == null) {
+          logger.warn("updateFactTablesBlock: result is null");
+          return false;
+        }
+
+        logger.info("updateFactTablesBlock: result: " + result);
+      } catch (Exception e) {
+        logger.warn("login: Exception during fact deletion: " + Util.traceFromException(e));
+        return false;
+      }
+
+    return true;
   }
 
+  private String buildFactTableAttributeString(Map<String, String> factTable) {
+    StringBuilder result = new StringBuilder();
+    boolean first = true;
+
+    for (Map.Entry<String, String> entry : factTable.entrySet()) {
+      if (!first) {
+        result.append(", ");  // Add comma between key-value pairs
+      } else {
+        first = false;
+      }
+
+      String key = entry.getKey();
+      String value = entry.getValue();
+
+      String transformedValue = "\"" + value + "\""; // Default: surround value with double quotes
+      // Transform value depending on its type
+      if (
+              key.equals("age_range") ||
+              key.equals("sex") ||
+              key.equals("disease") ||
+              key.equals("sample_type"))
+        transformedValue = wrapValueInHashWithAttribute("name", value);
+      else if (
+              key.equals("collection") ||
+              key.equals("national_node")
+      )
+        transformedValue = wrapValueInHashWithAttribute("id", value);
+      else if (
+              key.equals("number_of_samples") ||
+              key.equals("number_of_donors")
+      )
+        transformedValue = value; // Don't put quotes around numbers
+
+      // Append the key and value in the desired format
+      result.append(key).append(": ").append(transformedValue);
+    }
+
+    return result.toString();
+  }
+
+  private String wrapValueInHashWithAttribute(String attributeName, String value) {
+    return "{ " + attributeName + ": \"" + value + "\" }";
+  }
+
+  private boolean getFactPageToggle = false; // used to ensure that getNextPageOfFactIdsForCollection gets run only once
   /**
    * Retrieves a list of fact IDs from the Directory associated with a specific collection.
    *
@@ -570,7 +482,48 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   @Override
   protected List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId) {
-    return null;
+    List<String> factIds = new ArrayList<>();
+
+    // Use getFactPageToggle to ensure that this method gets run only once.
+    // My assumption is that the GraphQL API does not do any paging, so that a single API
+    // call gets everything.
+    if (getFactPageToggle) {
+        getFactPageToggle = false;
+        return factIds;
+    }
+    getFactPageToggle = true;
+
+    try {
+      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), "CollectionFacts", null, new ArrayList<>(List.of("id")));
+      if (collectionFactsList == null) {
+        logger.warn("getNextPageOfFactIdsForCollection: diseaseTypeList is null for collectionId: " + collectionId + ", there may be a problem");
+        return null;
+      }
+      if (collectionFactsList.size() == 0) {
+        logger.info("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
+        return factIds;
+      }
+
+      for (Map<String, Object> item : collectionFactsList) {
+        if (item == null) {
+          logger.warn("getNextPageOfFactIdsForCollection: item is null");
+          return null;
+        }
+        if (!item.containsKey("id")) {
+          logger.info("getNextPageOfFactIdsForCollection: id key missing from item");
+          return null;
+        }
+
+        String collectionFactsId = (String) item.get("id");
+
+        factIds.add(collectionFactsId);
+      }
+    } catch (Exception e) {
+      logger.warn("getNextPageOfFactIdsForCollection: Exception during biobank import: " + Util.traceFromException(e));
+      return null;
+    }
+
+    return factIds;
   }
 
   /**
@@ -582,7 +535,32 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   @Override
   protected boolean deleteFactsByIds(String countryCode, List<String> factIds) {
-    return false;
+    if (factIds.size() == 0)
+      // Nothing to delete
+      return true;
+
+    for (String factId : factIds)
+      try {
+        String grapqlCommand = "mutation {\n" +
+                "  delete( CollectionFacts: { id: \"" + factId + "\" } ) {\n" +
+                "    message\n" +
+                "  }\n" +
+                "}";
+
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+
+        if (result == null) {
+          logger.warn("deleteFactsByIds: result is null");
+          return false;
+        }
+
+        logger.info("login: result: " + result);
+      } catch (Exception e) {
+        logger.warn("deleteFactsByIds: Exception during fact deletion: " + Util.traceFromException(e));
+        return false;
+      }
+
+    return true;
   }
 
   /**
@@ -593,31 +571,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   protected boolean isValidIcdValue(String diagnosis) {
     try {
-      String grapqlCommand = "query {\n" +
-              "  DiseaseTypes( filter: { name: { equals: \"" + diagnosis + "\" } } ) {\n" +
-              "    name\n" +
-              "  }\n" +
-              "}";
-
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseDirectoryOntologiesEndpoint(), grapqlCommand);
-
-      if (result == null) {
-        logger.warn("isValidIcdValue: result is null");
+      List<Map<String, Object>> diseaseTypeList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseDirectoryOntologiesEndpoint(), "DiseaseTypes", "filter: { name: { equals: \"" + diagnosis + "\" } }", new ArrayList<>(List.of("name")));
+      if (diseaseTypeList == null) {
+        logger.warn("isValidIcdValue: diseaseTypeList is null for diagnosis: " + diagnosis + ", there may be a problem");
         return false;
       }
-
-      logger.info("isValidIcdValue: result: " + result);
-
-      Map<String, Object> diseaseType = directoryCallsGraphql.convertJsonObjectToMap(result);
-
-      if (!diseaseType.containsKey("DiseaseTypes")) {
-        logger.warn("isValidIcdValue: no DiseaseTypes element found");
-        return false;
-      }
-
-      List<Map<String, Object>> diseaseTypeList = (List<Map<String, Object>>) diseaseType.get("DiseaseTypes");
       if (diseaseTypeList.size() == 0) {
-        logger.warn("isValidIcdValue: diseaseTypeList is empty");
+        logger.info("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
         return false;
       }
 
