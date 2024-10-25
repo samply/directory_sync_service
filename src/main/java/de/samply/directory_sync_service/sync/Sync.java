@@ -59,10 +59,10 @@ public class Sync {
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-        if (!directoryApi.isAvailable()) {
+          if (!directoryApi.isLoginAvailable()) {
             logger.warn("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
             directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-//            if (!directoryApi.isAvailable()) {
+//            if (!directoryApi.isLoginAvailable()) {
 //                logger.warn("syncWithDirectory: Directory REST API is not available");
 //                return false;
 //            }

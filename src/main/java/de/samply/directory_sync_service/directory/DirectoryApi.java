@@ -40,23 +40,19 @@ public abstract class DirectoryApi {
   }
 
   /**
-   * @return true if this API is accessible, false otherwise.
+   * @return true if a login endpoint for this API is accessible, false otherwise.
    */
-  public boolean isAvailable() {
-    List<String> endpoints = directoryEndpoints.getAllEndpoints();
+  public boolean isLoginAvailable() {
+    String endpoint = directoryEndpoints.getLoginEndpoint();
 
-    // Simply loop over all known endpoints for this API and check if they exist
-    boolean available = true;
-    for (String endpoint: endpoints)
-      if (!directoryCalls.endpointExists(endpoint)) {
-        logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
-        available = false;
-      }
+    if (!directoryCalls.endpointExists(endpoint)) {
+      logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
+      return false;
+    }
 
-    if (available)
-      logger.info("isAvailable: all availability tests have succeeded");
+    logger.info("isAvailable: login availability test has succeeded");
 
-    return available;
+    return true;
   }
 
   /**

@@ -64,19 +64,6 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
   }
 
   /**
-   * Retrieves a list of all available REST endpoints in the Directory API that don't depend on a specific country.
-   *
-   * @return a list of endpoints.
-   */
-  public List<String> getAllEndpoints() {
-    List<String> endpoints = new ArrayList<>();
-    endpoints.add(getLoginEndpoint());
-    endpoints.add(getDiseaseTypeEndpoint());
-
-    return endpoints;
-  }
-
-  /**
    * Create a URL for a specific Directory API endpoint.
    *
    * @param countryCode a code such as "DE" specifying the country the URL should address. May be null.

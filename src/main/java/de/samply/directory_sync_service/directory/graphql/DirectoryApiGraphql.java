@@ -47,28 +47,25 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * @return true if this API is accessible, false otherwise.
+   * @return true if a login endpoint for this API is accessible, false otherwise.
    */
-  public boolean isAvailable() {
-    if (!super.isAvailable()) {
-      logger.warn("DirectoryApiGraphql.isAvailable: failing availablity test because one or more GraphQL endpoints are not there");
+  @Override
+  public boolean isLoginAvailable() {
+    if (!super.isLoginAvailable()) {
+      logger.warn("DirectoryApiGraphql.isLoginAvailable: failing availablity test because the login GraphQL endpoint is not there");
       return false;
     }
 
-    List<String> endpoints = directoryEndpoints.getAllEndpoints();
+    String endpoint = directoryEndpoints.getLoginEndpoint();
 
-    // Loop over all known endpoints for this API and check to see if they report errors
-    boolean available = true;
-    for (String endpoint: endpoints)
-      if (!directoryCallsGraphql.endpointIsValidGraphql(endpoint)) {
-        logger.warn("DirectoryApiGraphql.isAvailable: failing availablity test because " + endpoint + " returns an error");
-        available = false;
-      }
+    if (!directoryCallsGraphql.endpointIsValidGraphql(endpoint)) {
+      logger.warn("DirectoryApiGraphql.isLoginAvailable: failing login availablity test because " + endpoint + " returns an error");
+      return false;
+    }
 
-    if (available)
-      logger.info("DirectoryApiGraphql.isAvailable: all availability tests have succeeded");
+    logger.info("DirectoryApiGraphql.isLoginAvailable: login availability test has succeeded");
 
-    return available;
+    return true;
   }
 
   /**

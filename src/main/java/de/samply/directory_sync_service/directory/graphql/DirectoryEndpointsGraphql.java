@@ -43,18 +43,4 @@ public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
   public String getLoginEndpoint() {
     return ENDPOINT_LOGIN;
   }
-
-  /**
-   * Retrieves a list of all available REST endpoints in the Directory API that don't depend on a specific country.
-   *
-   * @return a list of endpoints.
-   */
-  public List<String> getAllEndpoints() {
-    List<String> endpoints = new ArrayList<>();
-    endpoints.add(getDatabaseEricEndpoint());
-    endpoints.add(getDatabaseDirectoryOntologiesEndpoint());
-    endpoints.add(getLoginEndpoint());
-
-    return endpoints;
-  }
 }

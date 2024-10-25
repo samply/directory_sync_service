@@ -17,11 +17,4 @@ public abstract class DirectoryEndpoints {
    * @return the constructed biobank API URL.
    */
   public abstract String getLoginEndpoint();
-
-  /**
-   * Retrieves a list of all available REST endpoints in the Directory API that don't depend on a specific country.
-   *
-   * @return a list of endpoints.
-   */
-  public abstract List<String> getAllEndpoints();
 }
