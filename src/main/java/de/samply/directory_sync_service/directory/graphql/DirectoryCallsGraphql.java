@@ -220,17 +220,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
   }
 
   /**
-   * Executes a GraphQL command using the root endpoint and returns the result as a JsonObject.
-   *
-   * @param graphqlCommand The GraphQL command to execute.
-   * @return The result of the GraphQL command as a JsonObject.
-   */
-  public JsonObject runGraphqlCommand(String graphqlCommand) {
-    String endpoint = DirectoryEndpointsGraphql.getRootEndpoint();
-    return runGraphqlCommand(endpoint, graphqlCommand);
-  }
-
-  /**
    * Executes a GraphQL command using a specified endpoint and returns the result as a JsonObject.
    *
    * @param endpoint The endpoint to use for the GraphQL command.

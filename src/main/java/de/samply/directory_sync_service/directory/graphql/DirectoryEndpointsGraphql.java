@@ -9,7 +9,7 @@ import java.util.List;
  * Utility class that constructs various GraphQL endpoints for the Directory API.
  */
 public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
-  private static final String ENDPOINT_ROOT = "/api/graphql";
+  private static final String ENDPOINT_LOGIN = "/api/graphql";
   private static final String ENDPOINT_DATABASE_ERIC = "/ERIC/api/graphql";
   private static final String ENDPOINT_DATABASE_DIRECTORY_ONTOLOGIES = "/DirectoryOntologies/api/graphql";
 
@@ -40,8 +40,8 @@ public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
    *
    * @return the constructed biobank API URL.
    */
-  public static String getRootEndpoint() {
-    return ENDPOINT_ROOT;
+  public static String getLoginEndpoint() {
+    return ENDPOINT_LOGIN;
   }
 
   /**
@@ -53,7 +53,7 @@ public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
     List<String> endpoints = new ArrayList<>();
     endpoints.add(getDatabaseEricEndpoint());
     endpoints.add(getDatabaseDirectoryOntologiesEndpoint());
-    endpoints.add(getRootEndpoint());
+    endpoints.add(getLoginEndpoint());
 
     return endpoints;
   }

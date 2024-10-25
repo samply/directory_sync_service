@@ -78,14 +78,15 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return true;
 
     try {
-      String grapqlCommand = "mutation {\n" +
+      String graphqlCommand = "mutation {\n" +
               "  signin(password: \"" + password + "\", email: \"" + username + "\") {\n" +
               "    message\n" +
               "    token\n" +
               "  }\n" +
               "}";
 
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(grapqlCommand);
+      String endpoint = DirectoryEndpointsGraphql.getLoginEndpoint();
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(endpoint, graphqlCommand);
 
       if (result == null) {
         logger.warn("login: result is null");
@@ -175,7 +176,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     for (String collectionId: collectionIds) {
       logger.info("fetchCollectionGetOutcomes: collectionId: " + collectionId);
-      String grapqlCommand = "query {" +
+      String graphqlCommand = "query {" +
               "  Collections( filter: { id: { equals: \"" + collectionId + "\" } } ) {\n" +
               "    id\n" +
               "    name\n" +
@@ -207,7 +208,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  }\n" +
               "}";
 
-      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
       if (collectionsList == null) {
         logger.warn("fetchCollectionGetOutcomes: biobankList list is null");
         continue;
@@ -249,13 +250,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
       transformEntityForEmx2(entity);
       String entityGraphql = mapToGraphQL(entity);
 
-      String grapqlCommand = "mutation {\n" +
+      String graphqlCommand = "mutation {\n" +
               "  update (Collections: \n" +
               entityGraphql +
               "  ) { message }\n" +
               "}";
 
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
     }
 
     return true;
@@ -404,15 +405,15 @@ public class DirectoryApiGraphql extends DirectoryApi {
           factTable.put("national_node", countryCode);
         String factTableAttributeString = buildFactTableAttributeString(factTable);
 
-        String grapqlCommand = "mutation {\n" +
+        String graphqlCommand = "mutation {\n" +
                 "  insert( CollectionFacts: { " + factTableAttributeString + " } ) {\n" +
                 "    message\n" +
                 "  }\n" +
                 "}";
 
-        logger.info("updateFactTablesBlock: grapqlCommand: " + grapqlCommand);
+        logger.info("updateFactTablesBlock: graphqlCommand: " + graphqlCommand);
 
-        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
 
         if (result == null) {
           logger.warn("updateFactTablesBlock: result is null");
@@ -541,13 +542,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     for (String factId : factIds)
       try {
-        String grapqlCommand = "mutation {\n" +
+        String graphqlCommand = "mutation {\n" +
                 "  delete( CollectionFacts: { id: \"" + factId + "\" } ) {\n" +
                 "    message\n" +
                 "  }\n" +
                 "}";
 
-        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), grapqlCommand);
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
 
         if (result == null) {
           logger.warn("deleteFactsByIds: result is null");

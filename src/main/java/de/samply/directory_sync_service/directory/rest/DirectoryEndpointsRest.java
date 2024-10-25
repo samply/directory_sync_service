@@ -10,8 +10,8 @@ import java.util.ArrayList;
  * Utility class that constructs various REST endpoints for the Directory API.
  */
 public class DirectoryEndpointsRest extends DirectoryEndpoints {
-  private static final String ENDPOINT_DISEASE_TYPE = "/api/v2/eu_bbmri_eric_disease_types";
   private static final String ENDPOINT_LOGIN = "/api/v1/login";
+  private static final String ENDPOINT_DISEASE_TYPE = "/api/v2/eu_bbmri_eric_disease_types";
   private static final String ENDPOINT_FUNCTION = "/api/v2/eu_bbmri_eric_";
 
   /**
