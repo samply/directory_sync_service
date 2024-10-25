@@ -19,7 +19,8 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
    *
    * @return the constructed biobank API URL.
    */
-  public static String getLoginEndpoint() {
+  @Override
+  public String getLoginEndpoint() {
     return ENDPOINT_LOGIN;
   }
 
@@ -28,7 +29,7 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
    *
    * @return the constructed biobank API URL.
    */
-  public static String getDiseaseTypeEndpoint() {
+  public String getDiseaseTypeEndpoint() {
     return ENDPOINT_DISEASE_TYPE;
   }
 
@@ -38,7 +39,7 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
    * @param countryCode The country code (e.g., "DE").
    * @return the constructed biobank API URL.
    */
-  public static String getBiobankEndpoint(String countryCode) {
+  public String getBiobankEndpoint(String countryCode) {
     return buildFunctionEndpoint(countryCode, "biobanks");
   }
 
@@ -48,7 +49,7 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
    * @param countryCode The country code (e.g., "DE").
    * @return the constructed collection API URL.
    */
-  public static String getCollectionEndpoint(String countryCode) {
+  public String getCollectionEndpoint(String countryCode) {
     return buildFunctionEndpoint(countryCode, "collections");
   }
 
@@ -58,7 +59,7 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
    * @param countryCode The country code (e.g., "DE").
    * @return the constructed facts API URL.
    */
-  public static String getFactEndpoint(String countryCode) {
+  public String getFactEndpoint(String countryCode) {
     return buildFunctionEndpoint(countryCode, "facts");
   }
 
@@ -82,7 +83,7 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
    * @param function specifies the type of the endpoint, e.g. "collections".
    * @return
    */
-  private static String buildFunctionEndpoint(String countryCode, String function) {
+  private String buildFunctionEndpoint(String countryCode, String function) {
     String countryCodeInsert = "";
     if (countryCode != null && !countryCode.isEmpty())
       countryCodeInsert = countryCode + "_";

@@ -20,7 +20,7 @@ public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
    *
    * @return the constructed biobank API URL.
    */
-  public static String getDatabaseEricEndpoint() {
+  public String getDatabaseEricEndpoint() {
     return ENDPOINT_DATABASE_ERIC;
   }
 
@@ -30,17 +30,17 @@ public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
    *
    * @return the constructed biobank API URL.
    */
-  public static String getDatabaseDirectoryOntologiesEndpoint() {
+  public String getDatabaseDirectoryOntologiesEndpoint() {
     return ENDPOINT_DATABASE_DIRECTORY_ONTOLOGIES;
   }
 
   /**
-   * Constructs the URL for accessing the root endpoint of the Directory API.
-   * I am not sure if this is needed.
+   * Constructs the URL for accessing the login endpoint of the Directory API.
    *
    * @return the constructed biobank API URL.
    */
-  public static String getLoginEndpoint() {
+  @Override
+  public String getLoginEndpoint() {
     return ENDPOINT_LOGIN;
   }
 

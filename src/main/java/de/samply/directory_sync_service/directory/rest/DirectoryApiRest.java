@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
  */
 public class DirectoryApiRest extends DirectoryApi {
   private DirectoryCallsRest directoryCallsRest;
+  private DirectoryEndpointsRest directoryEndpointsRest;
 
   /**
    * Constructs a new DirectoryApiRest instance.
@@ -35,6 +36,7 @@ public class DirectoryApiRest extends DirectoryApi {
   public DirectoryApiRest(String baseUrl, boolean mockDirectory, String username, String password) {
     super(baseUrl, mockDirectory, username, password);
     this.directoryCallsRest = new DirectoryCallsRest(baseUrl, username, password);
+    this.directoryEndpointsRest = new DirectoryEndpointsRest();
     directoryCalls = directoryCallsRest; // Used in superclass
     directoryEndpoints = new DirectoryEndpointsRest();
   }
@@ -63,7 +65,7 @@ public class DirectoryApiRest extends DirectoryApi {
       // Return a fake Biobank if we are mocking
       return new Biobank();
 
-    Biobank biobank = (Biobank) directoryCallsRest.get(DirectoryEndpointsRest.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
+    Biobank biobank = (Biobank) directoryCallsRest.get(directoryEndpointsRest.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
     if (biobank == null) {
       logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
       return null;
@@ -91,7 +93,7 @@ public class DirectoryApiRest extends DirectoryApi {
     }
 
     for (String collectionId: collectionIds) {
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(DirectoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
         logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
         return null;
@@ -121,7 +123,7 @@ public class DirectoryApiRest extends DirectoryApi {
       return true;
     }
 
-    String response = directoryCallsRest.put(DirectoryEndpointsRest.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    String response = directoryCallsRest.put(directoryEndpointsRest.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
     if (response == null) {
       logger.warn("entity update, PUT problem");
       return false;
@@ -143,7 +145,7 @@ public class DirectoryApiRest extends DirectoryApi {
   protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
     Map<String,Object> body = new HashMap<String,Object>();
     body.put("entities", factTablesBlock);
-    String response = directoryCallsRest.post(DirectoryEndpointsRest.getFactEndpoint(countryCode), body);
+    String response = directoryCallsRest.post(directoryEndpointsRest.getFactEndpoint(countryCode), body);
     if (response == null) {
       logger.warn("updateFactTablesBlock: null response from REST call");
       return false;
@@ -161,7 +163,7 @@ public class DirectoryApiRest extends DirectoryApi {
    */
   @Override
   protected List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId) {
-    String apiUrl = DirectoryEndpointsRest.getFactEndpoint(countryCode);
+    String apiUrl = directoryEndpointsRest.getFactEndpoint(countryCode);
 
     // Get a list of fact IDs for this collection
     Map factWrapper = (Map) directoryCallsRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
@@ -199,7 +201,7 @@ public class DirectoryApiRest extends DirectoryApi {
       // Nothing to delete
       return true;
 
-    String apiUrl = DirectoryEndpointsRest.getFactEndpoint(countryCode);
+    String apiUrl = directoryEndpointsRest.getFactEndpoint(countryCode);
 
     String result = directoryCallsRest.delete(apiUrl, factIds);
 
@@ -218,7 +220,7 @@ public class DirectoryApiRest extends DirectoryApi {
    * @return true if the diagnosis code is a valid ICD value, false if not, or if an error condition was encountered.
    */
   protected boolean isValidIcdValue(String diagnosis) {
-    String url = DirectoryEndpointsRest.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
+    String url = directoryEndpointsRest.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
     Map body = (Map) directoryCallsRest.get(url, Map.class);
     if (body != null) {
       if (body.containsKey("total")) {

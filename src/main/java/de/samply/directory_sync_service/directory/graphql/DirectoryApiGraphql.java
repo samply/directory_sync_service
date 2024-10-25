@@ -25,6 +25,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   private final String username;
   private final String password;
   private DirectoryCallsGraphql directoryCallsGraphql;
+  private DirectoryEndpointsGraphql directoryEndpointsGraphql;
 
   /**
    * Constructs a new DirectoryApiRest instance.
@@ -38,6 +39,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   public DirectoryApiGraphql(String baseUrl, boolean mockDirectory, String username, String password) {
     super(baseUrl, mockDirectory, username, password);
     this.directoryCallsGraphql = new DirectoryCallsGraphql(baseUrl, username, password);
+    this.directoryEndpointsGraphql = new DirectoryEndpointsGraphql();
     directoryCalls = directoryCallsGraphql; // Used in superclass
     directoryEndpoints = new DirectoryEndpointsGraphql();
     this.username = username;
@@ -85,7 +87,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  }\n" +
               "}";
 
-      String endpoint = DirectoryEndpointsGraphql.getLoginEndpoint();
+      String endpoint = directoryEndpointsGraphql.getLoginEndpoint();
       JsonObject result = directoryCallsGraphql.runGraphqlCommand(endpoint, graphqlCommand);
 
       if (result == null) {
@@ -126,7 +128,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return biobank;
 
     try {
-      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), "Biobanks", "filter: { id: { equals: \"" + id.toString() + "\" } }", new ArrayList<>(List.of("id", "name")));
+      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(directoryEndpointsGraphql.getDatabaseEricEndpoint(), "Biobanks", "filter: { id: { equals: \"" + id.toString() + "\" } }", new ArrayList<>(List.of("id", "name")));
       if (item == null) {
         logger.warn("fetchBiobank: item is null");
         return null;
@@ -208,7 +210,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  }\n" +
               "}";
 
-      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
       if (collectionsList == null) {
         logger.warn("fetchCollectionGetOutcomes: biobankList list is null");
         continue;
@@ -256,7 +258,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  ) { message }\n" +
               "}";
 
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
     }
 
     return true;
@@ -413,7 +415,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
         logger.info("updateFactTablesBlock: graphqlCommand: " + graphqlCommand);
 
-        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
 
         if (result == null) {
           logger.warn("updateFactTablesBlock: result is null");
@@ -495,7 +497,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     getFactPageToggle = true;
 
     try {
-      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), "CollectionFacts", null, new ArrayList<>(List.of("id")));
+      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(directoryEndpointsGraphql.getDatabaseEricEndpoint(), "CollectionFacts", null, new ArrayList<>(List.of("id")));
       if (collectionFactsList == null) {
         logger.warn("getNextPageOfFactIdsForCollection: diseaseTypeList is null for collectionId: " + collectionId + ", there may be a problem");
         return null;
@@ -548,7 +550,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
                 "  }\n" +
                 "}";
 
-        JsonObject result = directoryCallsGraphql.runGraphqlCommand(DirectoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
 
         if (result == null) {
           logger.warn("deleteFactsByIds: result is null");
@@ -572,7 +574,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   protected boolean isValidIcdValue(String diagnosis) {
     try {
-      List<Map<String, Object>> diseaseTypeList = directoryCallsGraphql.runGraphqlQueryReturnList(DirectoryEndpointsGraphql.getDatabaseDirectoryOntologiesEndpoint(), "DiseaseTypes", "filter: { name: { equals: \"" + diagnosis + "\" } }", new ArrayList<>(List.of("name")));
+      List<Map<String, Object>> diseaseTypeList = directoryCallsGraphql.runGraphqlQueryReturnList(directoryEndpointsGraphql.getDatabaseDirectoryOntologiesEndpoint(), "DiseaseTypes", "filter: { name: { equals: \"" + diagnosis + "\" } }", new ArrayList<>(List.of("name")));
       if (diseaseTypeList == null) {
         logger.warn("isValidIcdValue: diseaseTypeList is null for diagnosis: " + diagnosis + ", there may be a problem");
         return false;

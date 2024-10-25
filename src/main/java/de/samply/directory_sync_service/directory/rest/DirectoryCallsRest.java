@@ -51,7 +51,7 @@ public class DirectoryCallsRest extends DirectoryCalls {
    * Updates the token in the directory credentials upon successful login.
    */
   public boolean login() {
-    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(DirectoryEndpointsRest.getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
+    DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(new DirectoryEndpointsRest().getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
     if (loginResponse == null) {
       logger.error("login: failed to log in to Directory");
       return false;
