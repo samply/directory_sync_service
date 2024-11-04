@@ -2,6 +2,8 @@ package de.samply.directory_sync_service.directory.graphql;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
@@ -10,10 +12,13 @@ import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The DirectoryApiRest class provides an interface for interacting with the Directory service.
@@ -26,6 +31,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
   private final String password;
   private DirectoryCallsGraphql directoryCallsGraphql;
   private DirectoryEndpointsGraphql directoryEndpointsGraphql;
+  private Map<String,String> databaseEricEndpointMap = new HashMap<>();
+  private Map<String,String> columnInTableMap = new HashMap<>();
+
 
   /**
    * Constructs a new DirectoryApiRest instance.
@@ -125,7 +133,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return biobank;
 
     try {
-      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(directoryEndpointsGraphql.getDatabaseEricEndpoint(), "Biobanks", "filter: { id: { equals: \"" + id.toString() + "\" } }", new ArrayList<>(List.of("id", "name")));
+      String countryCode = id.getCountryCode();
+      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(getDatabaseEricEndpoint(countryCode), "Biobanks", "filter: { id: { equals: \"" + id.toString() + "\" } }", new ArrayList<>(List.of("id", "name")));
       if (item == null) {
         logger.warn("fetchBiobank: item is null");
         return null;
@@ -156,8 +165,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
   /**
    * Make API calls to the Directory to fill a DirectoryCollectionGet object containing attributes
-   * for all of the collections listed in collectionIds. The countryCode is used solely for
-   * constructing the URL for the API call.
+   * for all of the collections listed in collectionIds. The countryCode is not used.
    * 
    * @param countryCode E.g. "DE".
    * @param collectionIds IDs of the collections whose data will be harvested.
@@ -207,7 +215,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  }\n" +
               "}";
 
-      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+      String collectionCountryCode = extractCountryCodeFromBbmriEricId(collectionId);
+      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(collectionCountryCode), graphqlCommand);
       if (collectionsList == null) {
         logger.warn("fetchCollectionGetOutcomes: biobankList list is null");
         continue;
@@ -242,12 +251,18 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return true;
     }
 
+    logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update " + directoryCollectionPut.getCollectionIds().size() + " collections");
+
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
+      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update collection: " + collectionId);
+
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       cleanEntity(entity);
       insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
       transformEntityForEmx2(entity);
       String entityGraphql = mapToGraphQL(entity);
+      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: entityGraphql: " + entityGraphql);
+      String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
 
       String graphqlCommand = "mutation {\n" +
               "  update (Collections: \n" +
@@ -255,10 +270,33 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "  ) { message }\n" +
               "}";
 
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+
+      if (result == null) {
+        logger.warn("updateEntities: result is null");
+        return false;
+      }
+
+      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: result: " + result.toString());
     }
 
     return true;
+  }
+
+  /**
+   * Extracts the country code from a given BBMRI ID string. Works for both
+   * biobank and collection IDs.
+   *
+   * @param id The BBMRI ID string from which to extract the country code.
+   * @return The country code extracted from the BBMRI ID string.
+   */
+  private String extractCountryCodeFromBbmriEricId(String id) {
+    BbmriEricId bbmriEricCollectionId = BbmriEricId
+            .valueOf(id)
+            .orElse(null);
+    String countryCode = bbmriEricCollectionId.getCountryCode();
+
+    return countryCode;
   }
 
   /**
@@ -271,16 +309,20 @@ public class DirectoryApiGraphql extends DirectoryApi {
     for (String key: entity.keySet()) {
       if (entity.get(key) instanceof List) {
         List list = (List) entity.get(key);
-        if (list.size() == 0)
+        if (list.size() == 0) {
+          logger.warn("cleanEntity: attribute \"" + key + "\" is an empty list");
           badKeys.add(key);
+        }
         if (list.size() == 1 && list.get(0) == null) {
           logger.warn("cleanEntity: attribute \"" + key + "\" has a single null element");
           badKeys.add(key);
         }
       }
     }
-    for (String key: badKeys)
+    for (String key: badKeys) {
+      logger.info("cleanEntity: removing bad attribute: \"" + key + "\"");
       entity.remove(key);
+    }
   }
 
   /**
@@ -292,6 +334,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
   private void insertMissingAttributesIntoEntity(DirectoryCollectionPut directoryCollectionPut, Map<String, Object> entity) {
     if (!entity.containsKey("country"))
       entity.put("country", directoryCollectionPut.getCountryCode());
+    if (!entity.containsKey("timestamp"))
+      entity.put("timestamp", LocalDateTime.now().toString());
     if (!entity.containsKey("national_node"))
       entity.put("national_node", directoryCollectionPut.getCountryCode());
     if (!entity.containsKey("biobank_label") && entity.containsKey("biobank") && entity.get("biobank") instanceof String)
@@ -370,7 +414,18 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
   }
 
-  // Convert Java Map to GraphQL mutation-friendly string
+  /**
+   * Converts a Java {@link Map} to a GraphQL mutation-friendly string format.
+   * <p>
+   * This method transforms a provided Map into a format compatible with GraphQL
+   * mutations by first serializing it to JSON and then modifying the JSON output
+   * to match GraphQL syntax (e.g., removing quotes around keys).
+   * </p>
+   * Nested maps and arrays can be handled by this method.
+   * </p>
+   * @param map The {@link Map} to be converted to a GraphQL mutation-friendly string.
+   * @return A {@code String} representing the GraphQL-compatible format of the input map.
+  */
   private String mapToGraphQL(Map<String, Object> map) {
     // Convert Map to JSON using Gson
     Gson gson = new GsonBuilder().serializeNulls().create();  // Handles nulls if needed
@@ -398,24 +453,22 @@ public class DirectoryApiGraphql extends DirectoryApi {
       // Nothing to insert
       return true;
 
+    // The national_node attribute is needed by some Directory versions, but not by others.
+    // To find out what the current Directory requires, we need to do a little bit of introspection
+    // in the Directory's GrapgQL API.
+    boolean includeNationalNode = isColumnInTable(countryCode, "CollectionFacts", "national_node");
+
     for (Map<String, String> factTable : factTablesBlock)
       try {
         if (!factTable.containsKey("national_node") && countryCode != null && !countryCode.isEmpty())
           factTable.put("national_node", countryCode);
-        String factTableAttributeString = buildFactTableAttributeString(factTable);
 
-        String graphqlCommand = "mutation {\n" +
-                "  insert( CollectionFacts: { " + factTableAttributeString + " } ) {\n" +
-                "    message\n" +
-                "  }\n" +
-                "}";
-
+        String factTableAttributeString = buildFactTableAttributeString(factTable, includeNationalNode);
+        String graphqlCommand = buildUpdateFactTableGraphqlCommand(factTableAttributeString);
         logger.info("updateFactTablesBlock: graphqlCommand: " + graphqlCommand);
-
-        JsonObject result = directoryCallsGraphql.runGraphqlCommand(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
-
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
         if (result == null) {
-          logger.warn("updateFactTablesBlock: result is null");
+          logger.warn("updateFactTablesBlock: result is null with national_node attribute");
           return false;
         }
 
@@ -428,7 +481,97 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return true;
   }
 
-  private String buildFactTableAttributeString(Map<String, String> factTable) {
+  /**
+   * Builds a GraphQL command for updating a Directory fact table with the attributes encoded in the provided string.
+   *
+   * @param factTableAttributeString The string representing the attributes for the fact table update.
+   * @return The GraphQL command for updating the fact table.
+   */
+  private String buildUpdateFactTableGraphqlCommand(String factTableAttributeString) {
+    String graphqlCommand = "mutation {\n" +
+            "  insert( CollectionFacts: { " + factTableAttributeString + " } ) {\n" +
+            "    message\n" +
+            "  }\n" +
+            "}";
+
+    return graphqlCommand;
+  }
+
+  /**
+   * Checks if a specific column exists in a Directory GraphQL table for a given country code.
+   * The Directory GraphQL API may need to be called to complete this task.
+   *
+   * @param countryCode The country code used to determine the database endpoint. E.g. "DE".
+   * @param tableName The name of the table to check for the column. E.g. "CollectionFacts".
+   * @param columnName The name of the column to check for existence. E.g. "national_node".
+   * @return true if the column exists in the specified table, false otherwise. Also returns
+   *         false on error.
+   */
+  private boolean isColumnInTable(String countryCode, String tableName, String columnName) {
+    logger.info("isColumnInTable: countryCode: " + countryCode + ", tableName: " + tableName + ", columnName: " + columnName);
+
+    // Prevent the same column from being checked multiple times
+    String hash = countryCode + tableName + columnName;
+    if (columnInTableMap.containsKey(hash))
+      return true;
+    columnInTableMap.put(hash, hash);
+
+    String graphqlCommand = "{\n" +
+            "  _schema {\n" +
+            "    settings {\n" +
+            "      key\n" +
+            "      value\n" +
+            "    }\n" +
+            "    tables {\n" +
+            "      name\n" +
+            "      columns {\n" +
+            "        name\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+    logger.info("isColumnInTable: graphqlCommand: " + graphqlCommand);
+
+    AtomicBoolean found = new AtomicBoolean(false);
+    try {
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+      logger.info("isColumnInTable: result: " + result.toString());
+      JsonArray tableArray = result.get("_schema").getAsJsonObject().get("tables").getAsJsonArray();
+
+      tableArray.forEach(jsonElement -> {
+        JsonObject tables = jsonElement.getAsJsonObject();
+        if (tables.get("name").getAsString().equals(tableName)) {
+          JsonArray columns = tables.get("columns").getAsJsonArray();
+
+          // Is columnName in the list of columns?
+          for (JsonElement column : columns) {
+            String foundColumnName = column.getAsJsonObject().get("name").getAsString();
+            if (foundColumnName.equals(columnName)) {
+              logger.info("isColumnInTable: foundColumnName: " + foundColumnName.toString() + " == columnName: " + columnName);
+              found.set(true);
+              break;
+            }
+          }
+        }
+      });
+
+      return found.get();
+    } catch (Exception e) {
+      logger.warn("isColumnInTable: exception: " + Util.traceFromException(e));
+    }
+
+    return false;
+  }
+
+  /**
+   * Builds a String representation of the attributes for updating a Directory fact table using GraphQL,
+   * based on the provided map of key-value pairs.
+   *
+   * @param factTable The map containing key-value pairs representing the attributes for the fact table.
+   * @param includeNationalNode Flag to indicate whether to include the national node attribute.
+   * @return A string representation of the fact table attributes for updating.
+   */
+  private String buildFactTableAttributeString(Map<String, String> factTable, boolean includeNationalNode) {
     StringBuilder result = new StringBuilder();
     boolean first = true;
 
@@ -451,8 +594,15 @@ public class DirectoryApiGraphql extends DirectoryApi {
               key.equals("sample_type"))
         transformedValue = wrapValueInHashWithAttribute("name", value);
       else if (
-              key.equals("collection") ||
-              key.equals("national_node")
+              key.equals("national_node") && !includeNationalNode
+      )
+        continue; // including national_node causes problems with directory-playground.molgenis.net
+      else if (
+              key.equals("national_node") && includeNationalNode
+      )
+        transformedValue = wrapValueInHashWithAttribute("id", value);
+      else if (
+              key.equals("collection")
       )
         transformedValue = wrapValueInHashWithAttribute("id", value);
       else if (
@@ -468,6 +618,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return result.toString();
   }
 
+  /**
+   * Wraps a given name/value pair in a format suitable for GraphQL.
+   *
+   * @param attributeName The name of the attribute.
+   * @param value The value to be wrapped.
+   * @return Formatted name/value pair as a String.
+   */
   private String wrapValueInHashWithAttribute(String attributeName, String value) {
     return "{ " + attributeName + ": \"" + value + "\" }";
   }
@@ -494,7 +651,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     getFactPageToggle = true;
 
     try {
-      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(directoryEndpointsGraphql.getDatabaseEricEndpoint(), "CollectionFacts", null, new ArrayList<>(List.of("id")));
+      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), "CollectionFacts", null, new ArrayList<>(List.of("id")));
       if (collectionFactsList == null) {
         logger.warn("getNextPageOfFactIdsForCollection: diseaseTypeList is null for collectionId: " + collectionId + ", there may be a problem");
         return null;
@@ -540,25 +697,32 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return true;
 
     for (String factId : factIds)
-      try {
-        String graphqlCommand = "mutation {\n" +
-                "  delete( CollectionFacts: { id: \"" + factId + "\" } ) {\n" +
-                "    message\n" +
-                "  }\n" +
-                "}";
+      if (!deleteFactById(countryCode, factId))
+        return false;
 
-        JsonObject result = directoryCallsGraphql.runGraphqlCommand(directoryEndpointsGraphql.getDatabaseEricEndpoint(), graphqlCommand);
+    return true;
+  }
 
-        if (result == null) {
-          logger.warn("deleteFactsByIds: result is null");
-          return false;
-        }
+  protected boolean deleteFactById(String countryCode, String factId) {
+    try {
+      String graphqlCommand = "mutation {\n" +
+              "  delete( CollectionFacts: { id: \"" + factId + "\" } ) {\n" +
+              "    message\n" +
+              "  }\n" +
+              "}";
 
-        logger.info("login: result: " + result);
-      } catch (Exception e) {
-        logger.warn("deleteFactsByIds: Exception during fact deletion: " + Util.traceFromException(e));
+      JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+
+      if (result == null) {
+        logger.warn("deleteFactById: result is null");
         return false;
       }
+
+      logger.info("login: result: " + result);
+    } catch (Exception e) {
+      logger.warn("deleteFactById: Exception during fact deletion: " + Util.traceFromException(e));
+      return false;
+    }
 
     return true;
   }
@@ -604,5 +768,42 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     return false;
+  }
+
+  /**
+   * Retrieves the database endpoint for the ERIC database API based on the country code.
+   *
+   * @param countryCode The country code used to determine the database endpoint.
+   * @return The database endpoint for the ERIC database API, or null if no valid endpoint is found.
+   */
+  private String getDatabaseEricEndpoint(String countryCode) {
+    if (databaseEricEndpointMap.containsKey(countryCode))
+      return databaseEricEndpointMap.get(countryCode);
+
+    // There are several plausible endpoints, so try each one, until we find one that
+    // actually exists.
+
+    String databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint1() + countryCode + directoryEndpointsGraphql.getApiEndpoint();
+    if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
+      logger.info("getDatabaseEricEndpoint: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ using " + databaseEricEndpoint + " for ERIC database API");
+      databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+      return databaseEricEndpoint;
+    }
+
+    databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint2() + directoryEndpointsGraphql.getApiEndpoint();
+    if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
+      logger.info("getDatabaseEricEndpoint: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ using " + databaseEricEndpoint + " for ERIC database API");
+      databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+      return databaseEricEndpoint;
+    }
+
+    databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint3() + directoryEndpointsGraphql.getApiEndpoint();
+    if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
+      logger.info("getDatabaseEricEndpoint: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ using " + databaseEricEndpoint + " for ERIC database API");
+      databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+      return databaseEricEndpoint;
+    }
+
+    return null;
   }
 }

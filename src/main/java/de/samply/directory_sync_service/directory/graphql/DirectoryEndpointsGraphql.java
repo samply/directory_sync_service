@@ -9,19 +9,32 @@ import java.util.List;
  * Utility class that constructs various GraphQL endpoints for the Directory API.
  */
 public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
-  private static final String ENDPOINT_LOGIN = "/api/graphql";
-  private static final String ENDPOINT_DATABASE_ERIC = "/ERIC/api/graphql";
+  private static final String ENDPOINT_API = "/api/graphql";
+  private static final String ENDPOINT_LOGIN = ENDPOINT_API;
+  private static final String ENDPOINT_DATABASE_ERIC1 = "/BBMRI-";
+  private static final String ENDPOINT_DATABASE_ERIC2 = "/ERIC";
+  private static final String ENDPOINT_DATABASE_ERIC3 = "/BBMRI-ERIC";
   private static final String ENDPOINT_DATABASE_DIRECTORY_ONTOLOGIES = "/DirectoryOntologies/api/graphql";
 
   /**
-   * Constructs the URL for accessing the ERIC database endpoint of the Directory API.
-   * This is the route to the data you will be storing, in particular, biobanks and collections.
-   * Facts (star model) may also be stored here, I am not sure yet.
+   * Constructs the URL for accessing the GraphQL endpoint of the Directory API.
    *
    * @return the constructed biobank API URL.
    */
-  public String getDatabaseEricEndpoint() {
-    return ENDPOINT_DATABASE_ERIC;
+  public String getApiEndpoint() {
+    return ENDPOINT_API;
+  }
+
+  public String getDatabaseEricEndpoint1() {
+    return ENDPOINT_DATABASE_ERIC1;
+  }
+
+  public String getDatabaseEricEndpoint2() {
+    return ENDPOINT_DATABASE_ERIC2;
+  }
+
+  public String getDatabaseEricEndpoint3() {
+    return ENDPOINT_DATABASE_ERIC3;
   }
 
   /**

@@ -220,9 +220,16 @@ public abstract class DirectoryApi {
       // Don't do anything if we're in mock mode
       return;
 
+    if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
+      logger.info("__________ collectDiagnosisCorrections: uncorrected diagnoses: ");
+      for (String diagnosis : diagnoses.keySet())
+        logger.info("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
+    }
+
     int diagnosisCounter = 0; // for diagnostics only
     int invalidIcdValueCounter = 0;
     int correctedIcdValueCounter = 0;
+    int discardedIcdValueCounter = 0;
     for (String diagnosis: diagnoses.keySet()) {
       if (diagnosisCounter%500 == 0)
         logger.info("__________ collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
@@ -232,13 +239,19 @@ public abstract class DirectoryApi {
         if (isValidIcdValue(diagnosisCategory)) {
           correctedIcdValueCounter++;
           diagnoses.put(diagnosis, diagnosisCategory);
-        } else
+        } else {
+          discardedIcdValueCounter++;}
           diagnoses.put(diagnosis, null);
       }
       diagnosisCounter++;
     }
 
-    logger.info("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter);
+    logger.info("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
+    if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
+      logger.info("__________ collectDiagnosisCorrections: corrected diagnoses: ");
+      for (String diagnosis : diagnoses.keySet())
+        logger.info("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
+    }
   }
 
   protected abstract boolean isValidIcdValue(String diagnosis);

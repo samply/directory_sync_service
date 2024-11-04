@@ -47,10 +47,11 @@ public class Sync {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
             }
+            logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
             if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin))
                 break;
+            logger.info("syncWithDirectoryFailover: attempt " + retryNum + " of " + retryMax + " failed");
         }
     }
 
