@@ -12,7 +12,6 @@ import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,10 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DirectoryApiGraphql extends DirectoryApi {
   private final String username;
   private final String password;
-  private DirectoryCallsGraphql directoryCallsGraphql;
-  private DirectoryEndpointsGraphql directoryEndpointsGraphql;
-  private Map<String,String> databaseEricEndpointMap = new HashMap<>();
-  private Map<String,String> columnInTableMap = new HashMap<>();
+  private final DirectoryCallsGraphql directoryCallsGraphql;
+  private final DirectoryEndpointsGraphql directoryEndpointsGraphql;
+  private final Map<String,String> databaseEricEndpointMap = new HashMap<>();
+  private final Map<String,Boolean> columnInTableMap = new HashMap<>();
 
 
   /**
@@ -134,7 +133,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     try {
       String countryCode = id.getCountryCode();
-      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(getDatabaseEricEndpoint(countryCode), "Biobanks", "filter: { id: { equals: \"" + id.toString() + "\" } }", new ArrayList<>(List.of("id", "name")));
+      Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(getDatabaseEricEndpoint(countryCode), "Biobanks", "filter: { id: { equals: \"" + id + "\" } }", new ArrayList<>(List.of("id", "name")));
       if (item == null) {
         logger.warn("fetchBiobank: item is null");
         return null;
@@ -280,7 +279,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
 
-      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: result: " + result.toString());
+      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: result: " + result);
     }
 
     return true;
@@ -329,8 +328,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   private void cleanEntity(Map<String, Object> entity) {
     List<String> badKeys = new ArrayList<String>(); // List of keys to remove>
     for (String key: entity.keySet()) {
-      if (entity.get(key) instanceof List) {
-        List list = (List) entity.get(key);
+      if (entity.get(key) instanceof List list) {
         if (list.size() == 0) {
           logger.warn("cleanEntity: attribute \"" + key + "\" is an empty list");
           badKeys.add(key);
@@ -378,7 +376,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * Cleans the timestamp by removing any trailing non-numeric characters.
    * E.g. there might be a 'Z' at the end of the timestamp, which the GrapQL
    * API doesn't need.
-   * 
+   *
    * @param timestamp The timestamp string to be cleaned.
    * @return The cleaned timestamp string without any trailing non-numeric characters.
    */
@@ -553,8 +551,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // Prevent the same column from being checked multiple times
     String hash = countryCode + tableName + columnName;
     if (columnInTableMap.containsKey(hash))
-      return true;
-    columnInTableMap.put(hash, hash);
+      return columnInTableMap.get(hash);
 
     String graphqlCommand = "{\n" +
             "  _schema {\n" +
@@ -570,12 +567,10 @@ public class DirectoryApiGraphql extends DirectoryApi {
             "    }\n" +
             "  }\n" +
             "}";
-    logger.info("isColumnInTable: graphqlCommand: " + graphqlCommand);
 
     AtomicBoolean found = new AtomicBoolean(false);
     try {
       JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
-      logger.info("isColumnInTable: result: " + result.toString());
       JsonArray tableArray = result.get("_schema").getAsJsonObject().get("tables").getAsJsonArray();
 
       tableArray.forEach(jsonElement -> {
@@ -587,7 +582,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
           for (JsonElement column : columns) {
             String foundColumnName = column.getAsJsonObject().get("name").getAsString();
             if (foundColumnName.equals(columnName)) {
-              logger.info("isColumnInTable: foundColumnName: " + foundColumnName.toString() + " == columnName: " + columnName);
+              logger.info("isColumnInTable: foundColumnName: " + foundColumnName + " == columnName: " + columnName);
               found.set(true);
               break;
             }
@@ -595,11 +590,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
         }
       });
 
+      columnInTableMap.put(hash, found.get());
       return found.get();
     } catch (Exception e) {
       logger.warn("isColumnInTable: exception: " + Util.traceFromException(e));
     }
 
+    columnInTableMap.put(hash, false);
     return false;
   }
 

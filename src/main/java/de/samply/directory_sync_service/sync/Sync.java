@@ -43,7 +43,7 @@ public class Sync {
         for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             if (retryNum > 0) {
                 try {
-                    Thread.sleep(Integer.parseInt(retryInterval) * 1000);
+                    Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

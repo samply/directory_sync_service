@@ -252,7 +252,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     JsonObject data = jsonResponse.getAsJsonObject("data");
 
     if (data == null) {
-      logger.warn("graphql: Error in GraphQL response: " + jsonResponse.toString());
+      logger.warn("graphql: Error in GraphQL response: " + jsonResponse);
       return null;
     }
 

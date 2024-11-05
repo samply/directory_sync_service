@@ -99,7 +99,7 @@ public class CreateFactTablesFromStarModelInputData {
             mapEntry.put("number_of_samples", Long.toString(entry.getValue()));
             mapEntry.put("id", "bbmri-eric:factID:" // All fact IDs must start with this (mandatory).
                 // Snip "bbmri-eric:ID:" from collection ID and replace : with _
-                + collectionId.substring(14, collectionId.length()).replaceAll(":", "_")
+                + collectionId.substring(14).replaceAll(":", "_")
                 + "_"
                 + Math.abs(entry.getKey().hashCode()) // Add a hash code to make the ID unique
                 );

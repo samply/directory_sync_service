@@ -36,7 +36,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class DirectorySyncService implements CommandLineRunner {
 
-    private DirectorySyncLauncher directorySyncLauncher;
+    private final DirectorySyncLauncher directorySyncLauncher;
 
     /** Loads the Directory sync launcher. */
     DirectorySyncService(DirectorySyncLauncher directorySyncLauncher) {

@@ -18,7 +18,7 @@ import org.quartz.DisallowConcurrentExecution;
  */
 @DisallowConcurrentExecution
 public class DirectorySyncJob implements StatefulJob  {
-    private static Logger logger = LogManager.getLogger(DirectorySyncJob.class);
+    private static final Logger logger = LogManager.getLogger(DirectorySyncJob.class);
 
     /**
      * Method used by Quartz to start a job.

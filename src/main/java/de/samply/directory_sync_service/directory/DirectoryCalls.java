@@ -96,9 +96,9 @@ public abstract class DirectoryCalls {
         HttpEntity httpEntity = response.getEntity();
         result = EntityUtils.toString(httpEntity);
       } else if (response.getStatusLine().getStatusCode() == 404) {
-        logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + Integer.toString(response.getStatusLine().getStatusCode()));
+        logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode());
       } else {
-        logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " + Integer.toString(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
+        logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode() + response.getStatusLine().getReasonPhrase());
         logger.warn("executeRequest: result: " + result);
       }
     } catch (IOException e) {

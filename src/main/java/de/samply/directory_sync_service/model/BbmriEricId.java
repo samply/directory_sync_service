@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * {@literal bbmri-eric:ID:<country-code>_<suffix>}
  */
 public class BbmriEricId {
-  private static Logger logger = LogManager.getLogger(BbmriEricId.class);
+  private static final Logger logger = LogManager.getLogger(BbmriEricId.class);
 
   private static final Pattern PATTERN = Pattern.compile("bbmri-eric:ID:([a-zA-Z]{2})(_.+)");
 

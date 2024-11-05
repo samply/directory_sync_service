@@ -63,7 +63,7 @@ public class FhirApi {
   private Map<String, List<Specimen>> specimensByCollection = null;
   private Map<String, List<Patient>> patientsByCollection = null;
   private final IGenericClient fhirClient;
-  private FhirContext ctx;
+  private final FhirContext ctx;
 
   public FhirApi(String fhirStoreUrl) {
     ctx = FhirContext.forR4();

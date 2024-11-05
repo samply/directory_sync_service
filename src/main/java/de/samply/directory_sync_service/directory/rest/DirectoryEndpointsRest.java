@@ -1,10 +1,6 @@
 package de.samply.directory_sync_service.directory.rest;
 
 import de.samply.directory_sync_service.directory.DirectoryEndpoints;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Utility class that constructs various REST endpoints for the Directory API.

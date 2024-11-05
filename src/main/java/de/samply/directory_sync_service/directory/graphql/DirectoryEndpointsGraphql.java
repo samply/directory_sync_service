@@ -2,9 +2,6 @@ package de.samply.directory_sync_service.directory.graphql;
 
 import de.samply.directory_sync_service.directory.DirectoryEndpoints;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Utility class that constructs various GraphQL endpoints for the Directory API.
  */

@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
  */
 public class DirectoryApiRest extends DirectoryApi {
-  private DirectoryCallsRest directoryCallsRest;
-  private DirectoryEndpointsRest directoryEndpointsRest;
+  private final DirectoryCallsRest directoryCallsRest;
+  private final DirectoryEndpointsRest directoryEndpointsRest;
 
   /**
    * Constructs a new DirectoryApiRest instance.
@@ -227,8 +227,7 @@ public class DirectoryApiRest extends DirectoryApi {
         Object total = body.get("total");
         if (total instanceof Double) {
           Integer intTotal = ((Double) total).intValue();
-          if (intTotal > 0)
-            return true;
+          return intTotal > 0;
         } else
           logger.warn("isValidIcdValue: key 'total' is not a double");
       } else

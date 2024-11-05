@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class DirectorySyncLauncher {
-  private static Logger logger = LogManager.getLogger(DirectorySyncLauncher.class);
+  private static final Logger logger = LogManager.getLogger(DirectorySyncLauncher.class);
 
   @Autowired
   Configuration configuration;

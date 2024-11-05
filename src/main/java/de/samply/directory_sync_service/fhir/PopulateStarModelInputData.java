@@ -27,7 +27,7 @@ import de.samply.directory_sync_service.model.BbmriEricId;
  */
 public class PopulateStarModelInputData {
   private static final Logger logger = LoggerFactory.getLogger(PopulateStarModelInputData.class);
-  private FhirApi fhirApi;
+  private final FhirApi fhirApi;
 
   public PopulateStarModelInputData(FhirApi fhirApi) {
     this.fhirApi = fhirApi;

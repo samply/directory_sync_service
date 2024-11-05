@@ -174,7 +174,7 @@ public class StarModelData {
     // This comprises of one row per Patient/Specimen/Diagnosis combination.
     // Each row is a map containing attributes relevant to the star model.
     // A Map of a List of Maps: collectionID_1 -> [row0, row1, ...]
-    private Map<String,List<InputRow>> inputData = new HashMap<String,List<InputRow>>();
+    private final Map<String,List<InputRow>> inputData = new HashMap<String,List<InputRow>>();
 
     /**
      * Adds an input row to the specified collection in the inputData map.
@@ -233,7 +233,7 @@ public class StarModelData {
 
     // One big fact table for everything. Every fact contains a mandatory collection ID.
     // A single "fact" is a simple String map, with medically relevant keys.
-    private List<Map<String, String>> factTables = new ArrayList<Map<String, String>>();
+    private final List<Map<String, String>> factTables = new ArrayList<Map<String, String>>();
 
     /**
      * Adds a collection of facts to the existing fact table.

@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
  */
 public class DirectoryCredentials {
   private static final Logger logger = LoggerFactory.getLogger(DirectoryCredentials.class);
-  private String username;
-  private String password;
+  private final String username;
+  private final String password;
   private String token;
 
   /**
