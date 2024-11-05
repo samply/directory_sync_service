@@ -56,10 +56,6 @@ public abstract class DirectoryCalls {
     String url = urlCombine(baseUrl, endpoint);
     logger.info("endpointExists: checking if endpoint exists, URL: " + url);
     HttpHead request = new HttpHead(url);
-//    HttpOptions request = new HttpOptions(url);
-//    HttpGet request = new HttpGet(url);
-//    request.setHeader("Accept", "application/json");
-//    request.setHeader("Content-type", "application/json");
 
     boolean returnStatus = true;
     try {

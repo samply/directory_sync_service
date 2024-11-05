@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The DirectoryApiRest class provides an interface for interacting with the Directory service.
@@ -99,8 +98,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
 
-      logger.info("login: result: " + result);
-
       String token = result.get("signin").getAsJsonObject().get("token").getAsString();
       if (token == null) {
         logger.warn("login: token is null");
@@ -123,8 +120,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @return either the Biobank or null if an error occurs
    */
   public Biobank fetchBiobank(BbmriEricId id) {
-    logger.info("fetchBiobank: entered");
-
     Biobank biobank = new Biobank();
 
     if (mockDirectory)
@@ -246,11 +241,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
   public boolean updateEntities(DirectoryCollectionPut directoryCollectionPut) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: in mock mode, skip update");
       return true;
     }
-
-    logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update " + directoryCollectionPut.getCollectionIds().size() + " collections");
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
       logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update collection: " + collectionId);
@@ -263,7 +255,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
       transformEntityForEmx2(entity);
       deleteUnknownFieldsFromEntity(extractCountryCodeFromBbmriEricId(collectionId), entity);
       String entityGraphql = mapToGraphQL(entity);
-      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: entityGraphql: " + entityGraphql);
       String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
 
       String graphqlCommand = "mutation {\n" +
@@ -278,8 +269,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
         logger.warn("updateEntities: result is null");
         return false;
       }
-
-      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: result: " + result);
     }
 
     return true;
@@ -298,9 +287,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @param entity The entity map from which to delete unknown fields.
    */
   private void deleteUnknownFieldsFromEntity(String countryCode, Map<String, Object> entity) {
-    if (entity.containsKey("national_node") && !isColumnInTable(countryCode, "Collection", "national_node"))
+    if (entity.containsKey("national_node") && !isColumnInTable(countryCode, "Collections", "national_node"))
       entity.remove("national_node");
-    if (entity.containsKey("biobank_label") && !isColumnInTable(countryCode, "Collection", "biobank_label"))
+    if (entity.containsKey("biobank_label") && !isColumnInTable(countryCode, "Collections", "biobank_label"))
       entity.remove("biobank_label");
   }
 
@@ -485,8 +474,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   @Override
   protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
-    logger.info("updateFactTablesBlock: <><><><><><><><><><> entered");
-
     if (factTablesBlock.size() == 0)
       // Nothing to insert
       return true;
@@ -503,14 +490,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
         String factTableAttributeString = buildFactTableAttributeString(factTable, includeNationalNode);
         String graphqlCommand = buildUpdateFactTableGraphqlCommand(factTableAttributeString);
-        logger.info("updateFactTablesBlock: graphqlCommand: " + graphqlCommand);
         JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
         if (result == null) {
           logger.warn("updateFactTablesBlock: result is null with national_node attribute");
           return false;
         }
-
-        logger.info("updateFactTablesBlock: result: " + result);
       } catch (Exception e) {
         logger.warn("login: Exception during fact deletion: " + Util.traceFromException(e));
         return false;
@@ -568,36 +552,35 @@ public class DirectoryApiGraphql extends DirectoryApi {
             "  }\n" +
             "}";
 
-    AtomicBoolean found = new AtomicBoolean(false);
+    boolean found = false;
     try {
       JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
       JsonArray tableArray = result.get("_schema").getAsJsonObject().get("tables").getAsJsonArray();
 
-      tableArray.forEach(jsonElement -> {
-        JsonObject tables = jsonElement.getAsJsonObject();
-        if (tables.get("name").getAsString().equals(tableName)) {
-          JsonArray columns = tables.get("columns").getAsJsonArray();
+      for (JsonElement jsonElement : tableArray) {
+        JsonObject table = jsonElement.getAsJsonObject();
+        String tableNameFound = table.get("name").getAsString();
+        if (tableNameFound.equals(tableName)) {
+          JsonArray columns = table.get("columns").getAsJsonArray();
 
           // Is columnName in the list of columns?
           for (JsonElement column : columns) {
             String foundColumnName = column.getAsJsonObject().get("name").getAsString();
             if (foundColumnName.equals(columnName)) {
-              logger.info("isColumnInTable: foundColumnName: " + foundColumnName + " == columnName: " + columnName);
-              found.set(true);
+              logger.info("isColumnInTable: success foundColumnName: " + foundColumnName + " == columnName: " + columnName);
+              found = true;
               break;
             }
           }
+          break;
         }
-      });
-
-      columnInTableMap.put(hash, found.get());
-      return found.get();
+      }
     } catch (Exception e) {
       logger.warn("isColumnInTable: exception: " + Util.traceFromException(e));
     }
 
-    columnInTableMap.put(hash, false);
-    return false;
+    columnInTableMap.put(hash, found);
+    return found;
   }
 
   /**
@@ -704,7 +687,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
           return null;
         }
         if (!item.containsKey("id")) {
-          logger.info("getNextPageOfFactIdsForCollection: id key missing from item");
+          logger.warn("getNextPageOfFactIdsForCollection: id key missing from item");
           return null;
         }
 
@@ -822,21 +805,21 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     String databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint1() + countryCode + directoryEndpointsGraphql.getApiEndpoint();
     if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.info("getDatabaseEricEndpoint: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ using " + databaseEricEndpoint + " for ERIC database API");
+      logger.info("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
     databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint2() + directoryEndpointsGraphql.getApiEndpoint();
     if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.info("getDatabaseEricEndpoint: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ using " + databaseEricEndpoint + " for ERIC database API");
+      logger.info("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
     databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint3() + directoryEndpointsGraphql.getApiEndpoint();
     if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.info("getDatabaseEricEndpoint: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ using " + databaseEricEndpoint + " for ERIC database API");
+      logger.info("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }

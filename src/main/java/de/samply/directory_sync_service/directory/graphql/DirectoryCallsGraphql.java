@@ -161,8 +161,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
       return null;
     }
 
-    logger.info("runGraphqlQueryReturnList: result: " + result);
-
     Map<String, Object> resultMap = convertJsonObjectToMap(result);
 
     if (resultMap.isEmpty()) {
@@ -214,8 +212,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
             "  }\n" +
             "}";
 
-    logger.info("buildGraphqlQueryString: grapqlCommand: " + grapqlCommand);
-
     return grapqlCommand;
   }
 
@@ -236,7 +232,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     // Create the GraphQL body
     String cleanedCommand = escapeQuotes(removeNewlines(graphqlCommand));
     String wrappedCommand = wrapCommandInQuery(cleanedCommand);
-    logger.info("runGraphqlCommand: wrappedCommand: " + wrappedCommand);
     StringEntity entity = new StringEntity(wrappedCommand, UTF_8);
     request.setEntity(entity);
 

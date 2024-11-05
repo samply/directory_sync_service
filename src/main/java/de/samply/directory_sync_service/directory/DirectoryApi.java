@@ -100,7 +100,6 @@ public abstract class DirectoryApi {
   public boolean updateStarModel(StarModelData starModelInputData) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      logger.info("updateStarModel: in mock mode, skip update");
       return true;
     }
 
@@ -165,14 +164,13 @@ public abstract class DirectoryApi {
           logger.info("deleteStarModel: number of facts found: " + factIds.size());
           if (factIds.size() == 0) {
             // Terminate the do loop if there are no more facts left.
-            logger.info("deleteStarModel: finished getting facts for collection: " + collectionId);
             break;
           }
 
           // Take the list of fact IDs and delete all of the corresponding facts
           // at the Directory.
           if (!deleteFactsByIds(countryCode, factIds)) {
-            logger.info("deleteStarModel: Problem deleting facts for collection: " + collectionId);
+            logger.warn("deleteStarModel: Problem deleting facts for collection: " + collectionId);
             return false;
           }
         } while (true);

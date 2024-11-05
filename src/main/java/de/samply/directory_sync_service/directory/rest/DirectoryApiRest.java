@@ -119,7 +119,6 @@ public class DirectoryApiRest extends DirectoryApi {
   public boolean updateEntities(DirectoryCollectionPut directoryCollectionPut) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      logger.info("DirectoryApiRest.updateEntities: in mock mode, skip update");
       return true;
     }
 
@@ -128,8 +127,6 @@ public class DirectoryApiRest extends DirectoryApi {
       logger.warn("entity update, PUT problem");
       return false;
     }
-
-    logger.info("DirectoryApiRest.updateEntities: successfully put " + directoryCollectionPut.size() + " collections to the Directory");
 
     return true;
   }
