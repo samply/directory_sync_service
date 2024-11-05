@@ -20,8 +20,13 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -203,6 +208,13 @@ public class DirectoryCallsRest extends DirectoryCalls {
    */
   private HttpDeleteWithBody buildDeleteRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
+    try (InputStream inputStream = entity.getContent();
+         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+      String content = reader.lines().collect(Collectors.joining("\n"));
+      logger.info("buildDeleteRequest: content: " + content);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     HttpDeleteWithBody request = new HttpDeleteWithBody(urlCombine(baseUrl, commandUrl));
     request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     request.setHeader("Accept", "application/json");
