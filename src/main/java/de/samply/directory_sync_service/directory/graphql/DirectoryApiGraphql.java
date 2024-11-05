@@ -258,8 +258,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       cleanEntity(entity);
+      if (entity.containsKey("timestamp"))
+        entity.put("timestamp", cleanTimestamp(entity.get("timestamp").toString()));
       insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
       transformEntityForEmx2(entity);
+      deleteUnknownFieldsFromEntity(extractCountryCodeFromBbmriEricId(collectionId), entity);
       String entityGraphql = mapToGraphQL(entity);
       logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: entityGraphql: " + entityGraphql);
       String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
@@ -281,6 +284,25 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     return true;
+  }
+
+  /**
+   * Deletes unknown fields from an entity.
+   *
+   * Background: different implementations of the Directory support different fields
+   * in the Collection type. In particular, the "national_node" and "biobank_label"
+   * fields are not universally supported. This method will make an API call to the
+   * Directory to see if these fields are known, and if not, will delete them from
+   * the entity.
+   *
+   * @param countryCode The country code used to determine the database endpoint.
+   * @param entity The entity map from which to delete unknown fields.
+   */
+  private void deleteUnknownFieldsFromEntity(String countryCode, Map<String, Object> entity) {
+    if (entity.containsKey("national_node") && !isColumnInTable(countryCode, "Collection", "national_node"))
+      entity.remove("national_node");
+    if (entity.containsKey("biobank_label") && !isColumnInTable(countryCode, "Collection", "biobank_label"))
+      entity.remove("biobank_label");
   }
 
   /**
@@ -350,6 +372,24 @@ public class DirectoryApiGraphql extends DirectoryApi {
       dataCategories.add("BIOLOGICAL_SAMPLES");
       entity.put("data_categories", dataCategories);
     }
+  }
+
+  /**
+   * Cleans the timestamp by removing any trailing non-numeric characters.
+   * E.g. there might be a 'Z' at the end of the timestamp, which the GrapQL
+   * API doesn't need.
+   * 
+   * @param timestamp The timestamp string to be cleaned.
+   * @return The cleaned timestamp string without any trailing non-numeric characters.
+   */
+  private String cleanTimestamp(String timestamp) {
+    // Use the String.matches method to check if the timestamp ends with a non-numeric character
+    if (timestamp.matches(".*[^\\d]$")) {
+      timestamp = timestamp.substring(0, timestamp.length() - 1);
+      logger.info("cleanTimestamp: ............................ corrected timestamp: " + timestamp);
+    }
+
+    return timestamp;
   }
 
   /**
