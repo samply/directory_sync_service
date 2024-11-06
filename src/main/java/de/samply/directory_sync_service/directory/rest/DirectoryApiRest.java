@@ -200,7 +200,8 @@ public class DirectoryApiRest extends DirectoryApi {
 
     String apiUrl = directoryEndpointsRest.getFactEndpoint(countryCode);
 
-    String result = directoryCallsRest.delete(apiUrl, factIds);
+    // Directory likes to have its delete data wrapped in a map with key "entityIds".
+    String result = directoryCallsRest.delete(apiUrl, new HashMap<>(Map.of("entityIds", factIds)));
 
     if (result == null) {
       logger.warn("deleteFactsByIds, Problem during delete of factIds");
