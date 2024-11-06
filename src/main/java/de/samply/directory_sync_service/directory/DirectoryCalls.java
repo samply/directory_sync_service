@@ -91,6 +91,8 @@ public abstract class DirectoryCalls {
       CloseableHttpResponse response = httpClient.execute(request);
       if (response.getStatusLine().getStatusCode() < 300) {
         HttpEntity httpEntity = response.getEntity();
+        if (httpEntity == null)
+          logger.warn("executeRequest: entity is null" );
         result = EntityUtils.toString(httpEntity);
       } else if (response.getStatusLine().getStatusCode() == 404) {
         logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode());
