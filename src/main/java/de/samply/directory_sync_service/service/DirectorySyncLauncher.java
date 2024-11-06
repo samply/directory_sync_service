@@ -38,6 +38,8 @@ public class DirectorySyncLauncher {
   Configuration configuration;
 
   public void run() {
+    logger.info("run: entered");
+
     DirectorySyncJob directorySyncJob = new DirectorySyncJob();
 
     if (!directorySyncJob.isExecutable(configuration))
@@ -46,7 +48,7 @@ public class DirectorySyncLauncher {
     String timerCron = configuration.getTimerCron();
 
     if (timerCron == null || timerCron.isEmpty()) {
-      logger.info("Running job just once");
+      logger.info("run: Running job just once");
       directorySyncJob.execute(configuration);
       return;
     }
@@ -57,7 +59,7 @@ public class DirectorySyncLauncher {
 
     String jobType = directorySyncJob.getJobType();
 
-    logger.info("Running job repeatedly, according to following cron schedule: " + timerCron);
+    logger.info("run: Running job repeatedly, according to following cron schedule: " + timerCron);
     JobKey quartzJobKey = new JobKey(jobType + "Job", jobType);
     JobDetail quartzJob = JobBuilder.newJob(DirectorySyncJob.class)
             .withIdentity(quartzJobKey).build();

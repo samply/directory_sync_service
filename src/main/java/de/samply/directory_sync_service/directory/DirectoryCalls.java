@@ -2,6 +2,7 @@ package de.samply.directory_sync_service.directory;
 
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpHead;
@@ -95,7 +96,9 @@ public abstract class DirectoryCalls {
         logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode());
       } else {
         logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode() + response.getStatusLine().getReasonPhrase());
-        logger.warn("executeRequest: result: " + result);
+        for (Header header: request.getAllHeaders()) {
+          logger.warn("executeRequest: header: " + header.toString());
+        }
       }
     } catch (IOException e) {
       logger.warn("executeRequest: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));

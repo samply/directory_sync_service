@@ -1,5 +1,8 @@
 package de.samply.directory_sync_service.service;
 
+import de.samply.directory_sync_service.sync.Sync;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,6 +38,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 public class DirectorySyncService implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(DirectorySyncService.class);
 
     private final DirectorySyncLauncher directorySyncLauncher;
 
@@ -52,11 +56,13 @@ public class DirectorySyncService implements CommandLineRunner {
      * @param args No arguments required.
      */
     public static void main(String[] args) {
+        logger.info("main: Starting Directory sync service");
         SpringApplication.run(DirectorySyncService.class, args);
     }
 
     @Override
     public void run(String... args) {
+        logger.info("main: Running Directory sync service");
         directorySyncLauncher.run();
     }
 }
