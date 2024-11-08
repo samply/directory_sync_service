@@ -46,7 +46,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    */
   public boolean endpointIsValidGraphql(String endpoint) {
     String url = urlCombine(baseUrl, endpoint);
-    logger.info("endpointIsValidGraphql: url: " + url);
+    logger.debug("endpointIsValidGraphql: url: " + url);
     HttpGet request = new HttpGet(url);
 
     String response = executeRequest(request);
@@ -99,7 +99,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
       return null;
     }
     if (retrievedList.size() == 0) {
-      logger.info("runGraphqlQueryReturnMap: no results found");
+      logger.debug("runGraphqlQueryReturnMap: no results found");
       return new HashMap<>();
     }
     if (retrievedList.size() > 1)
@@ -164,7 +164,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     Map<String, Object> resultMap = convertJsonObjectToMap(result);
 
     if (resultMap.isEmpty()) {
-      logger.info("runGraphqlQueryReturnList: no matching data found");
+      logger.debug("runGraphqlQueryReturnList: no matching data found");
       return new ArrayList<>();
     }
     if (resultMap.keySet().size() > 1) {

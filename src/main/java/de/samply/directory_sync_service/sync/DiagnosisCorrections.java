@@ -56,11 +56,10 @@ public class DiagnosisCorrections {
                 String miriamDiagnosis = FhirToDirectoryAttributeConverter.convertDiagnosis(diagnosis);
                 correctedDiagnoses.put(miriamDiagnosis, miriamDiagnosis);
             });
-            logger.info("__________ generateDiagnosisCorrections: 1 correctedDiagnoses.size(): " + correctedDiagnoses.size());
 
             // Get corrected diagnosis codes from the Directory
             directoryApi.collectDiagnosisCorrections(correctedDiagnoses);
-            logger.info("__________ generateDiagnosisCorrections: 2 correctedDiagnoses.size(): " + correctedDiagnoses.size());
+            logger.info("__________ generateDiagnosisCorrections: correctedDiagnoses.size(): " + correctedDiagnoses.size());
 
             return correctedDiagnoses;
         } catch (Exception e) {

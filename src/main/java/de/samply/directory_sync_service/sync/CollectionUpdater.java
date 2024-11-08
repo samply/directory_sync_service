@@ -50,14 +50,14 @@ public class CollectionUpdater {
                 logger.warn("Problem getting collections from FHIR store");
                 return false;
             }
-            logger.info("__________ sendUpdatesToDirectory: FHIR collection count): " + fhirCollection.size());
+            logger.info("sendUpdatesToDirectory: FHIR collection count): " + fhirCollection.size());
 
             DirectoryCollectionPut directoryCollectionPut = FhirCollectionToDirectoryCollectionPutConverter.convert(fhirCollection);
             if (directoryCollectionPut == null) {
                 logger.warn("Problem converting FHIR attributes to Directory attributes");
                 return false;
             }
-            logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+            logger.info("sendUpdatesToDirectory: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
@@ -67,18 +67,17 @@ public class CollectionUpdater {
                 logger.warn("Problem getting collections from Directory");
                 return false;
             }
-            logger.info("__________ sendUpdatesToDirectory: 1 directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
 
             if (!MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut)) {
                 logger.warn("Problem merging Directory GET attributes to Directory PUT attributes");
                 return false;
             }
-            logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
+            logger.info("sendUpdatesToDirectory: directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
             directoryCollectionPut.applyDiagnosisCorrections(correctedDiagnoses);
-            logger.info("__________ sendUpdatesToDirectory: 2 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+            logger.info("sendUpdatesToDirectory: directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
             directoryApi.login();
 

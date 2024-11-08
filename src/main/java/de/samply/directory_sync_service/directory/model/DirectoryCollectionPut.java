@@ -137,23 +137,23 @@ public class DirectoryCollectionPut extends HashMap {
             List<Entity> entities = getEntities();
             if (entities == null || entities.size() == 0)
                 return null;
-            logger.info("getCountryCode: entities.size: " + entities.size());
+            logger.debug("getCountryCode: entities.size: " + entities.size());
             Entity entity = entities.get(0);
             countryCode = entity.getCountry();
             if (countryCode == null || countryCode.isEmpty()) {
-                logger.info("getCountryCode: countryCode from first entity is null or empty");
+                logger.debug("getCountryCode: countryCode from first entity is null or empty");
                 String entityId = entity.getId();
-                logger.info("getCountryCode: entityId: " + entityId);
+                logger.debug("getCountryCode: entityId: " + entityId);
                 Optional<BbmriEricId> bbmriEricId = BbmriEricId.valueOf(entityId);
-                logger.info("getCountryCode: bbmriEricId: " + bbmriEricId);
+                logger.debug("getCountryCode: bbmriEricId: " + bbmriEricId);
                 countryCode = bbmriEricId.orElse(null).getCountryCode();
             }
         } catch (Exception e) {
-            logger.info("getCountryCode: exception: " + Util.traceFromException(e));
+            logger.debug("getCountryCode: exception: " + Util.traceFromException(e));
             return null;
         }
 
-        logger.info("getCountryCode: countryCode: " + countryCode);
+        logger.debug("getCountryCode: countryCode: " + countryCode);
         return countryCode;
     }
 

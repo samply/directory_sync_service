@@ -59,12 +59,8 @@ public class BiobanksUpdater {
      * @return the {@link OperationOutcome} from the FHIR server update
      */
     private static boolean updateBiobankInFhirStore(FhirApi fhirApi, DirectoryApi directoryApi, Organization fhirBiobank) {
-        logger.info("updateBiobankOnFhirServerIfNecessary: entered");
-
         // Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
         Optional<BbmriEricId> bbmriEricIdOpt = FhirApi.bbmriEricId(fhirBiobank);
-
-        logger.info("updateBiobankOnFhirServerIfNecessary: bbmriEricIdOpt: " + bbmriEricIdOpt);
 
         // Check if the identifier is present, if not, return false
         if (!bbmriEricIdOpt.isPresent()) {
@@ -86,17 +82,17 @@ public class BiobanksUpdater {
             return false;
         }
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Create a BiobankTuple containing the FHIR biobank and the Directory biobank");
+        logger.debug("updateBiobankOnFhirServerIfNecessary: Create a BiobankTuple containing the FHIR biobank and the Directory biobank");
 
         // Create a BiobankTuple containing the FHIR biobank and the Directory biobank
         BiobankTuple biobankTuple = new BiobankTuple(fhirBiobank, directoryBiobank);
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Update the biobank name if necessary");
+        logger.debug("updateBiobankOnFhirServerIfNecessary: Update the biobank name if necessary");
 
         // Update the biobank name if necessary
         BiobankTuple updatedBiobankTuple = UPDATE_BIOBANK_NAME.apply(biobankTuple);
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Check if any changes have been made; if not, return a no-update necessary outcome");
+        logger.debug("updateBiobankOnFhirServerIfNecessary: Check if any changes have been made; if not, return a no-update necessary outcome");
 
         // Check if any changes have been made; if not, return true (because this outcome is OK)
         if (!updatedBiobankTuple.hasChanged()) {
@@ -104,7 +100,7 @@ public class BiobanksUpdater {
             return true;
         }
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: Update the biobank resource on the FHIR server if changes were made");
+        logger.debug("updateBiobankOnFhirServerIfNecessary: Update the biobank resource on the FHIR server if changes were made");
 
         // Update the biobank resource on the FHIR server
         OperationOutcome updateOutcome = fhirApi.updateResource(updatedBiobankTuple.fhirBiobank);

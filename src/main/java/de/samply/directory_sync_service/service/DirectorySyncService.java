@@ -56,13 +56,13 @@ public class DirectorySyncService implements CommandLineRunner {
      * @param args No arguments required.
      */
     public static void main(String[] args) {
-        logger.info("main: Starting Directory sync service");
+        logger.debug("main: Starting Directory sync service");
         SpringApplication.run(DirectorySyncService.class, args);
     }
 
     @Override
     public void run(String... args) {
-        logger.info("main: Running Directory sync service");
+        logger.debug("main: Running Directory sync service");
         directorySyncLauncher.run();
     }
 }

@@ -55,7 +55,7 @@ public abstract class DirectoryCalls {
    */
   public boolean endpointExists(String endpoint) {
     String url = urlCombine(baseUrl, endpoint);
-    logger.info("endpointExists: checking if endpoint exists, URL: " + url);
+    logger.debug("endpointExists: checking if endpoint exists, URL: " + url);
     HttpHead request = new HttpHead(url);
 
     boolean returnStatus = true;

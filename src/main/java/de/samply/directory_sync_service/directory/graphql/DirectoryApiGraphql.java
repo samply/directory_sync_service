@@ -51,7 +51,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     this.username = username;
     this.password = password;
 
-    logger.info("DirectoryApiGraphql: constructed");
+    logger.debug("DirectoryApiGraphql: constructed");
   }
 
   /**
@@ -71,7 +71,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return false;
     }
 
-    logger.info("DirectoryApiGraphql.isLoginAvailable: login availability test has succeeded");
+    logger.debug("DirectoryApiGraphql.isLoginAvailable: login availability test has succeeded");
 
     return true;
   }
@@ -136,7 +136,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return null;
       }
       if (item.isEmpty()) {
-        logger.info("fetchBiobank: no results from query");
+        logger.debug("fetchBiobank: no results from query");
         return biobank;
       }
 
@@ -178,7 +178,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     for (String collectionId: collectionIds) {
-      logger.info("fetchCollectionGetOutcomes: collectionId: " + collectionId);
+      logger.debug("fetchCollectionGetOutcomes: collectionId: " + collectionId);
       String graphqlCommand = "query {" +
               "  Collections( filter: { id: { equals: \"" + collectionId + "\" } } ) {\n" +
               "    id\n" +
@@ -218,7 +218,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         continue;
       }
       if (collectionsList.size() == 0) {
-        logger.info("fetchCollectionGetOutcomes: collectionFactsList list is empty");
+        logger.debug("fetchCollectionGetOutcomes: collectionFactsList list is empty");
         continue;
       }
 
@@ -247,7 +247,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      logger.info("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update collection: " + collectionId);
+      logger.debug("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update collection: " + collectionId);
 
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       cleanEntity(entity);
@@ -331,7 +331,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       }
     }
     for (String key: badKeys) {
-      logger.info("cleanEntity: removing bad attribute: \"" + key + "\"");
+      logger.debug("cleanEntity: removing bad attribute: \"" + key + "\"");
       entity.remove(key);
     }
   }
@@ -375,7 +375,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // Use the String.matches method to check if the timestamp ends with a non-numeric character
     if (timestamp.matches(".*[^\\d]$")) {
       timestamp = timestamp.substring(0, timestamp.length() - 1);
-      logger.info("cleanTimestamp: ............................ corrected timestamp: " + timestamp);
+      logger.debug("cleanTimestamp: ............................ corrected timestamp: " + timestamp);
     }
 
     return timestamp;
@@ -676,7 +676,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return null;
       }
       if (collectionFactsList.size() == 0) {
-        logger.info("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
+        logger.debug("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
         return factIds;
       }
 
@@ -737,7 +737,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
 
-      logger.info("login: result: " + result);
+      logger.debug("login: result: " + result);
     } catch (Exception e) {
       logger.warn("deleteFactById: Exception during fact deletion: " + Util.traceFromException(e));
       return false;
@@ -760,7 +760,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
       if (diseaseTypeList.size() == 0) {
-        logger.info("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
+        logger.debug("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
         return false;
       }
 
@@ -804,21 +804,21 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     String databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint1() + countryCode + directoryEndpointsGraphql.getApiEndpoint();
     if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.info("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
+      logger.debug("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
     databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint2() + directoryEndpointsGraphql.getApiEndpoint();
     if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.info("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
+      logger.debug("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
     databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint3() + directoryEndpointsGraphql.getApiEndpoint();
     if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.info("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
+      logger.debug("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }

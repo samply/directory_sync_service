@@ -44,7 +44,7 @@ public class DirectoryApiRest extends DirectoryApi {
    * Log in to the Directory. You can log in as many times as you like.
    */
   public boolean login() {
-    logger.info("login: logging  in");
+    logger.debug("login: logging  in");
 
     if (mockDirectory)
       // Don't try logging in if we are mocking

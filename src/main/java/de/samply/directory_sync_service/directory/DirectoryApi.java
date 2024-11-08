@@ -50,7 +50,7 @@ public abstract class DirectoryApi {
       return false;
     }
 
-    logger.info("isAvailable: login availability test has succeeded");
+    logger.debug("isAvailable: login availability test has succeeded");
 
     return true;
   }
@@ -161,7 +161,7 @@ public abstract class DirectoryApi {
             logger.warn("deleteStarModel: Problem getting facts for collection: " + collectionId);
             return false;
           }
-          logger.info("deleteStarModel: number of facts found: " + factIds.size());
+          logger.debug("deleteStarModel: number of facts found: " + factIds.size());
           if (factIds.size() == 0) {
             // Terminate the do loop if there are no more facts left.
             break;
@@ -219,9 +219,9 @@ public abstract class DirectoryApi {
       return;
 
     if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
-      logger.info("__________ collectDiagnosisCorrections: uncorrected diagnoses: ");
+      logger.debug("__________ collectDiagnosisCorrections: uncorrected diagnoses: ");
       for (String diagnosis : diagnoses.keySet())
-        logger.info("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
+        logger.debug("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
     }
 
     int diagnosisCounter = 0; // for diagnostics only
@@ -230,7 +230,7 @@ public abstract class DirectoryApi {
     int discardedIcdValueCounter = 0;
     for (String diagnosis: diagnoses.keySet()) {
       if (diagnosisCounter%500 == 0)
-        logger.info("__________ collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
+        logger.debug("__________ collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
       if (!isValidIcdValue(diagnosis)) {
         invalidIcdValueCounter++;
         String diagnosisCategory = diagnosis.split("\\.")[0];
@@ -244,11 +244,11 @@ public abstract class DirectoryApi {
       diagnosisCounter++;
     }
 
-    logger.info("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
+    logger.debug("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
     if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
-      logger.info("__________ collectDiagnosisCorrections: corrected diagnoses: ");
+      logger.debug("__________ collectDiagnosisCorrections: corrected diagnoses: ");
       for (String diagnosis : diagnoses.keySet())
-        logger.info("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
+        logger.debug("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
     }
   }
 

@@ -211,7 +211,7 @@ public class DirectoryCallsRest extends DirectoryCalls {
     try (InputStream inputStream = entity.getContent();
          BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       String content = reader.lines().collect(Collectors.joining("\n"));
-      logger.info("buildDeleteRequest: content: " + content);
+      logger.debug("buildDeleteRequest: content: " + content);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

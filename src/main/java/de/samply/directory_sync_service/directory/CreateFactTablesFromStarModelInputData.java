@@ -37,7 +37,7 @@ public class CreateFactTablesFromStarModelInputData {
                     starModelInputData.getMinDonors(),
                     maxFacts,
                     starModelInputData.getInputRowsAsStringMaps(collectionId));
-            logger.info("createFactTables: collectionId: " + collectionId + ", factTableFinal.size() " + factTableFinal.size());
+            logger.debug("createFactTables: collectionId: " + collectionId + ", factTableFinal.size() " + factTableFinal.size());
             starModelInputData.addFactTable(factTableFinal);
         }
     }

@@ -76,7 +76,7 @@ public class Sync {
 
         // Login test. Don't perform any further actions on the Directory.
         if (directoryOnlyLogin) {
-            logger.info(">>>>>>>>>>>>>>> syncWithDirectory: login was successful, now quitting because onlyLogin was set to true");
+            logger.info("syncWithDirectory: login was successful, now quitting because onlyLogin was set to true");
             return true;
         }
 

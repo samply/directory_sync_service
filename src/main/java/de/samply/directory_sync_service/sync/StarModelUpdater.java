@@ -39,7 +39,7 @@ public class StarModelUpdater {
      * @throws IllegalArgumentException if the defaultCollectionId is not a valid BbmriEricId.
      */
     public static boolean sendStarModelUpdatesToDirectory(FhirApi fhirApi, DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, String defaultCollectionId, int minDonors, int maxFacts) {
-        logger.info("__________ sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
+        logger.info("sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
                     .valueOf(defaultCollectionId)
@@ -52,7 +52,7 @@ public class StarModelUpdater {
                 logger.warn("Problem getting star model information from FHIR store");
                 return false;
             }
-            logger.info("__________ sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
+            logger.info("sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
             directoryApi.login();
 
@@ -63,12 +63,12 @@ public class StarModelUpdater {
             // Take the patient list and the specimen list from starModelInputData and
             // use them to generate the star model fact tables.
             CreateFactTablesFromStarModelInputData.createFactTables(starModelInputData, maxFacts);
-            logger.info("__________ sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
+            logger.info("sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
             starModelInputData.applyDiagnosisCorrections(correctedDiagnoses);
-            logger.info("__________ sendStarModelUpdatesToDirectory: 2 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
+            logger.info("sendStarModelUpdatesToDirectory: 2 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
 
             // Send fact tables to Direcory.
             directoryApi.login();
@@ -86,14 +86,14 @@ public class StarModelUpdater {
                     int numberOfSamples = Integer.parseInt(factTable.get("number_of_samples"));
                     totalStarModelSpecimenCount += numberOfSamples;
                     if (numberOfSamples > 1)
-                        logger.info("sendStarModelUpdatesToDirectory: ÄLÄLÄLÄLÄLÄLÄLÄLÄLÄLÄLÄLÄ number of samples: " + numberOfSamples);
+                        logger.debug("sendStarModelUpdatesToDirectory: number of samples: " + numberOfSamples);
                 }
             if (totalFhirSpecimenCount < totalStarModelSpecimenCount) {
                 logger.warn("sendStarModelUpdatesToDirectory: FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
                 return false;
             }
 
-            logger.info("__________ sendStarModelUpdatesToDirectory: star model update successful");
+            logger.info("sendStarModelUpdatesToDirectory: star model update successful");
             return true;
         } catch (Exception e) {
             logger.warn("sendStarModelUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
