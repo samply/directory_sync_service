@@ -1,7 +1,6 @@
 package de.samply.directory_sync_service.directory.rest;
 
 import de.samply.directory_sync_service.directory.DirectoryApi;
-import de.samply.directory_sync_service.Util;
 
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
@@ -103,7 +102,6 @@ public class DirectoryApiRest extends DirectoryApi {
         logger.warn("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId);
         return null;
       }
-      logger.info("fetchCollectionGetOutcomes: ????????? item: " + Util.jsonStringFomObject(item));
       directoryCollectionGet.getItems().add(item);
     }
 

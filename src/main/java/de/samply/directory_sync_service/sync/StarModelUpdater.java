@@ -8,9 +8,11 @@ import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -76,6 +78,22 @@ public class StarModelUpdater {
                 return false;
             }
 
+            // Sanity check: compare sample counts from source data with sample counts derived from star model
+            int totalFhirSpecimenCount = fhirApi.calculateTotalSpecimenCount(defaultBbmriEricCollectionId);
+            int totalStarModelSpecimenCount = 0;
+            for (Map<String, String> factTable: starModelInputData.getFactTables())
+                if (factTable.containsKey("number_of_samples")) {
+                    int numberOfSamples = Integer.parseInt(factTable.get("number_of_samples"));
+                    totalStarModelSpecimenCount += numberOfSamples;
+                    if (numberOfSamples > 1)
+                        logger.info("sendStarModelUpdatesToDirectory: ÄLÄLÄLÄLÄLÄLÄLÄLÄLÄLÄLÄLÄ number of samples: " + numberOfSamples);
+                }
+            if (totalFhirSpecimenCount < totalStarModelSpecimenCount) {
+                logger.warn("sendStarModelUpdatesToDirectory: FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
+                return false;
+            }
+
+            logger.info("__________ sendStarModelUpdatesToDirectory: star model update successful");
             return true;
         } catch (Exception e) {
             logger.warn("sendStarModelUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));

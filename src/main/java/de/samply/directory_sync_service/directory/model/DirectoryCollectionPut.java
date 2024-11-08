@@ -132,7 +132,6 @@ public class DirectoryCollectionPut extends HashMap {
      * @return Country code
      */
     public String getCountryCode() {
-        logger.info("getCountryCode: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ entered");
         String countryCode = null;
         try {
             List<Entity> entities = getEntities();
@@ -140,7 +139,6 @@ public class DirectoryCollectionPut extends HashMap {
                 return null;
             logger.info("getCountryCode: entities.size: " + entities.size());
             Entity entity = entities.get(0);
-            logger.info("getCountryCode: entity: " + gson.toJson(entity));
             countryCode = entity.getCountry();
             if (countryCode == null || countryCode.isEmpty()) {
                 logger.info("getCountryCode: countryCode from first entity is null or empty");

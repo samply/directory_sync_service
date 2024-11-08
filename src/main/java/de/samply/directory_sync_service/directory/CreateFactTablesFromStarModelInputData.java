@@ -1,6 +1,9 @@
 package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.model.StarModelData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +20,7 @@ import java.util.stream.Collectors;
  * </p>
  */
 public class CreateFactTablesFromStarModelInputData {
+    protected static final Logger logger = LoggerFactory.getLogger(CreateFactTablesFromStarModelInputData.class);
 
     /**
      * Creates fact tables for each collection in the provided Star Model input data.
@@ -30,9 +34,10 @@ public class CreateFactTablesFromStarModelInputData {
     public static void createFactTables(StarModelData starModelInputData, int maxFacts) {
         for (String collectionId: starModelInputData.getInputCollectionIds()) {
             List<Map<String, String>> factTableFinal = createFactTableFinal(collectionId,
-                starModelInputData.getMinDonors(),
-                maxFacts,
-                starModelInputData.getInputRowsAsStringMaps(collectionId));
+                    starModelInputData.getMinDonors(),
+                    maxFacts,
+                    starModelInputData.getInputRowsAsStringMaps(collectionId));
+            logger.info("createFactTables: collectionId: " + collectionId + ", factTableFinal.size() " + factTableFinal.size());
             starModelInputData.addFactTable(factTableFinal);
         }
     }
@@ -41,7 +46,7 @@ public class CreateFactTablesFromStarModelInputData {
      * Creates a final fact table for a specific collection based on input rows, minimum donors, and data transformations.
      * <p>
      * This code was translated from Petr Holub's R script "CRC-fact-sheet.R".
-     * 
+     *
      * @param collectionId The identifier for the collection for which to create the fact table.
      * @param minDonors The minimum number of donors required for a fact to be included in the table.
      * @param maxFacts
@@ -49,67 +54,131 @@ public class CreateFactTablesFromStarModelInputData {
      * @return The final fact table as a list of maps containing key-value pairs.
      */
     private static List<Map<String, String>> createFactTableFinal(String collectionId, int minDonors, int maxFacts, List<Map<String, String>> patientSamples) {
-        // Select columns and create a new column "age_range"
-        List<Map<String, String>> patientSamplesFacts = patientSamples.stream()
-            .map(result -> {
-                Map<String, String> fact = new HashMap<>(result);
-                fact.remove("sample_type");
-                fact.remove("sample_year_num");
-                fact.put("age_range", cutAgeRange(result.get("age_at_primary_diagnosis")));
-                return fact;
-            })
-            .collect(Collectors.toList());
+        // Transform patient sample data by standardizing fields (e.g., age range, sex, sample material)
+        // and adding collection-specific metadata. This returns a list where each map represents a transformed row.
+        List<Map<String, String>> patientSamplesFacts = transformData(patientSamples);
 
-        // Group by certain columns and calculate summary statistics
-        Map<String, Long> factTable = patientSamplesFacts.stream()
-            .filter(fact -> !fact.containsValue(null))
-            .collect(Collectors.groupingBy(
-                fact -> String.join("_",
-                    fact.get("sex"),
-                    fact.get("hist_loc"),
-                    fact.get("age_range"),
-                    fact.get("sample_material")),
-                Collectors.counting()));
+        // Generate an intermediate fact table by grouping the transformed data and calculating
+        // unique counts for patients and samples based on attributes like sex, disease, and age range.
+        // The result is a map where keys are attribute combinations and values are maps of counts.
+        Map<String, Map<String, Long>> factTable = generateFactTable(patientSamplesFacts);
 
-        // Filter out rows with fewer than a given number of donors
-        if (minDonors > 0)
-            factTable = factTable.entrySet().stream()
-                .filter(entry -> entry.getValue() >= minDonors)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        // Finalize the fact table by filtering out entries that do not meet the minimum donor requirement
+        // and truncating the list if it exceeds the specified maximum number of facts. Additional metadata
+        // and unique identifiers are added to each fact entry.
+        List<Map<String, String>> factTableFinal = generateFactTableFinal(factTable, collectionId, minDonors, maxFacts);
 
-        // Perform additional data transformations on the facts table
+        return factTableFinal;
+    }
+
+    /**
+     * Transforms data by adding calculated or transformed fields to each record.
+     * Specifically, it adds an age range based on age, standardizes the sample material and sex,
+     * adds a collection identifier, and sets the last update date to today's date.
+     *
+     * @param data List of maps where each map represents a row of data about a patient or sample.
+     * @return List of transformed maps with additional or modified fields.
+     */
+    private static List<Map<String, String>> transformData(List<Map<String, String>> data) {
+        return data.stream()
+                .map(row -> {
+                    String ageStr = row.get("age_at_primary_diagnosis");
+                    row.put("age_range", getAgeRange(ageStr != null ? Integer.parseInt(ageStr) : -1));
+                    row.put("sample_material", transformSampleMaterial(row.get("sample_material")));
+                    row.put("sex", transformSex(row.get("sex")));
+                    row.put("hist_loc", row.get("hist_loc"));
+                    row.put("last_update", LocalDate.now().toString());
+                    row.put("collection", "bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort");
+                    return row;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Generates a fact table by grouping patient data and calculating unique patient and sample counts
+     * based on specified criteria (sex, disease, age range, sample material).
+     *
+     * @param data List of maps representing individual patient/sample data rows.
+     * @return A fact table where the keys are a concatenated string of attributes (e.g., "sex|disease|age_range|sample_material"),
+     *         and the values are maps containing aggregated counts of patients and samples.
+     */
+    private static Map<String, Map<String, Long>> generateFactTable(List<Map<String, String>> data) {
+        Map<String, Map<String, Long>> factTable = data.stream()
+                .collect(Collectors.groupingBy(
+                        row -> row.get("sex") + "|" + row.get("hist_loc") + "|" + row.get("age_range") + "|" + row.get("sample_material"),
+                        Collectors.collectingAndThen(Collectors.toList(), records -> {
+                            long patientCount = records.stream().map(r -> r.get("id")).distinct().count();
+                            long sampleCount = records.size();
+                            Map<String, Long> counts = new HashMap<>();
+                            counts.put("number_of_donors", patientCount);
+                            counts.put("number_of_samples", sampleCount);
+                            return counts;
+                        })
+                ));
+
+        return factTable;
+    }
+
+    /**
+     * Generates a finalized fact table from an aggregated fact table, adding metadata and truncating if necessary.
+     *
+     * @param factTable A map containing aggregated fact entries (grouped and counted).
+     * @param collectionId The collection identifier relevant to the data.
+     * @param minDonors The minimum number of donors required to include a fact in the final table.
+     * @param maxFacts The maximum number of facts to include in the final table (if >= 0).
+     * @return A list of maps representing the finalized fact table, including additional metadata fields.
+     */
+    private static List<Map<String, String>> generateFactTableFinal(Map<String, Map<String, Long>> factTable, String collectionId, int minDonors, int maxFacts) {
         List<Map<String, String>> factTableFinal = new ArrayList<>();
-        int factTableSize = 0;
-        for (Map.Entry<String, Long> entry : factTable.entrySet()) {
-            if (maxFacts >= 0 && factTableSize >= maxFacts)
-                break;
-            factTableSize++;
+        int factCount = 0;
+        String factIdStub = createFactIdStub(collectionId);
+        for (Map.Entry<String, Map<String, Long>> entry : factTable.entrySet()) {
+            // Skip entries that don't meet the minimum donor requirement
+            if (entry.getValue().get("number_of_donors") < minDonors) {
+                continue;
+            }
 
-            List<String> keyParts = Arrays.asList(entry.getKey().split("_"));
-
+            // Split the key to get the various fact attributes
+            List<String> keyParts = Arrays.asList(entry.getKey().split("\\|"));
             String sampleMaterial = keyParts.get(3);
             for (int i=4; i<keyParts.size(); i++)
                 sampleMaterial = sampleMaterial + "_" + keyParts.get(i);
-            Map<String, String> mapEntry = new HashMap<>();
-            mapEntry.put("sex", keyParts.get(0));
-            mapEntry.put("disease", keyParts.get(1));
-            mapEntry.put("age_range", keyParts.get(2));
-            mapEntry.put("sample_type", sampleMaterial);
-            mapEntry.put("number_of_donors", Long.toString(entry.getValue()));
-            mapEntry.put("number_of_samples", Long.toString(entry.getValue()));
-            mapEntry.put("id", "bbmri-eric:factID:" // All fact IDs must start with this (mandatory).
+
+            // Create the fact row
+            Map<String, String> row = new HashMap<>();
+            row.put("sex", keyParts.get(0));
+            row.put("disease", keyParts.get(1));
+            row.put("age_range", keyParts.get(2));
+            row.put("sample_type", sampleMaterial);
+            row.put("number_of_donors", entry.getValue().get("number_of_donors").toString());
+            row.put("number_of_samples", entry.getValue().get("number_of_samples").toString());
+            row.put("id", factIdStub+ Math.abs(entry.getKey().hashCode())); // Add hash code to make ID unique
+            row.put("collection", collectionId);
+            row.put("last_update", LocalDate.now().toString());
+
+            // Add the row to the final list
+            factTableFinal.add(row);
+
+            // Stop if we've reached the maximum allowed number of facts
+            factCount++;
+            if (maxFacts >= 0 && factCount >= maxFacts)
+                break;
+        }
+
+        return factTableFinal;
+    }
+
+    /**
+     * Generates a standardized ID prefix for each fact entry in the fact table.
+     *
+     * @param collectionId The unique identifier for the data collection.
+     * @return A standardized prefix for fact IDs based on the collection identifier.
+     */
+    private static String createFactIdStub(String collectionId) {
+        return "bbmri-eric:factID:" // All fact IDs must start with this (mandatory).
                 // Snip "bbmri-eric:ID:" from collection ID and replace : with _
                 + collectionId.substring(14).replaceAll(":", "_")
-                + "_"
-                + Math.abs(entry.getKey().hashCode()) // Add a hash code to make the ID unique
-                );
-            mapEntry.put("last_update", LocalDate.now().toString());
-            mapEntry.put("collection", collectionId);
-
-            factTableFinal.add(mapEntry);
-        }
-            
-        return factTableFinal;
+                + "_";
     }
 
     /**
@@ -118,28 +187,54 @@ public class CreateFactTablesFromStarModelInputData {
      * @param age The age to be categorized into bins.
      * @return The age range as a string.
      */
-    private static String cutAgeRange(String age) {
-        if (age == null || age.isBlank())
-            return "Unknown";
-
-        // Logic to cut age into bins
-        int ageValue = Integer.parseInt(age);
-        if (ageValue < 1) {
+    private static String getAgeRange(int age) {
+        if (age < 1) {
             return "Infant";
-        } else if (ageValue < 2) {
+        } else if (age < 2) {
             return "Infant";
-        } else if (ageValue < 13) {
+        } else if (age < 13) {
             return "Child";
-        } else if (ageValue < 18) {
+        } else if (age < 18) {
             return "Adolescent";
-        } else if (ageValue < 45) {
+        } else if (age < 45) {
             return "Adult";
-        } else if (ageValue < 65) {
+        } else if (age < 65) {
             return "Middle-aged";
-        } else if (ageValue < 80) {
+        } else if (age < 80) {
             return "Aged (65-79 years)";
         } else {
             return "Aged (>80 years)";
         }
+    }
+
+    /**
+     * Converts the sample material names to the Directory standard.
+     *
+     * @param material The raw sample material type.
+     * @return The standardized name for the sample material.
+     */
+    private static String transformSampleMaterial(String material) {
+        if (material == null) return "";
+        switch (material) {
+            case "FFPE":
+                return "TISSUE_PARAFFIN_EMBEDDED";
+            case "Cryopreservation":
+                return "TISSUE_FROZEN";
+            case "Other":
+                return "OTHER";
+            default:
+                return material;
+        }
+    }
+
+    /**
+     * Converts sex designations to the Directory standard.
+     *
+     * @param sex The raw sex designation.
+     * @return The standardized sex designation.
+     */
+    private static String transformSex(String sex) {
+        if (sex == null) return "";
+        return sex.equalsIgnoreCase("female") ? "FEMALE" : sex.equalsIgnoreCase("male") ? "MALE" : sex;
     }
 }

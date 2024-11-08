@@ -221,17 +221,33 @@ public class FhirApi {
       if (defaultCollection != null && defaultCollection.size() != 0 && defaultBbmriEricCollectionId != null) {
         logger.info("__________ fetchSpecimensByCollection: Replace the DEFAULT_COLLECTION_ID key");
 
-        specimensByCollection.put(defaultBbmriEricCollectionId.toString(), defaultCollection);
+        if (specimensByCollection.containsKey(defaultBbmriEricCollectionId.toString()))
+          // Add all specimens with DEFAULT_COLLECTION_ID to defaultBbmriEricCollectionId if it exists
+          for (Specimen specimen : defaultCollection)
+            specimensByCollection.get(defaultBbmriEricCollectionId.toString()).add(specimen);
+        else
+          // Move all specimens with DEFAULT_COLLECTION_ID to defaultBbmriEricCollectionId
+          specimensByCollection.put(defaultBbmriEricCollectionId.toString(), defaultCollection);
       }
 
       logger.info("__________ fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
 
       return specimensByCollection;
     } catch (Exception e) {
+      logger.warn("fetchSpecimensByCollection: exception", Util.traceFromException(e));
       OperationOutcome outcome = new OperationOutcome();
       outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR).setDiagnostics(Util.traceFromException(e));
       return null;
     }
+  }
+
+  public int calculateTotalSpecimenCount(BbmriEricId defaultBbmriEricCollectionId) {
+    Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+    int totalSpecimenCount = 0;
+    for (List<Specimen> specimenList : specimensByCollection.values())
+      totalSpecimenCount += specimenList.size();
+
+    return totalSpecimenCount;
   }
 
   /**

@@ -50,6 +50,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
     directoryEndpoints = new DirectoryEndpointsGraphql();
     this.username = username;
     this.password = password;
+
+    logger.info("DirectoryApiGraphql: constructed");
   }
 
   /**
@@ -530,8 +532,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
    *         false on error.
    */
   private boolean isColumnInTable(String countryCode, String tableName, String columnName) {
-    logger.info("isColumnInTable: countryCode: " + countryCode + ", tableName: " + tableName + ", columnName: " + columnName);
-
     // Prevent the same column from being checked multiple times
     String hash = countryCode + tableName + columnName;
     if (columnInTableMap.containsKey(hash))
@@ -567,7 +567,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
           for (JsonElement column : columns) {
             String foundColumnName = column.getAsJsonObject().get("name").getAsString();
             if (foundColumnName.equals(columnName)) {
-              logger.info("isColumnInTable: success foundColumnName: " + foundColumnName + " == columnName: " + columnName);
               found = true;
               break;
             }
