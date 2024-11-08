@@ -147,10 +147,10 @@ public abstract class DirectoryApi {
    * @return An boolean indicating the success or failure of the deletion.
    */
   protected boolean deleteStarModel(StarModelData starModelInputData) {
-    String countryCode = starModelInputData.getCountryCode();
-
     try {
       for (String collectionId: starModelInputData.getInputCollectionIds()) {
+        String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
+
         // Loop until no more facts are left in the Directory.
         // We need to do things this way, because the Directory implements paging
         // and a single pass may not get all facts.
@@ -253,4 +253,20 @@ public abstract class DirectoryApi {
   }
 
   protected abstract boolean isValidIcdValue(String diagnosis);
+
+  /**
+   * Extracts the country code from a given BBMRI ID string. Works for both
+   * biobank and collection IDs.
+   *
+   * @param id The BBMRI ID string from which to extract the country code.
+   * @return The country code extracted from the BBMRI ID string.
+   */
+  protected String extractCountryCodeFromBbmriEricId(String id) {
+    BbmriEricId bbmriEricCollectionId = BbmriEricId
+            .valueOf(id)
+            .orElse(null);
+    String countryCode = bbmriEricCollectionId.getCountryCode();
+
+    return countryCode;
+  }
 }

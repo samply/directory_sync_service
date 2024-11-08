@@ -296,22 +296,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * Extracts the country code from a given BBMRI ID string. Works for both
-   * biobank and collection IDs.
-   *
-   * @param id The BBMRI ID string from which to extract the country code.
-   * @return The country code extracted from the BBMRI ID string.
-   */
-  private String extractCountryCodeFromBbmriEricId(String id) {
-    BbmriEricId bbmriEricCollectionId = BbmriEricId
-            .valueOf(id)
-            .orElse(null);
-    String countryCode = bbmriEricCollectionId.getCountryCode();
-
-    return countryCode;
-  }
-
-  /**
    * Removes keys from the given collection if the corresponding value is an empty list or a list with a single null element.
    *
    * @param entity The collection to clean.
