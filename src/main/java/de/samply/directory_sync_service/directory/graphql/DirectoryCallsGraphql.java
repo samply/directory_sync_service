@@ -49,7 +49,9 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     logger.debug("endpointIsValidGraphql: url: " + url);
     HttpGet request = new HttpGet(url);
 
+    logger.debug("endpointIsValidGraphql: execute request");
     String response = executeRequest(request);
+    logger.debug("endpointIsValidGraphql: finished executing request");
     if (response == null) {
       logger.warn("endpointIsValidGraphql: HTTP response is null");
       return false;
@@ -57,11 +59,14 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
 
     try {
       // Use gson to turn the response into a JSON object
+      logger.debug("endpointIsValidGraphql: turn response into JSON");
       JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
       if (jsonResponse == null) {
         logger.warn("endpointIsValidGraphql: jsonResponse is null");
         return false;
       }
+
+      logger.debug("endpointIsValidGraphql: check response for error");
 
       // Check if the response contains an error
       if (jsonResponse.has("errors")) {
@@ -76,6 +81,8 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
       logger.warn("endpointIsValidGraphql: response: " + response);
       return false;
     }
+
+    logger.debug("endpointIsValidGraphql: all good, returning true");
 
     return true;
   }
