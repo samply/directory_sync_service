@@ -107,8 +107,14 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getName(String id) {
-        if (!getItem(id).containsKey("name"))
+        if (getItem(id) == null) {
+            logger.warn("DirectoryCollectionGet.getName: item is null for id: " + id + ", aborting");
             return "";
+        }
+        if (!getItem(id).containsKey("name")) {
+            logger.warn("DirectoryCollectionGet.getName: no name key, aborting");
+            return "";
+        }
         return (String) getItem(id).get("name");
     }
 

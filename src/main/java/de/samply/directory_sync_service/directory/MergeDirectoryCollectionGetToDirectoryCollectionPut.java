@@ -53,6 +53,7 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
    * @return The DirectoryCollectionPut object with merged data, or null if an exception occurs.
    */
   private static DirectoryCollectionPut merge(String collectionId, DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
+    logger.info("Merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
     try {
       directoryCollectionPut.setName(collectionId, directoryCollectionGet.getName(collectionId));
       directoryCollectionPut.setDescription(collectionId, directoryCollectionGet.getDescription(collectionId));
