@@ -71,7 +71,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return false;
     }
 
-    logger.debug("DirectoryApiGraphql.isLoginAvailable: login availability test has succeeded");
+    logger.info("DirectoryApiGraphql.isLoginAvailable: login availability test has succeeded");
 
     return true;
   }

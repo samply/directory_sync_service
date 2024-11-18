@@ -19,6 +19,8 @@ import org.quartz.DisallowConcurrentExecution;
 @DisallowConcurrentExecution
 public class DirectorySyncJob implements StatefulJob  {
     private static final Logger logger = LogManager.getLogger(DirectorySyncJob.class);
+    private int successCounter = 0;
+    private int failureCounter = 0;
 
     /**
      * Method used by Quartz to start a job.
@@ -54,7 +56,18 @@ public class DirectorySyncJob implements StatefulJob  {
         boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
         boolean directoryOnlyLogin = Boolean.parseBoolean(configuration.getDirectoryOnlyLogin());
 
-        Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin);
+        boolean success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin);
+
+        if (success) {
+            logger.info("execute: Directory sync succeeded");
+            successCounter++;
+        } else {
+            logger.info("execute: Directory sync failed");
+            failureCounter++;
+        }
+        // Print a warning message once a week if we never have any successful Directory sync runs.
+        if (successCounter == 0 && failureCounter >= 7 && failureCounter%7 == 0)
+            logger.warn("execute: Directory sync appears to be consistently failing, failureCounter=" + failureCounter);
     }
 
     /**

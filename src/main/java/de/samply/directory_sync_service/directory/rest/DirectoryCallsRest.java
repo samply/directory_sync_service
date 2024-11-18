@@ -58,10 +58,18 @@ public class DirectoryCallsRest extends DirectoryCalls {
   public boolean login() {
     DirectoryCredentials.LoginResponse loginResponse = (DirectoryCredentials.LoginResponse) post(new DirectoryEndpointsRest().getLoginEndpoint(), DirectoryCredentials.LoginResponse.class, directoryCredentials.generateLoginCredentials());
     if (loginResponse == null) {
-      logger.error("login: failed to log in to Directory");
+      logger.warn("DirectoryCallsRest.login: failed to log in to Directory, loginResponse is null");
       return false;
-    } else
-      directoryCredentials.setToken(loginResponse.token);
+    } else {
+      logger.info("DirectoryCallsRest.login: successfully logged in to Directory, trying to set token");
+      String token = loginResponse.token;
+      if (token == null || token.isEmpty()) {
+        logger.warn("DirectoryCallsRest.login: failed to log in to Directory, token is null or empty");
+        return false;
+      }
+      directoryCredentials.setToken(token);
+      logger.info("DirectoryCallsRest.login: successfully set token");
+    }
     return true;
   }
 
@@ -92,8 +100,12 @@ public class DirectoryCallsRest extends DirectoryCalls {
    */
   public Object post(String commandUrl, Class c, Object o) {
     String response = post(commandUrl, o);
-    if (response == null)
+    if (response == null) {
+      logger.warn("DirectoryCallsRest.post: failed to post to Directory, response is null");
+      logger.warn("DirectoryCallsRest.post: commandUrl: " + commandUrl);
+      logger.warn("DirectoryCallsRest.post: o: " + Util.jsonStringFomObject(o));
       return null;
+    }
     Object body = gson.fromJson(response, c);
 
     return body;

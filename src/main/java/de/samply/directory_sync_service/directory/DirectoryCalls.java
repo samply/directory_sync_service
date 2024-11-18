@@ -55,7 +55,7 @@ public abstract class DirectoryCalls {
    */
   public boolean endpointExists(String endpoint) {
     String url = urlCombine(baseUrl, endpoint);
-    logger.debug("endpointExists: checking if endpoint exists, URL: " + url);
+    logger.info("endpointExists: checking if endpoint exists, URL: " + url);
     HttpHead request = new HttpHead(url);
 
     boolean returnStatus = true;
@@ -65,7 +65,7 @@ public abstract class DirectoryCalls {
       int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode != 200 && statusCode != 204) {
         // The endpoint neither exists nor has the server responded with allowed methods.
-        logger.warn("endpointExists: statusCode: " + statusCode);
+        logger.warn("endpointExists: failure, statusCode: " + statusCode + ", expected 200 or 204");
         returnStatus = false;
       }
     } catch (Exception e) {

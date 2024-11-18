@@ -46,7 +46,7 @@ public abstract class DirectoryApi {
     String endpoint = directoryEndpoints.getLoginEndpoint();
 
     if (!directoryCalls.endpointExists(endpoint)) {
-      logger.warn("isAvailable: failing availablity test because " + endpoint + " is not accessible");
+      logger.warn("isLoginAvailable: failing availablity test because " + endpoint + " is not accessible");
       return false;
     }
 

@@ -39,20 +39,28 @@ public class Sync {
      *
      * @throws IOException
      */
-    public static void syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
-        for (int retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
-            if (retryNum > 0) {
-                try {
-                    Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            logger.info("syncWithDirectoryFailover: retrying sync, attempt " + retryNum + " of " + retryMax);
-            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin))
+    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
+        boolean success = false;
+        int retryNum;
+        for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
+            logger.info("syncWithDirectoryFailover: trying sync, attempt " + retryNum + " of " + retryMax);
+            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin)) {
+                success = true;
                 break;
+            }
             logger.info("syncWithDirectoryFailover: attempt " + retryNum + " of " + retryMax + " failed");
+            try {
+                // Sleep for 100 seconds before trying again
+                Thread.sleep(Integer.parseInt(retryInterval) * 100000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        if (retryNum == Integer.parseInt(retryMax))
+            logger.warn("syncWithDirectoryFailover: reached maximum number of retires(" + Integer.parseInt(retryMax) + "), giving up");
+        logger.info("syncWithDirectoryFailover: done");
+
+        return success;
     }
 
     private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
@@ -60,7 +68,7 @@ public class Sync {
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-          if (!directoryApi.isLoginAvailable()) {
+        if (!directoryApi.isLoginAvailable()) {
             logger.warn("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
             directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 //            if (!directoryApi.isLoginAvailable()) {
