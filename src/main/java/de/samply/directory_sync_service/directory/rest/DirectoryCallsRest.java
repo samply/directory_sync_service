@@ -122,6 +122,9 @@ public class DirectoryCallsRest extends DirectoryCalls {
     HttpPost request = buildPostRequest(commandUrl, o);
     String response = executeRequest(request);
 
+    if (response == null)
+      logger.warn("DirectoryCallsRest.post: failed to put to Directory, response is null, o: " + Util.jsonStringFomObject(o));
+
     return response;
   }
 
@@ -135,6 +138,9 @@ public class DirectoryCallsRest extends DirectoryCalls {
   public String put(String commandUrl, Object o) {
     HttpPut request = buildPutRequest(commandUrl, o);
     String response = executeRequest(request);
+
+    if (response == null)
+      logger.warn("DirectoryCallsRest.put: failed to put to Directory, response is null, o: " + Util.jsonStringFomObject(o));
 
     return response;
   }

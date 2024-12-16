@@ -140,9 +140,15 @@ public class DirectoryApiRest extends DirectoryApi {
    */
   @Override
   protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
+    if (factTablesBlock.size() == 0) {
+      logger.debug("updateFactTablesBlock: factTablesBlock is empty, no need to contact the Directory");
+      return true;
+    }
+
     Map<String,Object> body = new HashMap<String,Object>();
     body.put("entities", factTablesBlock);
     String response = directoryCallsRest.post(directoryEndpointsRest.getFactEndpoint(countryCode), body);
+
     if (response == null) {
       logger.warn("updateFactTablesBlock: null response from REST call");
       return false;
