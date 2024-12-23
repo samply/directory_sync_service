@@ -106,7 +106,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
       return null;
     }
     if (retrievedList.size() == 0) {
-      logger.debug("runGraphqlQueryReturnMap: no results found");
+      logger.warn("runGraphqlQueryReturnMap: no results found");
       return new HashMap<>();
     }
     if (retrievedList.size() > 1)
@@ -171,7 +171,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     Map<String, Object> resultMap = convertJsonObjectToMap(result);
 
     if (resultMap.isEmpty()) {
-      logger.debug("runGraphqlQueryReturnList: no matching data found");
+      logger.warn("runGraphqlQueryReturnList: no matching data found");
       return new ArrayList<>();
     }
     if (resultMap.keySet().size() > 1) {

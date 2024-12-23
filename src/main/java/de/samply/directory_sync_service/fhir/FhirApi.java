@@ -111,10 +111,10 @@ public class FhirApi {
               .prefer(OPERATION_OUTCOME)
               .execute()
               .getOperationOutcome();
-      logger.debug("updateResource: @@@@@@@@@@ return outcome: " +outcome);
+      logger.debug("updateResource: return outcome: " +outcome);
       return (OperationOutcome) outcome;
     } catch (Exception e) {
-      logger.debug("updateResource: @@@@@@@@@@ exception: " + Util.traceFromException(e));
+      logger.warn("updateResource: exception: " + Util.traceFromException(e));
       OperationOutcome outcome = new OperationOutcome();
       outcome.addIssue().setSeverity(ERROR).setDiagnostics(e.getMessage());
       return outcome;
@@ -167,6 +167,7 @@ public class FhirApi {
               .withProfile(profileUri).execute();
     } catch (Exception e) {
       Util.traceFromException(e);
+      logger.warn("listAllOrganizations: exception: " + Util.traceFromException(e));
       return null;
     }
   }
@@ -425,7 +426,7 @@ public class FhirApi {
         }
       });
     } catch (ResourceNotFoundException e) {
-      logger.error("extractConditionCodesFromPatient: could not find Condition, stack trace:\n" + Util.traceFromException(e));
+      logger.warn("extractConditionCodesFromPatient: could not find Condition, stack trace:\n" + Util.traceFromException(e));
     }
 
     return conditionCodes;
@@ -681,9 +682,10 @@ public class FhirApi {
    * @return A list of unique material codes (as strings) extracted from the specimens.
    */
   private List<String> extractMaterialsFromSpecimenList(List<Specimen> specimenList) {
-    if (specimenList == null)
-      logger.debug("extractMaterialsFromSpecimenList: specimenList is null");
-    else
+    if (specimenList == null) {
+      logger.warn("extractMaterialsFromSpecimenList: specimenList is null");
+      return null;
+    } else
       logger.debug("extractMaterialsFromSpecimenList: specimenList.size: " + specimenList.size());
     Set<String> materialSet = new HashSet<>();
     for (Specimen specimen : specimenList) {

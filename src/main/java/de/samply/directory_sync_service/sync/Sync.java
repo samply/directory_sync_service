@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.sync;
 
+import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
@@ -53,7 +54,7 @@ public class Sync {
                 // Sleep for retryInterval seconds before trying again
                 Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.warn("syncWithDirectoryFailover: problem during Thread.sleep, stack trace:\n" + Util.traceFromException(e));
             }
         }
         if (retryNum == Integer.parseInt(retryMax))

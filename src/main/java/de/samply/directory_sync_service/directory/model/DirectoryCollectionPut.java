@@ -135,13 +135,15 @@ public class DirectoryCollectionPut extends HashMap {
         String countryCode = null;
         try {
             List<Entity> entities = getEntities();
-            if (entities == null || entities.size() == 0)
+            if (entities == null || entities.size() == 0) {
+                logger.warn("getCountryCode: entities is null or empty, cannot determine country code");
                 return null;
+            }
             logger.debug("getCountryCode: entities.size: " + entities.size());
             Entity entity = entities.get(0);
             countryCode = entity.getCountry();
             if (countryCode == null || countryCode.isEmpty()) {
-                logger.debug("getCountryCode: countryCode from first entity is null or empty");
+                logger.warn("getCountryCode: countryCode from first entity is null or empty, using EricId: " + entity.getId());
                 String entityId = entity.getId();
                 logger.debug("getCountryCode: entityId: " + entityId);
                 Optional<BbmriEricId> bbmriEricId = BbmriEricId.valueOf(entityId);
@@ -149,7 +151,7 @@ public class DirectoryCollectionPut extends HashMap {
                 countryCode = bbmriEricId.orElse(null).getCountryCode();
             }
         } catch (Exception e) {
-            logger.debug("getCountryCode: exception: " + Util.traceFromException(e));
+            logger.warn("getCountryCode: exception: " + Util.traceFromException(e));
             return null;
         }
 

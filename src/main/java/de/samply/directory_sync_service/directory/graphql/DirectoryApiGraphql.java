@@ -136,7 +136,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return null;
       }
       if (item.isEmpty()) {
-        logger.debug("fetchBiobank: no results from query");
+        logger.warn("fetchBiobank: no results from query");
         return biobank;
       }
 
@@ -218,7 +218,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         continue;
       }
       if (collectionsList.size() == 0) {
-        logger.debug("fetchCollectionGetOutcomes: collectionFactsList list is empty");
+        logger.warn("fetchCollectionGetOutcomes: collectionFactsList list is empty");
         continue;
       }
 
@@ -660,7 +660,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return null;
       }
       if (collectionFactsList.size() == 0) {
-        logger.debug("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
+        logger.warn("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
         return factIds;
       }
 
@@ -744,7 +744,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
       if (diseaseTypeList.size() == 0) {
-        logger.debug("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
+        logger.warn("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
         return false;
       }
 
