@@ -50,8 +50,8 @@ public class Sync {
             }
             logger.info("syncWithDirectoryFailover: attempt " + retryNum + " of " + retryMax + " failed");
             try {
-                // Sleep for 100 seconds before trying again
-                Thread.sleep(Integer.parseInt(retryInterval) * 100000L);
+                // Sleep for retryInterval seconds before trying again
+                Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

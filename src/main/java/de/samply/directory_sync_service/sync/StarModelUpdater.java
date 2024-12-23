@@ -93,6 +93,8 @@ public class StarModelUpdater {
                 return false;
             }
 
+            logger.debug("sendStarModelUpdatesToDirectory: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
+            logger.debug("sendStarModelUpdatesToDirectory: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
             logger.info("sendStarModelUpdatesToDirectory: star model update successful");
             return true;
         } catch (Exception e) {

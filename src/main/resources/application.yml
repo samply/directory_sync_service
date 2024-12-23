@@ -1,7 +1,7 @@
 ds:
   retry:
-    max: "10"
-    interval: "20"
+    max: "3"
+    interval: "200"
   timer:
     cron: ""
   fhir:
