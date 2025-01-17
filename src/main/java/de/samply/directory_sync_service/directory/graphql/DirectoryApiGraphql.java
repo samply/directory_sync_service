@@ -751,7 +751,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       Map<String, Object> item = diseaseTypeList.get(0);
 
       if (item == null) {
-        logger.warn("fetchCollectionGetOutcomes: first item in list of disease types is null!");
+        logger.warn("isValidIcdValue: first item in list of disease types is null!");
         return false;
       }
 

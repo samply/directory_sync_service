@@ -18,3 +18,11 @@ ds:
     max_facts: "-1"
     mock: "False"
     only_login: "False"
+
+# HAPI FHIR floods the logs at the INFO level, so cut off at WARN
+logging:
+  level:
+    ca:
+      uhn:
+        fhir: "WARN"
+
