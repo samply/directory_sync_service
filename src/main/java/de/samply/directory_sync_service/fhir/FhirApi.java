@@ -342,6 +342,21 @@ public class FhirApi {
             .filter(specimen -> specimen.hasSubject())
             // Find a Patient object corresponding to the specimen's subject
             .map(specimen -> extractPatientFromSpecimen(specimen))
+            // Skip null results from the mapping step
+            .filter(Objects::nonNull)
+            // Avoid duplicating the same patient
+            .filter(distinctBy(Patient::getId))
+            // collect the patients into a new list
+            .collect(Collectors.toList());
+
+    return patients;
+  }
+  private List<Patient> extractPatientListFromSpecimenList_old(List<Specimen> specimens) {
+    List<Patient> patients = specimens.stream()
+            // filter out specimens without a patient reference
+            .filter(specimen -> specimen.hasSubject())
+            // Find a Patient object corresponding to the specimen's subject
+            .map(specimen -> extractPatientFromSpecimen(specimen))
             // Avoid duplicating the same patient
             .filter(distinctBy(Patient::getId))
             // collect the patients into a new list
@@ -355,16 +370,22 @@ public class FhirApi {
    * 
    * @param specimen a Specimen resource that contains a reference to a Patient resource
    * @return a Patient resource that matches the reference in the Specimen resource, or null if not found
-   * @throws ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException if the FHIR server cannot find the Patient resource
    */
   public Patient extractPatientFromSpecimen(Specimen specimen) {
-    return fhirClient
-              .read()
-              .resource(Patient.class)
-              .withId(specimen.getSubject()
-                      .getReference()
-                      .replaceFirst("Patient/", ""))
-              .execute();
+    Patient patient =  null;
+    try {
+      patient =  fhirClient
+                .read()
+                .resource(Patient.class)
+                .withId(specimen.getSubject()
+                        .getReference()
+                        .replaceFirst("Patient/", ""))
+                .execute();
+    } catch (Exception e) {
+      logger.warn("extractPatientFromSpecimen: caught exception", Util.traceFromException(e));
+    }
+
+    return patient;
   }
 
   Boolean conditionsPresentInFhirStore = null;

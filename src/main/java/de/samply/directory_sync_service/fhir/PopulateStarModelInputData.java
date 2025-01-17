@@ -83,6 +83,11 @@ public class PopulateStarModelInputData {
     // Get the Patient who donated the sample
     Patient patient = fhirApi.extractPatientFromSpecimen(specimen);
 
+    if (patient == null) {
+      logger.warn("populateSpecimen: patient is null, skipping specimen: " + specimen.getIdElement().getIdPart());
+      return;
+    }
+
     String material = extractMaterialFromSpecimen(specimen);
     String patientId = patient.getIdElement().getIdPart();
     String sex = patient.getGender().getDisplay();
