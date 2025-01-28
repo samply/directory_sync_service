@@ -88,9 +88,7 @@ public abstract class DirectoryCalls {
   protected String executeRequest(HttpUriRequest request) {
     String result = null;
     try {
-      logger.debug("executeRequest: execute request" );
       CloseableHttpResponse response = httpClient.execute(request);
-      logger.debug("executeRequest: request executed" );
       if (response.getStatusLine().getStatusCode() < 300) {
         HttpEntity httpEntity = response.getEntity();
         if (httpEntity == null)

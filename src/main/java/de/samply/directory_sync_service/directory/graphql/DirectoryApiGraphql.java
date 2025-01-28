@@ -80,6 +80,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * Log in to the Directory. You can log in as many times as you like.
    */
   public boolean login() {
+    logger.info("DirectoryApiGraphql.login: logging  in");
+
     if (mockDirectory)
       // Don't try logging in if we are mocking
       return true;
@@ -111,6 +113,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
       logger.warn("login: exception: " + Util.traceFromException(e));
       return false;
     }
+
+    logger.info("DirectoryApiGraphql.login: log in successful");
 
     return true;
   }
@@ -482,7 +486,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
           return false;
         }
       } catch (Exception e) {
-        logger.warn("login: Exception during fact deletion: " + Util.traceFromException(e));
+        logger.warn("updateFactTablesBlock: Exception during fact deletion: " + Util.traceFromException(e));
         return false;
       }
 
@@ -721,7 +725,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
 
-      logger.debug("login: result: " + result);
+      logger.debug("deleteFactById: result: " + result);
     } catch (Exception e) {
       logger.warn("deleteFactById: Exception during fact deletion: " + Util.traceFromException(e));
       return false;

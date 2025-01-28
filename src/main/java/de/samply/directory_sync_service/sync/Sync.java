@@ -65,6 +65,7 @@ public class Sync {
     }
 
     private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
+        logger.debug("syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses = null;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
@@ -72,10 +73,6 @@ public class Sync {
         if (!directoryApi.isLoginAvailable()) {
             logger.warn("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
             directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-//            if (!directoryApi.isLoginAvailable()) {
-//                logger.warn("syncWithDirectory: Directory REST API is not available");
-//                return false;
-//            }
         }
 
         if (!directoryApi.login()) {
@@ -88,6 +85,8 @@ public class Sync {
             logger.info("syncWithDirectory: login was successful, now quitting because onlyLogin was set to true");
             return true;
         }
+
+        logger.debug("syncWithDirectory: starting synchronization");
 
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {
