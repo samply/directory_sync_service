@@ -101,11 +101,19 @@ public class DirectoryApiRest extends DirectoryApi {
     boolean warnFlag = false;
     for (String collectionId: collectionIds) {
       logger.debug("fetchCollectionGetOutcomes: collectionId: " + collectionId);
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22", DirectoryCollectionGet.class);
+      String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
+      logger.debug("fetchCollectionGetOutcomes: commandUrl: " + commandUrl);
+      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
-        logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
-        warnFlag = true;
-        continue;
+        logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, trying URL without country code");
+        commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
+        logger.debug("fetchCollectionGetOutcomes: new commandUrl: " + commandUrl);
+        singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
+        if (singleDirectoryCollectionGet == null) {
+          logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+          warnFlag = true;
+          continue;
+        }
       }
       Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
       if (item == null) {

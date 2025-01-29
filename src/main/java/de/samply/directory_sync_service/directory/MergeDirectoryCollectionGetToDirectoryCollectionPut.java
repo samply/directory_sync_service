@@ -35,13 +35,14 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
     if (directoryCollectionGet.isMockDirectory())
       return true;
 
+    boolean mergeSuccess = false;
     for (String collectionId: collectionIds)
-        if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null) {
+        if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null)
           logger.warn("Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
-          return false;
-        }
+        else
+          mergeSuccess = true;
     
-    return true;
+    return mergeSuccess;
   }
 
   /**
