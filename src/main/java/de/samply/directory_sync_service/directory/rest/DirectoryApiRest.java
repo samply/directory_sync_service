@@ -17,7 +17,14 @@ import java.util.stream.Collectors;
  * The DirectoryApiRest class provides an interface for interacting with the Directory service.
  * This class allows for fetching and updating biobank and collection information, managing star models,
  * and performing various validation and correction operations.
+ *
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
+ *
+ * Most methods will first try using a URL containing the country code, and If that fails, they will
+ * use a URL without country code. This is because the inclusion of the country code is necessary when
+ * synchronizing with a national node Directory, but not when synchronizing with the central Directory.
+ * Both of these cases can occur: larger countries (e.g. DE) tend to have their own national node
+ * Directories, but smaller countries (e.g. CY) use the central Directory.
  */
 public class DirectoryApiRest extends DirectoryApi {
   private final DirectoryCallsRest directoryCallsRest;
