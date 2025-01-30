@@ -640,12 +640,12 @@ public class DirectoryApiGraphql extends DirectoryApi {
   /**
    * Retrieves a list of fact IDs from the Directory associated with a specific collection.
    *
-   * @param countryCode The country code, e.g. DE.
    * @param collectionId The ID of the collection to retrieve fact IDs for.
    * @return A list of fact IDs for the specified collection, or null if there is an issue retrieving the data. An empty list indicates that there are no more facts left to be retrieved.
    */
   @Override
-  protected List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId) {
+  protected List<String> getNextPageOfFactIdsForCollection(String collectionId) {
+    String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
     List<String> factIds = new ArrayList<>();
 
     // Use getFactPageToggle to ensure that this method gets run only once.

@@ -70,12 +70,18 @@ public class DirectoryApiRest extends DirectoryApi {
       // Return a fake Biobank if we are mocking
       return new Biobank();
 
-    Biobank biobank = (Biobank) directoryCallsRest.get(directoryEndpointsRest.getBiobankEndpoint(id.getCountryCode()) + "/" + id, Biobank.class);
+    Biobank biobank = fetchBiobank(id.getCountryCode(), id);
     if (biobank == null) {
-      logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
-      return null;
+      logger.info("fetchBiobank: biobank is null, trying URL without country code");
+      biobank = fetchBiobank(null, id);
+      if (biobank == null)
+        logger.warn("fetchBiobank: No Biobank in Directory with id: " + id);
     }
     return biobank;
+  }
+
+  private Biobank fetchBiobank(String countryCode, BbmriEricId id) {
+    return (Biobank) directoryCallsRest.get(directoryEndpointsRest.getBiobankEndpoint(countryCode) + "/" + id, Biobank.class);
   }
 
   /**
@@ -97,7 +103,6 @@ public class DirectoryApiRest extends DirectoryApi {
       return directoryCollectionGet;
     }
 
-    logger.debug("fetchCollectionGetOutcomes: ?????????????????????????????????????????????????????????????????????????????????????????????????????????????");
     boolean warnFlag = false;
     for (String collectionId: collectionIds) {
       logger.debug("fetchCollectionGetOutcomes: collectionId: " + collectionId);
@@ -105,9 +110,8 @@ public class DirectoryApiRest extends DirectoryApi {
       logger.debug("fetchCollectionGetOutcomes: commandUrl: " + commandUrl);
       DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
-        logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, trying URL without country code");
+        logger.info("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, trying URL without country code");
         commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
-        logger.debug("fetchCollectionGetOutcomes: new commandUrl: " + commandUrl);
         singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
         if (singleDirectoryCollectionGet == null) {
           logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
@@ -123,7 +127,6 @@ public class DirectoryApiRest extends DirectoryApi {
       }
       directoryCollectionGet.getItems().add(item);
     }
-    logger.debug("fetchCollectionGetOutcomes: ?????????????????????????????????????????????????????????????????????????????????????????????????????????????");
 
     if (warnFlag && directoryCollectionGet.isEmpty()) {
       logger.warn("fetchCollectionGetOutcomes: No entities retrieved from Directory");
@@ -145,14 +148,23 @@ public class DirectoryApiRest extends DirectoryApi {
       return true;
     }
 
-    String response = directoryCallsRest.put(directoryEndpointsRest.getCollectionEndpoint(directoryCollectionPut.getCountryCode()), directoryCollectionPut);
+    String response = updateEntities(directoryCollectionPut.getCountryCode(), directoryCollectionPut);
     if (response == null) {
-      logger.warn("entity update, PUT problem");
-      return false;
+      logger.info("updateEntities: PUT problem, trying URL without country code");
+      response = updateEntities(null, directoryCollectionPut);
+      if (response == null) {
+        logger.warn("updateEntities: PUT problem even without country code, aborting");
+        return false;
+      }
     }
 
     return true;
   }
+
+  private String updateEntities(String countryCode, DirectoryCollectionPut directoryCollectionPut) {
+    return directoryCallsRest.put(directoryEndpointsRest.getCollectionEndpoint(countryCode), directoryCollectionPut);
+  }
+
 
   /**
    * Updates the fact tables block for a specific country with the provided data.
@@ -168,13 +180,22 @@ public class DirectoryApiRest extends DirectoryApi {
       return true;
     }
 
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      return true;
+    }
+
     Map<String,Object> body = new HashMap<String,Object>();
     body.put("entities", factTablesBlock);
-    String response = directoryCallsRest.post(directoryEndpointsRest.getFactEndpoint(countryCode), body);
 
+    String response = directoryCallsRest.post(directoryEndpointsRest.getFactEndpoint(countryCode), body);
     if (response == null) {
-      logger.warn("updateFactTablesBlock: null response from REST call");
-      return false;
+      logger.info("updateFactTablesBlock: null response from REST call, trying URL without country code");
+      response = directoryCallsRest.post(directoryEndpointsRest.getFactEndpoint(null), body);
+      if (response == null) {
+        logger.warn("updateFactTablesBlock: null response from REST call even without country code, aborting");
+        return false;
+      }
     }
 
     return true;
@@ -183,23 +204,26 @@ public class DirectoryApiRest extends DirectoryApi {
   /**
    * Retrieves a list of fact IDs from the Directory associated with a specific collection.
    *
-   * @param countryCode The country code, e.g. DE.
    * @param collectionId The ID of the collection to retrieve fact IDs for.
    * @return A list of fact IDs for the specified collection, or null if there is an issue retrieving the data. An empty list indicates that there are no more facts left to be retrieved.
    */
   @Override
-  protected List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId) {
-    String apiUrl = directoryEndpointsRest.getFactEndpoint(countryCode);
-
+  protected List<String> getNextPageOfFactIdsForCollection(String collectionId) {
     // Get a list of fact IDs for this collection
+    String apiUrl = directoryEndpointsRest.getFactEndpoint(extractCountryCodeFromBbmriEricId(collectionId));
     Map factWrapper = (Map) directoryCallsRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
-
     if (factWrapper == null) {
-      logger.warn("deleteStarModel: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId);
-      return null;
+      logger.info("getNextPageOfFactIdsForCollection: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId + ", trying without country code");
+      apiUrl = directoryEndpointsRest.getFactEndpoint(extractCountryCodeFromBbmriEricId(null));
+      factWrapper = (Map) directoryCallsRest.get(apiUrl + "?q=collection==%22" + collectionId + "%22", Map.class);
+      if (factWrapper == null) {
+        logger.warn("getNextPageOfFactIdsForCollection: Problem getting facts for collection, factWrapper == null, collectionId=" + collectionId + " even without contry code, aborting");
+        return null;
+      }
     }
+
     if (!factWrapper.containsKey("items")) {
-      logger.warn("deleteStarModel: Problem getting facts for collection, no item key present: " + collectionId);
+      logger.warn("getNextPageOfFactIdsForCollection: Problem getting facts for collection, no item key present: " + collectionId);
       return null;
     }
     List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
@@ -227,14 +251,20 @@ public class DirectoryApiRest extends DirectoryApi {
       // Nothing to delete
       return true;
 
-    String apiUrl = directoryEndpointsRest.getFactEndpoint(countryCode);
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      return true;
+    }
 
     // Directory likes to have its delete data wrapped in a map with key "entityIds".
-    String result = directoryCallsRest.delete(apiUrl, new HashMap<>(Map.of("entityIds", factIds)));
-
+    String result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(countryCode), new HashMap<>(Map.of("entityIds", factIds)));
     if (result == null) {
-      logger.warn("deleteFactsByIds, Problem during delete of factIds");
-      return false;
+      logger.info("deleteFactsByIds, Problem during delete of factIds, trying without country code");
+      result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(null), new HashMap<>(Map.of("entityIds", factIds)));
+      if (result == null) {
+        logger.warn("deleteFactsByIds, Problem during delete of factIds even without contry code, aborting");
+        return false;
+      }
     }
 
     return true;

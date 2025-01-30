@@ -155,7 +155,7 @@ public abstract class DirectoryApi {
         // We need to do things this way, because the Directory implements paging
         // and a single pass may not get all facts.
         do {
-          List<String> factIds = getNextPageOfFactIdsForCollection(countryCode, collectionId);
+          List<String> factIds = getNextPageOfFactIdsForCollection(collectionId);
 
           if (factIds == null) {
             logger.warn("deleteStarModel: Problem getting facts for collection: " + collectionId);
@@ -186,11 +186,10 @@ public abstract class DirectoryApi {
   /**
    * Retrieves a list of fact IDs from the Directory associated with a specific collection.
    *
-   * @param countryCode The country code, e.g. DE.
    * @param collectionId The ID of the collection to retrieve fact IDs for.
    * @return A list of fact IDs for the specified collection, or null if there is an issue retrieving the data. An empty list indicates that there are no more facts left to be retrieved.
    */
-  protected abstract List<String> getNextPageOfFactIdsForCollection(String countryCode, String collectionId);
+  protected abstract List<String> getNextPageOfFactIdsForCollection(String collectionId);
 
   /**
    * Deletes facts from the Directory service based on a list of fact IDs.
