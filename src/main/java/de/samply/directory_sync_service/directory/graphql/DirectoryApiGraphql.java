@@ -96,13 +96,26 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
       String endpoint = directoryEndpointsGraphql.getLoginEndpoint();
       JsonObject result = directoryCallsGraphql.runGraphqlCommand(endpoint, graphqlCommand);
-
       if (result == null) {
         logger.warn("login: result is null");
         return false;
       }
 
-      String token = result.get("signin").getAsJsonObject().get("token").getAsString();
+      JsonElement signin = result.get("signin");
+      if (signin == null) {
+        logger.warn("login: signin is null");
+        logger.warn("login: result: " + Util.jsonStringFomObject(result));
+        return false;
+      }
+
+      JsonElement tokenObject = signin.getAsJsonObject().get("token");
+      if (tokenObject == null) {
+        logger.warn("login: tokenObject is null");
+        logger.warn("login: signin: " + Util.jsonStringFomObject(signin));
+        return false;
+      }
+
+      String token = tokenObject.getAsString();
       if (token == null) {
         logger.warn("login: token is null");
         return false;

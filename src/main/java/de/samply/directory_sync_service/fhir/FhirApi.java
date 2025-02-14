@@ -382,7 +382,7 @@ public class FhirApi {
                         .replaceFirst("Patient/", ""))
                 .execute();
     } catch (Exception e) {
-      logger.warn("extractPatientFromSpecimen: caught exception", Util.traceFromException(e));
+      logger.warn("extractPatientFromSpecimen: caught exception: " + Util.traceFromException(e));
     }
 
     return patient;
