@@ -192,12 +192,16 @@ public class CreateFactTablesFromStarModelInputData {
         int age = ageStr != null ? Integer.parseInt(ageStr) : -1;
         if (age < 0) {
             return "Unknown";
+        } else if (age == 0) {
+            return "Newborn";
         } else if (age < 2) {
             return "Infant";
         } else if (age < 13) {
             return "Child";
         } else if (age < 18) {
             return "Adolescent";
+        } else if (age < 25) {
+            return "Young Adult";
         } else if (age < 45) {
             return "Adult";
         } else if (age < 65) {
