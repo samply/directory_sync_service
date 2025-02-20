@@ -56,7 +56,7 @@ public class CreateFactTablesFromStarModelInputData {
     private static List<Map<String, String>> createFactTableFinal(String collectionId, int minDonors, int maxFacts, List<Map<String, String>> patientSamples) {
         // Transform patient sample data by standardizing fields (e.g., age range, sex, sample material)
         // and adding collection-specific metadata. This returns a list where each map represents a transformed row.
-        List<Map<String, String>> patientSamplesFacts = transformData(patientSamples);
+        List<Map<String, String>> patientSamplesFacts = transformData(patientSamples, collectionId);
 
         // Generate an intermediate fact table by grouping the transformed data and calculating
         // unique counts for patients and samples based on attributes like sex, disease, and age range.
@@ -77,18 +77,19 @@ public class CreateFactTablesFromStarModelInputData {
      * adds a collection identifier, and sets the last update date to today's date.
      *
      * @param data List of maps where each map represents a row of data about a patient or sample.
+     * @param collectionId BBMRI ID for the relevant sample collection.
      * @return List of transformed maps with additional or modified fields.
      */
-    private static List<Map<String, String>> transformData(List<Map<String, String>> data) {
+    private static List<Map<String, String>> transformData(List<Map<String, String>> data, String collectionId) {
         return data.stream()
                 .map(row -> {
                     String ageStr = row.get("age_at_primary_diagnosis");
-                    row.put("age_range", getAgeRange(ageStr != null ? Integer.parseInt(ageStr) : -1));
+                    row.put("age_range", transformAgeRange(ageStr));
                     row.put("sample_material", transformSampleMaterial(row.get("sample_material")));
                     row.put("sex", transformSex(row.get("sex")));
                     row.put("hist_loc", row.get("hist_loc"));
                     row.put("last_update", LocalDate.now().toString());
-                    row.put("collection", "bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort");
+                    row.put("collection", collectionId);
                     return row;
                 })
                 .collect(Collectors.toList());
@@ -184,12 +185,13 @@ public class CreateFactTablesFromStarModelInputData {
     /**
      * Cuts the age into bins and returns the corresponding age range.
      *
-     * @param age The age to be categorized into bins.
+     * @param ageStr The age to be categorized into bins.
      * @return The age range as a string.
      */
-    private static String getAgeRange(int age) {
-        if (age < 1) {
-            return "Infant";
+    private static String transformAgeRange(String ageStr) {
+        int age = ageStr != null ? Integer.parseInt(ageStr) : -1;
+        if (age < 0) {
+            return "Unknown";
         } else if (age < 2) {
             return "Infant";
         } else if (age < 13) {
