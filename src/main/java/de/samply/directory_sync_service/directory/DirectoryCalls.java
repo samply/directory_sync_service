@@ -14,6 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Class for interacting with a Directory service via REST API calls.
@@ -55,7 +61,7 @@ public abstract class DirectoryCalls {
    */
   public boolean endpointExists(String endpoint) {
     String url = urlCombine(baseUrl, endpoint);
-    logger.info("endpointExists: checking if endpoint exists, URL: " + url);
+    logger.debug("endpointExists: checking if endpoint exists, URL: " + url);
     HttpHead request = new HttpHead(url);
 
     boolean returnStatus = true;
@@ -65,11 +71,11 @@ public abstract class DirectoryCalls {
       int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode != 200 && statusCode != 204) {
         // The endpoint neither exists nor has the server responded with allowed methods.
-        logger.warn("endpointExists: failure, statusCode: " + statusCode + ", expected 200 or 204");
+        logger.debug("endpointExists: failure, statusCode: " + statusCode + ", expected 200 or 204");
         returnStatus = false;
       }
     } catch (Exception e) {
-      logger.warn("endpointExists: exception while checking if endpoint exists, URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
+      logger.debug("endpointExists: exception while checking if endpoint exists, URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
       returnStatus = false;
     }
 
@@ -110,6 +116,40 @@ public abstract class DirectoryCalls {
 
     return result;
   }
+
+  /**
+   * Runs executeRequest with a timeout of 10 seconds.
+   *
+   * If the executeRequest completes within the timeout, its result is returned.
+   * If the executeRequest times out, it is canceled and an empty JSON map string ({}) is returned.
+   *
+   * @return The result of {@code executeRequest()} if it completes on time, {} if it times out, or {@code null} if it encounters an error.
+   */
+  public String executeRequestWithTimeout(HttpUriRequest request) {
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    Future<String> future = executor.submit(() -> {
+      try {
+        return executeRequest(request);
+      } catch (Exception e) {
+        System.out.println("Request failed: " + e.getMessage());
+        return null;
+      }
+    });
+
+    try {
+      return future.get(10, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      future.cancel(true); // Attempt to stop the execution
+      logger.debug("Request timed out and was terminated.");
+    } catch (Exception e) {
+      System.out.println("Execution error: " + e.getMessage());
+    } finally {
+      executor.shutdownNow();
+    }
+    return "{}";
+  }
+
 
   /**
    * Combines two URL parts, ensuring that there is exactly one slash between them.

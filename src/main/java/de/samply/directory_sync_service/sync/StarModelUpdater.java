@@ -1,6 +1,7 @@
 package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.fhir.FhirApi;
@@ -12,6 +13,7 @@ import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +51,7 @@ public class StarModelUpdater {
             // star model hypercubes.
             StarModelData starModelInputData = (new PopulateStarModelInputData(fhirApi)).populate(defaultBbmriEricCollectionId);
             if (starModelInputData == null) {
-                logger.warn("Problem getting star model information from FHIR store");
+                logger.warn("sendStarModelUpdatesToDirectory: Problem getting star model information from FHIR store");
                 return false;
             }
             logger.info("sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
@@ -64,6 +66,10 @@ public class StarModelUpdater {
             // use them to generate the star model fact tables.
             CreateFactTablesFromStarModelInputData.createFactTables(starModelInputData, maxFacts);
             logger.info("sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
+            if (starModelInputData.getFactCount() == 0) {
+                logger.warn("sendStarModelUpdatesToDirectory: no starModelInputData has been generated, FHIR store might be empty");
+                return true;
+            }
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
@@ -78,28 +84,72 @@ public class StarModelUpdater {
                 return false;
             }
 
-            // Sanity check: compare sample counts from source data with sample counts derived from star model
-            int totalFhirSpecimenCount = fhirApi.calculateTotalSpecimenCount(defaultBbmriEricCollectionId);
-            int totalStarModelSpecimenCount = 0;
-            for (Map<String, String> factTable: starModelInputData.getFactTables())
-                if (factTable.containsKey("number_of_samples")) {
-                    int numberOfSamples = Integer.parseInt(factTable.get("number_of_samples"));
-                    totalStarModelSpecimenCount += numberOfSamples;
-                    if (numberOfSamples > 1)
-                        logger.debug("sendStarModelUpdatesToDirectory: number of samples: " + numberOfSamples);
-                }
-            if (totalFhirSpecimenCount < totalStarModelSpecimenCount) {
-                logger.warn("sendStarModelUpdatesToDirectory: FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
-                return false;
-            }
+            sampleCountSanityCheck(fhirApi, defaultBbmriEricCollectionId, starModelInputData);
+            materialTypeSanityCheck(fhirApi, defaultBbmriEricCollectionId, starModelInputData);
 
-            logger.debug("sendStarModelUpdatesToDirectory: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
-            logger.debug("sendStarModelUpdatesToDirectory: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
             logger.info("sendStarModelUpdatesToDirectory: star model update successful");
             return true;
         } catch (Exception e) {
             logger.warn("sendStarModelUpdatesToDirectory - unexpected error: " + Util.traceFromException(e));
             return false;
+        }
+    }
+
+    /**
+     * Sanity check: compare sample counts from source data with sample counts derived from star model.
+     *
+     * @param fhirApi
+     * @param defaultBbmriEricCollectionId
+     * @param starModelInputData
+     */
+    private static void sampleCountSanityCheck(FhirApi fhirApi, BbmriEricId defaultBbmriEricCollectionId, StarModelData starModelInputData) {
+        int totalFhirSpecimenCount = fhirApi.calculateTotalSpecimenCount(defaultBbmriEricCollectionId);
+        int totalStarModelSpecimenCount = 0;
+        for (Map<String, String> factTable: starModelInputData.getFactTables())
+            if (factTable.containsKey("number_of_samples")) {
+                int numberOfSamples = Integer.parseInt(factTable.get("number_of_samples"));
+                totalStarModelSpecimenCount += numberOfSamples;
+                if (numberOfSamples > 1)
+                    logger.debug("sampleCountSanityCheck: number of samples: " + numberOfSamples);
+            }
+        if (totalFhirSpecimenCount < totalStarModelSpecimenCount)
+            logger.warn("sampleCountSanityCheck: !!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
+        logger.debug("sendStarModelUpdatesToDirectory: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
+        logger.debug("sendStarModelUpdatesToDirectory: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
+    }
+
+    /**
+     * Sanity check: do the material types in the star model match the material types in the FHIR store?
+     *
+     * @param fhirApi
+     * @param defaultBbmriEricCollectionId
+     * @param starModelInputData
+     */
+    private static void materialTypeSanityCheck(FhirApi fhirApi, BbmriEricId defaultBbmriEricCollectionId, StarModelData starModelInputData) {
+        Map<String, String> fhirSampleMaterials = fhirApi.getSampleMaterials(defaultBbmriEricCollectionId);
+        Map<String,String> convertedFhirSampleMaterials = new HashMap<>();
+        for (String sampleMaterial: fhirSampleMaterials.keySet()) {
+            String convertedSampleMaterial = FhirToDirectoryAttributeConverter.convertMaterial(sampleMaterial);
+            if (convertedSampleMaterial != null && !convertedFhirSampleMaterials.containsKey(convertedSampleMaterial))
+                convertedFhirSampleMaterials.put(convertedSampleMaterial, convertedSampleMaterial);
+        }
+        int totalStarModelSampleMaterialCount = 0;
+        Map<String,String> starModelSampleMaterials = new HashMap<>();
+        for (Map<String, String> factTable: starModelInputData.getFactTables())
+            if (factTable.containsKey("sample_material")) {
+                String sampleMaterial = factTable.get("sample_material");
+                if (!starModelSampleMaterials.containsKey(sampleMaterial)) {
+                    totalStarModelSampleMaterialCount++;
+                    starModelSampleMaterials.put(sampleMaterial, sampleMaterial);}
+            } else if (totalStarModelSampleMaterialCount == 0 && starModelInputData.getFactCount() > 0) {
+                logger.warn("sendStarModelUpdatesToDirectory: !!!!!!! did not find sample_material in fact 0: " + Util.jsonStringFomObject(starModelInputData.getFactTables().get(0)));
+            }
+        if (convertedFhirSampleMaterials.size() != totalStarModelSampleMaterialCount && starModelInputData.getFactTables().size() != 0) {
+            logger.warn("sendStarModelUpdatesToDirectory: !!!!!!! converted FHIR material type count (" + convertedFhirSampleMaterials.size() + ") is different from star model material type count (" + totalStarModelSampleMaterialCount + ")");
+            logger.warn("sendStarModelUpdatesToDirectory: FHIR material types: " + Util.orderedKeylistFromMap(fhirSampleMaterials));
+            logger.warn("sendStarModelUpdatesToDirectory: converted FHIR material types: " + Util.orderedKeylistFromMap(convertedFhirSampleMaterials));
+            logger.warn("sendStarModelUpdatesToDirectory: star model material types: " + Util.orderedKeylistFromMap(starModelSampleMaterials));
+            logger.warn("sendStarModelUpdatesToDirectory: star model material fact count: " + starModelInputData.getFactCount());
         }
     }
 }

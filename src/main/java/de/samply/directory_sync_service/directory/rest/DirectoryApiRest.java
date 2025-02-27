@@ -61,7 +61,7 @@ public class DirectoryApiRest extends DirectoryApi {
 
     boolean success = directoryCallsRest.login();
 
-    logger.info("DirectoryApiGraphql.login: success: " + success);
+    logger.info("login(Rest): success: " + success);
 
     return success;
   }
@@ -101,6 +101,7 @@ public class DirectoryApiRest extends DirectoryApi {
    * @return
    */
   public DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
+    logger.debug("fetchCollectionGetOutcomes(Rest): countryCode: " + countryCode);
     DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
     directoryCollectionGet.init();
 
@@ -112,23 +113,23 @@ public class DirectoryApiRest extends DirectoryApi {
 
     boolean warnFlag = false;
     for (String collectionId: collectionIds) {
-      logger.debug("fetchCollectionGetOutcomes: collectionId: " + collectionId);
+      logger.debug("fetchCollectionGetOutcomes(Rest): collectionId: " + collectionId);
       String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
-      logger.debug("fetchCollectionGetOutcomes: commandUrl: " + commandUrl);
+      logger.debug("fetchCollectionGetOutcomes(Rest): commandUrl: " + commandUrl);
       DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
-        logger.info("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, trying URL without country code");
+        logger.info("fetchCollectionGetOutcomes(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
         commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
         singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
         if (singleDirectoryCollectionGet == null) {
-          logger.warn("fetchCollectionGetOutcomes: singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+          logger.warn("fetchCollectionGetOutcomes(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
           warnFlag = true;
           continue;
         }
       }
       Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
       if (item == null) {
-        logger.warn("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId);
+        logger.warn("fetchCollectionGetOutcomes(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
         warnFlag = true;
         continue;
       }
@@ -136,9 +137,11 @@ public class DirectoryApiRest extends DirectoryApi {
     }
 
     if (warnFlag && directoryCollectionGet.isEmpty()) {
-      logger.warn("fetchCollectionGetOutcomes: No entities retrieved from Directory");
+      logger.warn("fetchCollectionGetOutcomes(Rest): No entities retrieved from Directory");
       return null;
     }
+
+    logger.debug("fetchCollectionGetOutcomes(Rest): done");
 
     return directoryCollectionGet;
   }

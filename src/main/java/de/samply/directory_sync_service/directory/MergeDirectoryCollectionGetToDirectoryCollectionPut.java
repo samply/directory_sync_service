@@ -30,18 +30,31 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
    * @return
    */
   public static boolean merge(DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
-    List<String> collectionIds = directoryCollectionPut.getCollectionIds();
+    logger.debug("merge: entered");
+
     // Only do a merge if we are not mocking
     if (directoryCollectionGet.isMockDirectory())
       return true;
 
+    if (directoryCollectionGet.size() == 0) {
+      logger.warn("merge: directoryCollectionGet.size() is zero");
+      return true;
+    }
+
+    List<String> collectionIds = directoryCollectionPut.getCollectionIds();
+    if (collectionIds.size() == 0)
+      logger.warn("merge: collectionIds.size() is zero");
+
     boolean mergeSuccess = false;
     for (String collectionId: collectionIds)
         if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null)
-          logger.warn("Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
+          logger.warn("merge: Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
         else
           mergeSuccess = true;
-    
+
+    if (!mergeSuccess)
+      logger.warn("merge: mergeSuccess is false");
+
     return mergeSuccess;
   }
 

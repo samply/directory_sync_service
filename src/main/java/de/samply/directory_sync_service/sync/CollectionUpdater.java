@@ -57,7 +57,7 @@ public class CollectionUpdater {
                 logger.warn("Problem converting FHIR attributes to Directory attributes");
                 return false;
             }
-            logger.info("sendUpdatesToDirectory: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+            logger.debug("sendUpdatesToDirectory: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
             List<String> collectionIds = directoryCollectionPut.getCollectionIds();
             String countryCode = directoryCollectionPut.getCountryCode();
@@ -67,17 +67,18 @@ public class CollectionUpdater {
                 logger.warn("Problem getting collections from Directory");
                 return false;
             }
+            logger.debug("sendUpdatesToDirectory: directoryCollectionGet.size(): " + directoryCollectionGet.size());
 
             if (!MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut)) {
                 logger.warn("Problem merging Directory GET attributes to Directory PUT attributes");
                 return false;
             }
-            logger.info("sendUpdatesToDirectory: directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
+            logger.debug("sendUpdatesToDirectory: directoryCollectionGet.getItems().size()): " + directoryCollectionGet.getItems().size());
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
             directoryCollectionPut.applyDiagnosisCorrections(correctedDiagnoses);
-            logger.info("sendUpdatesToDirectory: directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+            logger.debug("sendUpdatesToDirectory: directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
             directoryApi.login();
 
@@ -85,6 +86,8 @@ public class CollectionUpdater {
                 logger.warn("sendUpdatesToDirectory: Problem during collection update");
                 return false;
             }
+
+            logger.info("sendUpdatesToDirectory: successfully sent updates to Directory");
 
             return true;
         } catch (Exception e) {

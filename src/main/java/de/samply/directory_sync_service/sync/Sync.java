@@ -7,8 +7,11 @@ import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import de.samply.directory_sync_service.fhir.model.FhirCollection;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +74,7 @@ public class Sync {
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
         if (!directoryApi.isLoginAvailable()) {
-            logger.warn("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
+            logger.debug("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
             directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
         }
 
@@ -87,6 +90,16 @@ public class Sync {
         }
 
         logger.debug("syncWithDirectory: starting synchronization");
+
+        // Get FHIR collections from the FHIR store and list them to debug
+        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+                .valueOf(directoryDefaultCollectionId)
+                .orElse(null);
+        List<FhirCollection> fhirCollections = fhirApi.fetchFhirCollections(defaultBbmriEricCollectionId);
+        logger.debug("syncWithDirectory: ..................................... FHIR collections: ");
+        for  (FhirCollection collection : fhirCollections) {
+            logger.debug(",  " + collection.getId());
+        }
 
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {

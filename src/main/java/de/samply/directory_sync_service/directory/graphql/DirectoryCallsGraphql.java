@@ -51,6 +51,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
 
     logger.debug("endpointIsValidGraphql: execute request");
     String response = executeRequest(request);
+    //String response = executeRequestWithTimeout(request);
     logger.debug("endpointIsValidGraphql: finished executing request");
     if (response == null) {
       logger.warn("endpointIsValidGraphql: HTTP response is null");
@@ -234,7 +235,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     HttpPost request = new HttpPost(url);
     if (directoryCredentials.getToken() != null && !directoryCredentials.getToken().isEmpty())
       request.setHeader("x-molgenis-token", directoryCredentials.getToken());
-    request.setHeader("Content-Type", "application/json");
+    //request.setHeader("Content-Type", "application/json");
 
     // Create the GraphQL body
     String cleanedCommand = escapeQuotes(removeNewlines(graphqlCommand));

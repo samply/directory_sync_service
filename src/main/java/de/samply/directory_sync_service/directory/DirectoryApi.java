@@ -46,7 +46,7 @@ public abstract class DirectoryApi {
     String endpoint = directoryEndpoints.getLoginEndpoint();
 
     if (!directoryCalls.endpointExists(endpoint)) {
-      logger.warn("isLoginAvailable: failing availablity test because " + endpoint + " is not accessible");
+      logger.debug("isLoginAvailable: failing availablity test because " + endpoint + " is not accessible");
       return false;
     }
 
@@ -210,12 +210,19 @@ public abstract class DirectoryApi {
    * 1. If the full code is not correct, remove the number after the period and try again. If the new truncated code is OK, use it to replace the existing diagnosis.
    * 2. If that doesn't work, replace the existing diagnosis with null.
    *
+   * The supplied Map object, {@code diagnoses}, is modified in-place.
+   *
    * @param diagnoses A string map containing diagnoses to be corrected.
    */
   public void collectDiagnosisCorrections(Map<String, String> diagnoses) {
     if (mockDirectory)
       // Don't do anything if we're in mock mode
       return;
+
+    if (diagnoses.size() == 0) {
+      logger.warn("__________ collectDiagnosisCorrections: diagnoses is empty");
+      return;
+    }
 
     if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
       logger.debug("__________ collectDiagnosisCorrections: uncorrected diagnoses: ");

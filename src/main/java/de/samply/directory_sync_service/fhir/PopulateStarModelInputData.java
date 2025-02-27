@@ -44,13 +44,17 @@ public class PopulateStarModelInputData {
     // Group specimens according to collection.
     Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollection(defaultBbmriEricCollectionId);
     if (specimensByCollection == null) {
-      logger.error("Problem finding specimens");
+      logger.error("populate: Problem finding specimens");
       return null;
     }
 
     StarModelData starModelInputData = new StarModelData();
-    for (String collectionId: specimensByCollection.keySet())
+    if (specimensByCollection.keySet().size() ==0)
+      logger.warn("populate: specimensByCollection.keySet() is empty");
+    for (String collectionId: specimensByCollection.keySet()) {
+      logger.debug("populate: collectionId: " + collectionId);
       populateCollection(starModelInputData, collectionId, specimensByCollection.get(collectionId));
+    }
 
     return starModelInputData;
   }
@@ -66,6 +70,11 @@ public class PopulateStarModelInputData {
    * @throws NullPointerException if starModelInputData, collectionId, or specimens is null.
    */
   private void populateCollection(StarModelData starModelInputData, String collectionId, List<Specimen> specimens) {
+    if (specimens.size() == 0) {
+      logger.warn("populateCollection: specimens list is empty, skipping collection: " + collectionId);
+      return;
+    }
+
     for (Specimen specimen: specimens)
       populateSpecimen(starModelInputData, collectionId, specimen);
   }

@@ -2,29 +2,26 @@ package de.samply.directory_sync_service;
 
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.sync.Sync;
-import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.INFORMATION;
-
 public class Util {
   private static final Logger logger = LoggerFactory.getLogger(Sync.class);
 
-  public static <K, V> Map<K, V> mapOf() {
-    return new HashMap<>();
-  }
+//  public static <K, V> Map<K, V> mapOf() {
+//    return new HashMap<>();
+//  }
 
-    /**
+  /**
   * Get a printable stack trace from an Exception object.
   * @param e
   * @return
@@ -70,5 +67,20 @@ public class Util {
             return null;
         Gson gson = new Gson();
         return gson.toJson(object);
+    }
+
+    /**
+     * Generates an ordered key list from the provided map.
+     *
+     * @param map The map from which to generate the ordered key list.
+     * @return A comma-separated string of the ordered keys.
+     */
+    public static String orderedKeylistFromMap(Map<String, String> map) {
+        if (map == null)
+            return "";
+        // generate an ordered key list from the map
+        List<String> keys = new ArrayList<>(map.keySet());
+        Collections.sort(keys);
+        return String.join(",", keys);
     }
 }

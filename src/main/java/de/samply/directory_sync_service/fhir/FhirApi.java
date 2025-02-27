@@ -96,7 +96,7 @@ public class FhirApi {
    *         If an exception occurs during the update process, an error operation outcome will be returned.
    */
   public OperationOutcome updateResource(IBaseResource resource) {
-    logger.debug("updateResource: @@@@@@@@@@ entered");
+    logger.debug("updateResource: entered");
 
     // Remove the version ID, so that no If-Match header gets added to the request
     // If you don't do this, Blaze will throw an exception like this:
@@ -232,6 +232,8 @@ public class FhirApi {
       }
 
       logger.debug("__________ fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
+      if (specimensByCollection.size() == 0)
+        logger.warn("__________ fetchSpecimensByCollection: no collections found, maybe you need to upload some data to your FHIR store?");
 
       return specimensByCollection;
     } catch (Exception e) {
@@ -249,6 +251,25 @@ public class FhirApi {
       totalSpecimenCount += specimenList.size();
 
     return totalSpecimenCount;
+  }
+
+  /**
+   * Retrieves all sample materials over all collections.
+   *
+   * @param defaultBbmriEricCollectionId the default BBMRI-ERIC collection ID. May be null.
+   * @return a Map representing sample materials as key-value pairs
+   */
+  public Map<String,String> getSampleMaterials(BbmriEricId defaultBbmriEricCollectionId) {
+    Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+    Map<String, String> fhirSampleMaterials = new HashMap<String, String>();
+    for (List<Specimen> specimenList : specimensByCollection.values()) {
+      List<String> materials = extractMaterialsFromSpecimenList(specimenList);
+      for (String material : materials)
+        if (!fhirSampleMaterials.containsKey(material))
+          fhirSampleMaterials.put(material, material);
+    }
+
+    return fhirSampleMaterials;
   }
 
   /**
@@ -290,7 +311,7 @@ public class FhirApi {
             bundle = null;
     } while (bundle != null);
 
-    logger.debug("__________ getAllSpecimensAsMap: done");
+    logger.debug("__________ getAllSpecimensAsMap: done, result.size(): " + result.size());
 
     return result;
   }

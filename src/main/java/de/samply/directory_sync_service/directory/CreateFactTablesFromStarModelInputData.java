@@ -38,6 +38,8 @@ public class CreateFactTablesFromStarModelInputData {
                     maxFacts,
                     starModelInputData.getInputRowsAsStringMaps(collectionId));
             logger.debug("createFactTables: collectionId: " + collectionId + ", factTableFinal.size() " + factTableFinal.size());
+            if (factTableFinal.size() == 0)
+                logger.warn("createFactTables: factTableFinal.size() is zero");
             starModelInputData.addFactTable(factTableFinal);
         }
     }

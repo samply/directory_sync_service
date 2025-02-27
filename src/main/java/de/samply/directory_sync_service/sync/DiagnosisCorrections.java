@@ -48,7 +48,7 @@ public class DiagnosisCorrections {
                 logger.warn("Problem getting diagnosis information from FHIR store");
                 return null;
             }
-            logger.info("__________ generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
+            logger.debug("__________ generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
             // Convert the raw ICD 10 codes into MIRIAM-compatible codes and put the
             // codes into a map with identical keys and values.
@@ -59,11 +59,14 @@ public class DiagnosisCorrections {
 
             // Get corrected diagnosis codes from the Directory
             directoryApi.collectDiagnosisCorrections(correctedDiagnoses);
-            logger.info("__________ generateDiagnosisCorrections: correctedDiagnoses.size(): " + correctedDiagnoses.size());
+            logger.debug("__________ generateDiagnosisCorrections: correctedDiagnoses.size(): " + correctedDiagnoses.size());
+
+            if (correctedDiagnoses.size() == 0)
+                logger.warn("No diagnosis corrections generated");
 
             return correctedDiagnoses;
         } catch (Exception e) {
-            logger.error("generateDiagnosisCorrections - unexpected error: " + Util.traceFromException(e));
+            logger.warn("generateDiagnosisCorrections - unexpected error: " + Util.traceFromException(e));
         }
 
         return null;
