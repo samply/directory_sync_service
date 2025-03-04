@@ -8,9 +8,6 @@ import de.samply.directory_sync_service.directory.DirectoryEndpoints;
 public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
   private static final String ENDPOINT_API = "/api/graphql";
   private static final String ENDPOINT_LOGIN = ENDPOINT_API;
-  private static final String ENDPOINT_DATABASE_ERIC1 = "/BBMRI-";
-  private static final String ENDPOINT_DATABASE_ERIC2 = "/ERIC";
-  private static final String ENDPOINT_DATABASE_ERIC3 = "/BBMRI-ERIC";
   private static final String ENDPOINT_DATABASE_DIRECTORY_ONTOLOGIES = "/DirectoryOntologies/api/graphql";
 
   /**
@@ -20,18 +17,6 @@ public class DirectoryEndpointsGraphql extends DirectoryEndpoints {
    */
   public String getApiEndpoint() {
     return ENDPOINT_API;
-  }
-
-  public String getDatabaseEricEndpoint1() {
-    return ENDPOINT_DATABASE_ERIC1;
-  }
-
-  public String getDatabaseEricEndpoint2() {
-    return ENDPOINT_DATABASE_ERIC2;
-  }
-
-  public String getDatabaseEricEndpoint3() {
-    return ENDPOINT_DATABASE_ERIC3;
   }
 
   /**

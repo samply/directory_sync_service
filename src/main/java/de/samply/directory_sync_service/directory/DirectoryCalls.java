@@ -7,6 +7,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -63,23 +63,25 @@ public abstract class DirectoryCalls {
     String url = urlCombine(baseUrl, endpoint);
     logger.debug("endpointExists: checking if endpoint exists, URL: " + url);
     HttpHead request = new HttpHead(url);
+    //HttpGet request = new HttpGet(url);
 
-    boolean returnStatus = true;
     try {
-      CloseableHttpResponse response = httpClient.execute(request);
-
+      HttpClientContext context = HttpClientContext.create();
+      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+      CloseableHttpResponse response = httpClient.execute(request, context);
+      String finalUrl = context.getTargetHost() + context.getRequest().getRequestLine().getUri();
       int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode != 200 && statusCode != 204) {
         // The endpoint neither exists nor has the server responded with allowed methods.
         logger.debug("endpointExists: failure, statusCode: " + statusCode + ", expected 200 or 204");
-        returnStatus = false;
+        return false;
       }
     } catch (Exception e) {
       logger.debug("endpointExists: exception while checking if endpoint exists, URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
-      returnStatus = false;
+      return false;
     }
 
-    return returnStatus;
+    return true;
   }
 
   /**

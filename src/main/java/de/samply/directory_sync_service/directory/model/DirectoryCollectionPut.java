@@ -240,6 +240,13 @@ public class DirectoryCollectionPut extends HashMap {
         }
 
         public String getCountry() {
+            if (!this.containsKey("country"))
+                return null;
+            if (this.get("country").getClass() != String.class) {
+                // This should never happen. TODO: find out why this happens.
+                logger.warn("getCountry: country is not a String");
+                return null;
+            }
             return (String) get("country");
         }
 

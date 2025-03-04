@@ -1,11 +1,9 @@
 package de.samply.directory_sync_service.directory.graphql;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryCalls;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 
@@ -36,56 +34,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    */
   public DirectoryCallsGraphql(String baseUrl, String username, String password) {
     super(baseUrl, username, password);
-  }
-
-  /**
-   * Checks if an endpoint returns an error by sending an HTTP GET request to the endpoint and analyzing the response.
-   *
-   * @param endpoint The endpoint to check for errors.
-   * @return true if the endpoint does not return an error, false otherwise.
-   */
-  public boolean endpointIsValidGraphql(String endpoint) {
-    String url = urlCombine(baseUrl, endpoint);
-    logger.debug("endpointIsValidGraphql: url: " + url);
-    HttpGet request = new HttpGet(url);
-
-    logger.debug("endpointIsValidGraphql: execute request");
-    String response = executeRequest(request);
-    //String response = executeRequestWithTimeout(request);
-    logger.debug("endpointIsValidGraphql: finished executing request");
-    if (response == null) {
-      logger.warn("endpointIsValidGraphql: HTTP response is null");
-      return false;
-    }
-
-    try {
-      // Use gson to turn the response into a JSON object
-      logger.debug("endpointIsValidGraphql: turn response into JSON");
-      JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
-      if (jsonResponse == null) {
-        logger.warn("endpointIsValidGraphql: jsonResponse is null");
-        return false;
-      }
-
-      logger.debug("endpointIsValidGraphql: check response for error");
-
-      // Check if the response contains an error
-      if (jsonResponse.has("errors")) {
-        logger.warn("endpointIsValidGraphql: jsonResponse has the following errors:");
-        JsonObject errors = jsonResponse.getAsJsonObject("errors");
-        for (String error: errors.keySet())
-          logger.warn("endpointIsValidGraphql: error: " + error + ": " + errors.get(error).toString());
-        return false;
-      }
-    } catch (JsonSyntaxException e) {
-      logger.warn("endpointIsValidGraphql: JsonSyntaxException: " + e.getMessage());
-      logger.warn("endpointIsValidGraphql: response: " + response);
-      return false;
-    }
-
-    logger.debug("endpointIsValidGraphql: all good, returning true");
-
-    return true;
   }
 
   /**
@@ -147,8 +95,8 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    * @return A list of maps containing the retrieved data, or null if there are issues with the query.
    */
   public List<Map<String, Object>> runGraphqlQueryReturnList(String endpoint, String dataTableName, String filter, List<String> attributeNames) {
-    String grapqlCommand = buildGraphqlQueryString(dataTableName, filter, attributeNames);
-    return runGraphqlQueryReturnList(endpoint, grapqlCommand);
+    String graphqlCommand = buildGraphqlQueryString(dataTableName, filter, attributeNames);
+    return runGraphqlQueryReturnList(endpoint, graphqlCommand);
   }
 
   /**
@@ -158,11 +106,11 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    *
    * This is not intended for running mutations.
    *
-   * @param grapqlCommand Full GraphQL command to be run.
+   * @param graphqlCommand Full GraphQL command to be run.
    * @return A list of maps containing the retrieved data, or null if there are issues with the query.
    */
-  public List<Map<String, Object>> runGraphqlQueryReturnList(String endpoint, String grapqlCommand) {
-    JsonObject result = runGraphqlCommand(endpoint, grapqlCommand);
+  public List<Map<String, Object>> runGraphqlQueryReturnList(String endpoint, String graphqlCommand) {
+    JsonObject result = runGraphqlCommand(endpoint, graphqlCommand);
 
     if (result == null) {
       logger.warn("runGraphqlQueryReturnList: result is null");
@@ -214,13 +162,13 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     if (attributeNames != null && !attributeNames.isEmpty())
       graphqlAttributes = attributeNames.stream().collect(Collectors.joining("\n"));
 
-    String grapqlCommand = "query {\n" +
+    String graphqlCommand = "query {\n" +
             "  " + dataTableName + bracketedFilter + " {\n" +
             "    " + graphqlAttributes +
             "  }\n" +
             "}";
 
-    return grapqlCommand;
+    return graphqlCommand;
   }
 
   /**
@@ -235,7 +183,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     HttpPost request = new HttpPost(url);
     if (directoryCredentials.getToken() != null && !directoryCredentials.getToken().isEmpty())
       request.setHeader("x-molgenis-token", directoryCredentials.getToken());
-    //request.setHeader("Content-Type", "application/json");
 
     // Create the GraphQL body
     String cleanedCommand = escapeQuotes(removeNewlines(graphqlCommand));

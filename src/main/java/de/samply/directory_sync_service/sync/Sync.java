@@ -3,7 +3,6 @@ package de.samply.directory_sync_service.sync;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
-import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
 import java.io.IOException;
@@ -73,10 +72,6 @@ public class Sync {
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-        if (!directoryApi.isLoginAvailable()) {
-            logger.debug("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
-            directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-        }
 
         if (!directoryApi.login()) {
             logger.warn("syncWithDirectory: there was a problem during login to Directory");

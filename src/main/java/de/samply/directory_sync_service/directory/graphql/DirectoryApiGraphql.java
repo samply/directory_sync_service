@@ -55,28 +55,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * @return true if a login endpoint for this API is accessible, false otherwise.
-   */
-  @Override
-  public boolean isLoginAvailable() {
-    if (!super.isLoginAvailable()) {
-      logger.warn("DirectoryApiGraphql.isLoginAvailable: failing availablity test because the login GraphQL endpoint is not there");
-      return false;
-    }
-
-    String endpoint = directoryEndpoints.getLoginEndpoint();
-
-    if (!directoryCallsGraphql.endpointIsValidGraphql(endpoint)) {
-      logger.warn("DirectoryApiGraphql.isLoginAvailable: failing login availablity test because " + endpoint + " returns an error");
-      return false;
-    }
-
-    logger.info("DirectoryApiGraphql.isLoginAvailable: login availability test has succeeded");
-
-    return true;
-  }
-
-  /**
    * Log in to the Directory. You can log in as many times as you like.
    */
   public boolean login() {
@@ -793,6 +771,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
   /**
    * Retrieves the database endpoint for the ERIC database API based on the country code.
    *
+   * Uses a heuristic that looks through the available databases at the Directory and
+   * builds an endpoint from the most plausible one.
+   *
    * @param countryCode The country code used to determine the database endpoint.
    * @return The database endpoint for the ERIC database API, or null if no valid endpoint is found.
    */
@@ -800,30 +781,153 @@ public class DirectoryApiGraphql extends DirectoryApi {
     if (databaseEricEndpointMap.containsKey(countryCode))
       return databaseEricEndpointMap.get(countryCode);
 
-    // There are several plausible endpoints, so try each one, until we find one that
-    // actually exists.
+    List<String> databases = getDatabases();
 
-    String databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint1() + countryCode + directoryEndpointsGraphql.getApiEndpoint();
-    if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.debug("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
+    if (databases == null)  {
+      logger.warn("getDatabaseEricEndpoint: databases is null");
+      return null;
+    }
+
+    if (databases.size() == 0) {
+      logger.warn("getDatabaseEricEndpoint: databases is empty");
+      return null;
+    }
+
+    String database;
+    String databaseEricEndpoint;
+
+    // If there is a database called e.g. ERIC-DE, use that.
+    database = "ERIC-" + countryCode;
+    if (databases.contains(database)) {
+      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
-    databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint2() + directoryEndpointsGraphql.getApiEndpoint();
-    if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.debug("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
+    // Look to see if there is a database that ends with the country code and use if found
+    for (String db : databases) {
+      if (db.endsWith("-" + countryCode)) {
+        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+        return databaseEricEndpoint;
+      }
+    }
+
+    // If there is a database called BBMRI-ERIC, use that.
+    database = "BBMRI-ERIC";
+    if (databases.contains(database)) {
+      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
-    databaseEricEndpoint = directoryEndpointsGraphql.getDatabaseEricEndpoint3() + directoryEndpointsGraphql.getApiEndpoint();
-    if (directoryCallsGraphql.endpointIsValidGraphql(databaseEricEndpoint)) {
-      logger.debug("getDatabaseEricEndpoint: using " + databaseEricEndpoint + " for ERIC database API");
+    // If there is a database called ERIC, use that.
+    database = "ERIC";
+    if (databases.contains(database)) {
+      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
     }
 
+    // If there is a database with "ERIC" in its name, use that.
+    for (String db : databases) {
+      if (db.contains("ERIC")) {
+        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+        return databaseEricEndpoint;
+      }
+    }
+
+    // If there is a database called BBMRI, use that.
+    database = "BBMRI";
+    if (databases.contains(database)) {
+      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
+      databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+      return databaseEricEndpoint;
+    }
+
+    // If there is a database with "BBMRI" in its name, use that.
+    for (String db : databases) {
+      if (db.contains("BBMRI")) {
+        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+        return databaseEricEndpoint;
+      }
+    }
+
+    // We are scraping the barrel here. Take the database that is not "pet store", "_SYSTEM_" or "DirectoryOntologies".
+    for (String db : databases) {
+      if (!db.equals("pet store") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) {
+        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+        return databaseEricEndpoint;
+      }
+    }
+
+    logger.warn("getDatabaseEricEndpoint: no database found for country code: " + countryCode);
     return null;
   }
+
+  /**
+   * Retrieves a list of database labels from the Directory.
+   *
+   * <p>This method sends a GraphQL query to fetch the available database schemas.
+   * It parses the response and extracts the "label" field from each schema object.
+   * If the response structure is unexpected or data is missing, warnings are logged
+   * and the method returns {@code null}.
+   *
+   * @return a list of database labels, or {@code null} if an error occurs or the response
+   *         does not contain the expected data structure
+   */
+  public List<String> getDatabases() {
+    // Try to get all databases
+    String graphqlCommand = "{ _schemas { label } }";
+
+    JsonObject data = directoryCallsGraphql.runGraphqlCommand((new DirectoryEndpointsGraphql()).getApiEndpoint(), graphqlCommand);
+
+    if (data == null) {
+      logger.warn("getDatabases: data is null");
+      return null;
+    }
+
+    if (!data.has("_schemas")) {
+      logger.warn("getDatabases: data has no _schemas element");
+      return null;
+    }
+
+    if (!data.get("_schemas").isJsonArray()) {
+      logger.warn("getDatabases: data._schemas is not a JsonArray");
+      return null;
+    }
+
+    JsonArray schemas = data.get("_schemas").getAsJsonArray();
+
+    List<String> databases = new ArrayList<>();
+
+    for (JsonElement schema : schemas) {
+      if (!schema.isJsonObject()) {
+        logger.warn("getDatabases: schema is not a JsonObject, skipping");
+        continue;
+      }
+
+      if (!schema.getAsJsonObject().has("label")) {
+        logger.warn("getDatabases: schema has no label element");
+        return null;
+      }
+
+      String label = schema.getAsJsonObject().get("label").getAsString();
+      databases.add(label);
+    }
+
+    return databases;
+  }
+
 }
