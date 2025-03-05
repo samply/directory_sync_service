@@ -33,7 +33,9 @@ public class DirectorySyncJob implements StatefulJob  {
         JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
         Configuration configuration = (Configuration) data.get("configuration");
 
+        logger.info("execute: ------------------ executing as part of a repeated run");
         execute(configuration);
+        logger.info("execute: ------------------ finished executing as part of a repeated run\n\n\n\n");
     }
 
     /**

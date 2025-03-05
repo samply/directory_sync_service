@@ -108,6 +108,7 @@ public abstract class DirectoryApi {
     // 2. The new fact IDs may be different from the old ones.
     // 3. We will be using a POST and it will return an error if we try
     //    to overwrite an existing fact.
+    logger.debug("updateStarModel: deleting old star models");
     if (!deleteStarModel(starModelInputData)) {
       logger.warn("updateStarModel: Problem deleting star models");
       return false;
@@ -122,8 +123,9 @@ public abstract class DirectoryApi {
     for (int i = 0; i < factTables.size(); i += blockSize) {
       List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
 
+      logger.debug("updateStarModel: sending block: " + i + " of " + factTables.size());
       if (!updateFactTablesBlock(countryCode, factTablesBlock)) {
-        logger.warn("updateStarModel: failed, block: " + i);
+        logger.warn("updateStarModel: failed, block: " + i + " of " + factTables.size());
         return false;
       }
     }
@@ -161,11 +163,11 @@ public abstract class DirectoryApi {
             logger.warn("deleteStarModel: Problem getting facts for collection: " + collectionId);
             return false;
           }
-          logger.debug("deleteStarModel: number of facts found: " + factIds.size());
           if (factIds.size() == 0) {
             // Terminate the do loop if there are no more facts left.
             break;
           }
+          logger.debug("deleteStarModel: number of facts found: " + factIds.size() + " for collection: " + collectionId);
 
           // Take the list of fact IDs and delete all of the corresponding facts
           // at the Directory.
@@ -220,14 +222,14 @@ public abstract class DirectoryApi {
       return;
 
     if (diagnoses.size() == 0) {
-      logger.warn("__________ collectDiagnosisCorrections: diagnoses is empty");
+      logger.warn("collectDiagnosisCorrections: diagnoses is empty");
       return;
     }
 
     if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
-      logger.debug("__________ collectDiagnosisCorrections: uncorrected diagnoses: ");
+      logger.debug("collectDiagnosisCorrections: uncorrected diagnoses: ");
       for (String diagnosis : diagnoses.keySet())
-        logger.debug("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
+        logger.debug("collectDiagnosisCorrections: diagnosis: " + diagnosis);
     }
 
     int diagnosisCounter = 0; // for diagnostics only
@@ -236,7 +238,7 @@ public abstract class DirectoryApi {
     int discardedIcdValueCounter = 0;
     for (String diagnosis: diagnoses.keySet()) {
       if (diagnosisCounter%500 == 0)
-        logger.debug("__________ collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
+        logger.debug("collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
       if (!isValidIcdValue(diagnosis)) {
         invalidIcdValueCounter++;
         String diagnosisCategory = diagnosis.split("\\.")[0];
@@ -250,11 +252,11 @@ public abstract class DirectoryApi {
       diagnosisCounter++;
     }
 
-    logger.debug("__________ collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
+    logger.debug("collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
     if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
-      logger.debug("__________ collectDiagnosisCorrections: corrected diagnoses: ");
+      logger.debug("collectDiagnosisCorrections: corrected diagnoses: ");
       for (String diagnosis : diagnoses.keySet())
-        logger.debug("__________ collectDiagnosisCorrections: diagnosis: " + diagnosis);
+        logger.debug("collectDiagnosisCorrections: diagnosis: " + diagnosis);
     }
   }
 

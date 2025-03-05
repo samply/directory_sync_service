@@ -47,9 +47,11 @@ public class DirectorySyncLauncher {
 
     String timerCron = configuration.getTimerCron();
 
+    // If there is no cron timer defined, just run the job once and then quit.
     if (timerCron == null || timerCron.isEmpty()) {
-      logger.debug("run: Running job just once");
+      logger.info("run: ********************** Running job just once");
       directorySyncJob.execute(configuration);
+      logger.info("run: ********************** Finished running job just once\n\n\n\n\n");
       return;
     }
 
@@ -59,7 +61,7 @@ public class DirectorySyncLauncher {
 
     String jobType = directorySyncJob.getJobType();
 
-    logger.debug("run: Running job repeatedly, according to following cron schedule: " + timerCron);
+    logger.info("run: ********************** Running job repeatedly, according to following cron schedule: " + timerCron);
     JobKey quartzJobKey = new JobKey(jobType + "Job", jobType);
     JobDetail quartzJob = JobBuilder.newJob(DirectorySyncJob.class)
             .withIdentity(quartzJobKey).build();
@@ -77,6 +79,7 @@ public class DirectorySyncLauncher {
     try {
       Scheduler scheduler = new StdSchedulerFactory().getScheduler();
 
+      logger.info("run: ********************** starting scheduler");
       scheduler.start();
       scheduler.scheduleJob(quartzJob, quartzTrigger);
     } catch (SchedulerException e) {

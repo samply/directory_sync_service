@@ -3,6 +3,7 @@ package de.samply.directory_sync_service.sync;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
+import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
 import java.io.IOException;
@@ -43,15 +44,16 @@ public class Sync {
      * @throws IOException
      */
     public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
+        logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting");
         boolean success = false;
         int retryNum;
         for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
-            logger.info("syncWithDirectoryFailover: trying sync, attempt " + retryNum + " of " + retryMax);
+            logger.info("syncWithDirectoryFailover: +++++++++++++++++++ trying sync, attempt " + retryNum + " of " + retryMax);
             if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin)) {
                 success = true;
                 break;
             }
-            logger.info("syncWithDirectoryFailover: attempt " + retryNum + " of " + retryMax + " failed");
+            logger.info("syncWithDirectoryFailover: +++++++++++++++++++ attempt " + retryNum + " of " + retryMax + " failed");
             try {
                 // Sleep for retryInterval seconds before trying again
                 Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
@@ -61,21 +63,27 @@ public class Sync {
         }
         if (retryNum == Integer.parseInt(retryMax))
             logger.warn("syncWithDirectoryFailover: reached maximum number of retires(" + Integer.parseInt(retryMax) + "), giving up");
-        logger.info("syncWithDirectoryFailover: done");
+
+        logger.info("+++++++++++++++++++ syncWithDirectoryFailover: done");
 
         return success;
     }
 
     private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
-        logger.debug("syncWithDirectory: entered");
+        logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses = null;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 
+        // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
         if (!directoryApi.login()) {
-            logger.warn("syncWithDirectory: there was a problem during login to Directory");
-            return false;
+            logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
+            directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+            if (!directoryApi.login()) {
+                logger.warn("syncWithDirectory: there was a problem during login to Directory");
+                return false;
+            }
         }
 
         // Login test. Don't perform any further actions on the Directory.
@@ -91,7 +99,7 @@ public class Sync {
                 .valueOf(directoryDefaultCollectionId)
                 .orElse(null);
         List<FhirCollection> fhirCollections = fhirApi.fetchFhirCollections(defaultBbmriEricCollectionId);
-        logger.debug("syncWithDirectory: ..................................... FHIR collections: ");
+        logger.debug("syncWithDirectory: FHIR collections: ");
         for  (FhirCollection collection : fhirCollections) {
             logger.debug(",  " + collection.getId());
         }

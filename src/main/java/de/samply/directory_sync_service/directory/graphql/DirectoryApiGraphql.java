@@ -58,8 +58,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * Log in to the Directory. You can log in as many times as you like.
    */
   public boolean login() {
-    logger.info("DirectoryApiGraphql.login: logging  in");
-
     if (mockDirectory)
       // Don't try logging in if we are mocking
       return true;
@@ -105,7 +103,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return false;
     }
 
-    logger.info("DirectoryApiGraphql.login: log in successful");
+    logger.debug("DirectoryApiGraphql.login: log in successful");
 
     return true;
   }
@@ -300,11 +298,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
     for (String key: entity.keySet()) {
       if (entity.get(key) instanceof List list) {
         if (list.size() == 0) {
-          logger.warn("cleanEntity: attribute \"" + key + "\" is an empty list");
+          logger.debug("cleanEntity: attribute \"" + key + "\" is an empty list");
           badKeys.add(key);
         }
         if (list.size() == 1 && list.get(0) == null) {
-          logger.warn("cleanEntity: attribute \"" + key + "\" has a single null element");
+          logger.debug("cleanEntity: attribute \"" + key + "\" has a single null element");
           badKeys.add(key);
         }
       }
@@ -354,7 +352,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // Use the String.matches method to check if the timestamp ends with a non-numeric character
     if (timestamp.matches(".*[^\\d]$")) {
       timestamp = timestamp.substring(0, timestamp.length() - 1);
-      logger.debug("cleanTimestamp: ............................ corrected timestamp: " + timestamp);
+      logger.debug("cleanTimestamp: corrected timestamp: " + timestamp);
     }
 
     return timestamp;
@@ -655,7 +653,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return null;
       }
       if (collectionFactsList.size() == 0) {
-        logger.warn("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
+        logger.debug("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
         return factIds;
       }
 
@@ -739,7 +737,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return false;
       }
       if (diseaseTypeList.size() == 0) {
-        logger.warn("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
+        logger.debug("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
         return false;
       }
 

@@ -190,22 +190,22 @@ public class FhirApi {
    * @return a map of collection id to list of specimens, or null in case of an error
    */
   public Map<String,List<Specimen>> fetchSpecimensByCollection(BbmriEricId defaultBbmriEricCollectionId) {
-    logger.debug("__________ fetchSpecimensByCollection: entered");
+    logger.debug("fetchSpecimensByCollection: entered");
 
     // This method is slow, so use cached value if available.
     if (specimensByCollection != null)
       return specimensByCollection;
 
-    logger.debug("__________ fetchSpecimensByCollection: get specimens from FHIR store");
+    logger.debug("fetchSpecimensByCollection: get specimens from FHIR store");
 
     try {
       specimensByCollection = getAllSpecimensAsMap();
 
-      logger.debug("__________ fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
+      logger.debug("fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
 
       defaultBbmriEricCollectionId = determineDefaultCollectionId(defaultBbmriEricCollectionId, specimensByCollection);
 
-      logger.debug("__________ fetchSpecimensByCollection: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
+      logger.debug("fetchSpecimensByCollection: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
 
       // Remove specimens without a collection from specimensByCollection, but keep
       // the relevant specimen list, just in case we have a valid default ID to
@@ -213,14 +213,14 @@ public class FhirApi {
       List<Specimen> defaultCollection = specimensByCollection.remove(DEFAULT_COLLECTION_ID);
 
       if (defaultCollection == null)
-        logger.debug("__________ fetchSpecimensByCollection: defaultCollection is null");
+        logger.debug("fetchSpecimensByCollection: defaultCollection is null");
       else
-        logger.debug("__________ fetchSpecimensByCollection: defaultCollection size: " + defaultCollection.size());
+        logger.debug("fetchSpecimensByCollection: defaultCollection size: " + defaultCollection.size());
 
       // Replace the DEFAULT_COLLECTION_ID key in specimensByCollection by a sensible collection ID,
       // assuming, of course, that there were any specemins caregorized by DEFAULT_COLLECTION_ID.
       if (defaultCollection != null && defaultCollection.size() != 0 && defaultBbmriEricCollectionId != null) {
-        logger.debug("__________ fetchSpecimensByCollection: Replace the DEFAULT_COLLECTION_ID key");
+        logger.debug("fetchSpecimensByCollection: Replace the DEFAULT_COLLECTION_ID key");
 
         if (specimensByCollection.containsKey(defaultBbmriEricCollectionId.toString()))
           // Add all specimens with DEFAULT_COLLECTION_ID to defaultBbmriEricCollectionId if it exists
@@ -231,9 +231,9 @@ public class FhirApi {
           specimensByCollection.put(defaultBbmriEricCollectionId.toString(), defaultCollection);
       }
 
-      logger.debug("__________ fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
+      logger.debug("fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
       if (specimensByCollection.size() == 0)
-        logger.warn("__________ fetchSpecimensByCollection: no collections found, maybe you need to upload some data to your FHIR store?");
+        logger.warn("fetchSpecimensByCollection: no collections found, maybe you need to upload some data to your FHIR store?");
 
       return specimensByCollection;
     } catch (Exception e) {
@@ -279,7 +279,7 @@ public class FhirApi {
    * @throws FhirClientConnectionException If there is an issue connecting to the FHIR server.
    */
   private Map<String, List<Specimen>> getAllSpecimensAsMap() {
-    logger.debug("__________ getAllSpecimensAsMap: entered");
+    logger.debug("getAllSpecimensAsMap: entered");
 
     Map<String, List<Specimen>> result = new HashMap<String, List<Specimen>>();
 
@@ -287,7 +287,7 @@ public class FhirApi {
     IQuery<IBaseBundle> bundleTransaction = fhirClient.search().forResource(Specimen.class);
     Bundle bundle = (Bundle) bundleTransaction.execute();
 
-    logger.debug("__________ getAllSpecimensAsMap: gather specimens");
+    logger.debug("getAllSpecimensAsMap: gather specimens");
 
     // Keep looping until the store has no more specimens.
     // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
@@ -301,7 +301,7 @@ public class FhirApi {
             result.get(collectionId).add(specimen);
         }
 
-        logger.debug("__________ getAllSpecimensAsMap: Added " + bundle.getEntry().size() + " entries to result, result size: " + result.size());
+        logger.debug("getAllSpecimensAsMap: Added " + bundle.getEntry().size() + " entries to result, result size: " + result.size());
 
         // Check if there are more pages
         if (bundle.getLink(Bundle.LINK_NEXT) != null)
@@ -311,7 +311,7 @@ public class FhirApi {
             bundle = null;
     } while (bundle != null);
 
-    logger.debug("__________ getAllSpecimensAsMap: done, result.size(): " + result.size());
+    logger.debug("getAllSpecimensAsMap: done, result.size(): " + result.size());
 
     return result;
   }

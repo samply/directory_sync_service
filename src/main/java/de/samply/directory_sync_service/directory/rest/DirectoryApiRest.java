@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.directory.rest;
 
+import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 
 import de.samply.directory_sync_service.model.BbmriEricId;
@@ -51,7 +52,7 @@ public class DirectoryApiRest extends DirectoryApi {
    * Log in to the Directory. You can log in as many times as you like.
    */
   public boolean login() {
-    logger.info("DirectoryApiRest.login: logging  in");
+    logger.debug("DirectoryApiRest.login: logging  in");
 
     if (mockDirectory) {
       logger.info("DirectoryApiRest.login: mocking login, will not actually contact the Directory");
@@ -61,7 +62,7 @@ public class DirectoryApiRest extends DirectoryApi {
 
     boolean success = directoryCallsRest.login();
 
-    logger.info("login(Rest): success: " + success);
+    logger.debug("login(Rest): success: " + success);
 
     return success;
   }
@@ -208,6 +209,8 @@ public class DirectoryApiRest extends DirectoryApi {
       }
     }
 
+    logger.debug("updateFactTablesBlock: response: " + Util.jsonStringFomObject(response));
+
     return true;
   }
 
@@ -267,10 +270,12 @@ public class DirectoryApiRest extends DirectoryApi {
     }
 
     // Directory likes to have its delete data wrapped in a map with key "entityIds".
-    String result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(countryCode), new HashMap<>(Map.of("entityIds", factIds)));
+    HashMap<String, List<String>> factIdMap = new HashMap<>(Map.of("entityIds", factIds));
+    logger.info("deleteFactsByIds, the following IDs will be deleted: " + Util.jsonStringFomObject(factIdMap));
+    String result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(countryCode), factIdMap);
     if (result == null) {
       logger.info("deleteFactsByIds, Problem during delete of factIds, trying without country code");
-      result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(null), new HashMap<>(Map.of("entityIds", factIds)));
+      result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(null), factIdMap);
       if (result == null) {
         logger.warn("deleteFactsByIds, Problem during delete of factIds even without contry code, aborting");
         return false;

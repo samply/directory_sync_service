@@ -50,13 +50,14 @@ public class DirectoryCallsRest extends DirectoryCalls {
       logger.warn("DirectoryCallsRest.login: failed to log in to Directory, loginResponse is null");
       return false;
     } else {
-      logger.info("DirectoryCallsRest.login: successfully logged in to Directory, trying to set token");
+      logger.debug("DirectoryCallsRest.login: successfully logged in to Directory, trying to set token");
       String token = loginResponse.token;
       if (token == null || token.isEmpty()) {
         logger.warn("DirectoryCallsRest.login: failed to log in to Directory, token is null or empty");
         return false;
       }
       directoryCredentials.setToken(token);
+      logger.debug("DirectoryCallsRest.login: token: " + token);
       logger.info("DirectoryCallsRest.login: successfully set token");
     }
     return true;
@@ -72,8 +73,10 @@ public class DirectoryCallsRest extends DirectoryCalls {
   public Object get(String commandUrl, Class c) {
     HttpGet request = buildGetRequest(commandUrl);
     String response = executeRequest(request);
-    if (response == null)
+    if (response == null) {
+      logger.warn("DirectoryCallsRest.get: failed to get from Directory, response is null");
       return null;
+    }
     Object body = gson.fromJson(response, c);
 
     return body;
@@ -112,7 +115,7 @@ public class DirectoryCallsRest extends DirectoryCalls {
     String response = executeRequest(request);
 
     if (response == null)
-      logger.warn("DirectoryCallsRest.post: failed to put to Directory, response is null, o: " + Util.jsonStringFomObject(o));
+      logger.warn("DirectoryCallsRest.post: failed to post to Directory, response is null, o: " + Util.jsonStringFomObject(o));
 
     return response;
   }
@@ -156,7 +159,8 @@ public class DirectoryCallsRest extends DirectoryCalls {
    */
   private HttpGet buildGetRequest(String commandUrl) {
     HttpGet request = buildTokenlessGetRequest(commandUrl);
-    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+    if (directoryCredentials.getToken() != null)
+      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     return request;
   }
 
@@ -182,7 +186,8 @@ public class DirectoryCallsRest extends DirectoryCalls {
   private HttpPost buildPostRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
     HttpPost request = new HttpPost(urlCombine(baseUrl, commandUrl));
-    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+    if (directoryCredentials.getToken() != null)
+      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     request.setHeader("Accept", "application/json");
     request.setHeader("Content-type", "application/json");
     request.setEntity(entity);
@@ -199,7 +204,8 @@ public class DirectoryCallsRest extends DirectoryCalls {
   private HttpPut buildPutRequest(String commandUrl, Object o) {
     StringEntity entity = objectToStringEntity(o);
     HttpPut request = new HttpPut(urlCombine(baseUrl, commandUrl));
-    request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+    if (directoryCredentials.getToken() != null)
+      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
     request.setHeader("Accept", "application/json");
     request.setHeader("Content-type", "application/json");
     request.setEntity(entity);

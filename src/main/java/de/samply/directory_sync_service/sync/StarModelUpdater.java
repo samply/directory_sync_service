@@ -41,7 +41,7 @@ public class StarModelUpdater {
      * @throws IllegalArgumentException if the defaultCollectionId is not a valid BbmriEricId.
      */
     public static boolean sendStarModelUpdatesToDirectory(FhirApi fhirApi, DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, String defaultCollectionId, int minDonors, int maxFacts) {
-        logger.info("sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
+        logger.debug("sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
         try {
             BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
                     .valueOf(defaultCollectionId)
@@ -54,7 +54,7 @@ public class StarModelUpdater {
                 logger.warn("sendStarModelUpdatesToDirectory: Problem getting star model information from FHIR store");
                 return false;
             }
-            logger.info("sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
+            logger.debug("sendStarModelUpdatesToDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
             directoryApi.login();
 
@@ -65,7 +65,7 @@ public class StarModelUpdater {
             // Take the patient list and the specimen list from starModelInputData and
             // use them to generate the star model fact tables.
             CreateFactTablesFromStarModelInputData.createFactTables(starModelInputData, maxFacts);
-            logger.info("sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
+            logger.debug("sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + starModelInputData.getFactCount());
             if (starModelInputData.getFactCount() == 0) {
                 logger.warn("sendStarModelUpdatesToDirectory: no starModelInputData has been generated, FHIR store might be empty");
                 return true;
@@ -86,6 +86,7 @@ public class StarModelUpdater {
 
             sampleCountSanityCheck(fhirApi, defaultBbmriEricCollectionId, starModelInputData);
             materialTypeSanityCheck(fhirApi, defaultBbmriEricCollectionId, starModelInputData);
+            diseaseSanityCheck(starModelInputData);
 
             logger.info("sendStarModelUpdatesToDirectory: star model update successful");
             return true;
@@ -113,9 +114,9 @@ public class StarModelUpdater {
                     logger.debug("sampleCountSanityCheck: number of samples: " + numberOfSamples);
             }
         if (totalFhirSpecimenCount < totalStarModelSpecimenCount)
-            logger.warn("sampleCountSanityCheck: !!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
-        logger.debug("sendStarModelUpdatesToDirectory: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
-        logger.debug("sendStarModelUpdatesToDirectory: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
+            logger.warn("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
+        logger.debug("sampleCountSanityCheck: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
+        logger.debug("sampleCountSanityCheck: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
     }
 
     /**
@@ -136,20 +137,28 @@ public class StarModelUpdater {
         int totalStarModelSampleMaterialCount = 0;
         Map<String,String> starModelSampleMaterials = new HashMap<>();
         for (Map<String, String> factTable: starModelInputData.getFactTables())
-            if (factTable.containsKey("sample_material")) {
-                String sampleMaterial = factTable.get("sample_material");
+            if (factTable.containsKey("sample_type")) {
+                String sampleMaterial = factTable.get("sample_type");
                 if (!starModelSampleMaterials.containsKey(sampleMaterial)) {
                     totalStarModelSampleMaterialCount++;
-                    starModelSampleMaterials.put(sampleMaterial, sampleMaterial);}
-            } else if (totalStarModelSampleMaterialCount == 0 && starModelInputData.getFactCount() > 0) {
-                logger.warn("sendStarModelUpdatesToDirectory: !!!!!!! did not find sample_material in fact 0: " + Util.jsonStringFomObject(starModelInputData.getFactTables().get(0)));
+                    starModelSampleMaterials.put(sampleMaterial, sampleMaterial);
+                }
             }
         if (convertedFhirSampleMaterials.size() != totalStarModelSampleMaterialCount && starModelInputData.getFactTables().size() != 0) {
-            logger.warn("sendStarModelUpdatesToDirectory: !!!!!!! converted FHIR material type count (" + convertedFhirSampleMaterials.size() + ") is different from star model material type count (" + totalStarModelSampleMaterialCount + ")");
-            logger.warn("sendStarModelUpdatesToDirectory: FHIR material types: " + Util.orderedKeylistFromMap(fhirSampleMaterials));
-            logger.warn("sendStarModelUpdatesToDirectory: converted FHIR material types: " + Util.orderedKeylistFromMap(convertedFhirSampleMaterials));
-            logger.warn("sendStarModelUpdatesToDirectory: star model material types: " + Util.orderedKeylistFromMap(starModelSampleMaterials));
-            logger.warn("sendStarModelUpdatesToDirectory: star model material fact count: " + starModelInputData.getFactCount());
+            logger.warn("materialTypeSanityCheck: !!!!!!!!!!!!!!!!!!!!! converted FHIR material type count (" + convertedFhirSampleMaterials.size() + ") is different from star model material type count (" + totalStarModelSampleMaterialCount + ")");
+            logger.warn("materialTypeSanityCheck: FHIR material types: " + Util.orderedKeylistFromMap(fhirSampleMaterials));
+            logger.warn("materialTypeSanityCheck: converted FHIR material types: " + Util.orderedKeylistFromMap(convertedFhirSampleMaterials));
+            logger.warn("materialTypeSanityCheck: star model material types: " + Util.orderedKeylistFromMap(starModelSampleMaterials));
+            logger.warn("materialTypeSanityCheck: star model material fact count: " + starModelInputData.getFactCount());
         }
+    }
+
+    private static void diseaseSanityCheck(StarModelData starModelInputData) {
+        int diseaseCount = 0;
+        for (Map<String, String> factTable: starModelInputData.getFactTables())
+            if (factTable.containsKey("disease"))
+                diseaseCount++;
+        if (diseaseCount < starModelInputData.getFactTables().size())
+            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! disease count (" + diseaseCount + ") is different from fact table count (" + starModelInputData.getFactCount() + ")");
     }
 }

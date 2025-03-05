@@ -63,7 +63,6 @@ public abstract class DirectoryCalls {
     String url = urlCombine(baseUrl, endpoint);
     logger.debug("endpointExists: checking if endpoint exists, URL: " + url);
     HttpHead request = new HttpHead(url);
-    //HttpGet request = new HttpGet(url);
 
     try {
       HttpClientContext context = HttpClientContext.create();
@@ -101,14 +100,14 @@ public abstract class DirectoryCalls {
         HttpEntity httpEntity = response.getEntity();
         if (httpEntity == null)
           logger.warn("executeRequest: entity is null" );
-        result = EntityUtils.toString(httpEntity);
+        else
+          result = EntityUtils.toString(httpEntity);
       } else if (response.getStatusLine().getStatusCode() == 404) {
         logger.warn("executeRequest: entity get HTTP error (not found): URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode());
       } else {
         logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode() + response.getStatusLine().getReasonPhrase());
-        for (Header header: request.getAllHeaders()) {
+        for (Header header: request.getAllHeaders())
           logger.warn("executeRequest: header: " + header.toString());
-        }
       }
     } catch (IOException e) {
       logger.warn("executeRequest: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));

@@ -120,7 +120,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     Map<String, Object> resultMap = convertJsonObjectToMap(result);
 
     if (resultMap.isEmpty()) {
-      logger.warn("runGraphqlQueryReturnList: no matching data found");
+      logger.debug("runGraphqlQueryReturnList: no matching data found");
       return new ArrayList<>();
     }
     if (resultMap.keySet().size() > 1) {
