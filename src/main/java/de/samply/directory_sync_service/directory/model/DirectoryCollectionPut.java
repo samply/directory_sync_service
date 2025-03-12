@@ -143,7 +143,7 @@ public class DirectoryCollectionPut extends HashMap {
             Entity entity = entities.get(0);
             countryCode = entity.getCountry();
             if (countryCode == null || countryCode.isEmpty()) {
-                logger.warn("getCountryCode: countryCode from first entity is null or empty, using EricId: " + entity.getId());
+                logger.info("getCountryCode: countryCode from first entity is null or empty, using EricId: " + entity.getId());
                 String entityId = entity.getId();
                 logger.debug("getCountryCode: entityId: " + entityId);
                 Optional<BbmriEricId> bbmriEricId = BbmriEricId.valueOf(entityId);

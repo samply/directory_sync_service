@@ -112,6 +112,7 @@ public class PopulateStarModelInputData {
       starModelInputData.addInputRow(collectionId, starModelInputData.newInputRow(row, diagnosis));
   }
 
+  int nullAgeCounter = 0;
   /**
    * Determines the patient's age at the time of specimen collection.
    *
@@ -128,7 +129,8 @@ public class PopulateStarModelInputData {
     try {
       Date birthDate = patient.getBirthDate();
       if (birthDate == null) {
-        logger.warn("determinePatientAgeAtCollection: patient.getBirthDate() is null, returning null.");
+        if (nullAgeCounter++ < 5)
+          logger.warn("determinePatientAgeAtCollection: patient.getBirthDate() is null, returning null.");
         return null;
       }
       // Get the patient's birth date as a LocalDate object

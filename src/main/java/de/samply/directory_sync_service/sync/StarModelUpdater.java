@@ -119,6 +119,7 @@ public class StarModelUpdater {
         logger.debug("sampleCountSanityCheck: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
     }
 
+    static int starModelMaterialTypeMissingCount = 0;
     /**
      * Sanity check: do the material types in the star model match the material types in the FHIR store?
      *
@@ -143,7 +144,8 @@ public class StarModelUpdater {
                     totalStarModelSampleMaterialCount++;
                     starModelSampleMaterials.put(sampleMaterial, sampleMaterial);
                 }
-            }
+            } else if (starModelMaterialTypeMissingCount++ < 5)
+                logger.warn("materialTypeSanityCheck: fact table does not contain sample_type: " + Util.jsonStringFomObject(factTable));
         if (convertedFhirSampleMaterials.size() != totalStarModelSampleMaterialCount && starModelInputData.getFactTables().size() != 0) {
             logger.warn("materialTypeSanityCheck: !!!!!!!!!!!!!!!!!!!!! converted FHIR material type count (" + convertedFhirSampleMaterials.size() + ") is different from star model material type count (" + totalStarModelSampleMaterialCount + ")");
             logger.warn("materialTypeSanityCheck: FHIR material types: " + Util.orderedKeylistFromMap(fhirSampleMaterials));

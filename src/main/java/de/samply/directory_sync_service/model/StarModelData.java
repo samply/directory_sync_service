@@ -156,6 +156,7 @@ public class StarModelData {
             put("hist_loc", FhirToDirectoryAttributeConverter.convertDiagnosis(histLoc));
         }
 
+        int ageAtPrimaryDiagnosisCounter = 0;
         /**
          * Sets the age at primary diagnosis attribute for the input row.
          * 
@@ -163,7 +164,8 @@ public class StarModelData {
          */
         public void setAgeAtPrimaryDiagnosis(String age) {
             if (age == null) {
-                logger.warn("setAgeAtPrimaryDiagnosis: age is null, ignoring.");
+                if (ageAtPrimaryDiagnosisCounter++ < 5)
+                    logger.warn("setAgeAtPrimaryDiagnosis: age is null, ignoring.");
                 return;
             }
             put("age_at_primary_diagnosis", age);

@@ -860,9 +860,10 @@ public class DirectoryApiGraphql extends DirectoryApi {
       }
     }
 
-    // We are scraping the barrel here. Take the database that is not "pet store", "_SYSTEM_" or "DirectoryOntologies".
+    // We are scraping the barrel here. Pick a database whose name is not an already known
+    // non-ERIC database.
     for (String db : databases) {
-      if (!db.equals("pet store") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) {
+      if (!db.equals("pet store") && !db.equals("TestPet") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) { // non-ERIC DBs
         logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
         databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);

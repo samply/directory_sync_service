@@ -39,6 +39,7 @@ import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Extension;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Organization;
@@ -435,15 +436,30 @@ public class FhirApi {
       if (!conditionsPresentInFhirStore)
         return conditionCodes;
 
-      // Search for Condition resources by patient ID
-      Bundle bundle = fhirClient
-        .search()
-        .forResource(Condition.class)
-        .where(Condition.SUBJECT.hasId(patient.getIdElement()))
-        .returnBundle(Bundle.class)
-        .execute();
-      if (!bundle.hasEntry())
+      // Build the full reference like "Patient/{id}"
+      IdType patientIdElement = patient.getIdElement();
+      String idPart = patientIdElement.getIdPart();
+      if (idPart == null) {
+        logger.warn("extractConditionCodesFromPatient: patient has no id, returning empty list.");
         return conditionCodes;
+      }
+      String patientReference = "Patient/" + idPart;
+
+      logger.debug("extractConditionCodesFromPatient: patient id is " + patientReference);
+
+      // Search for Condition resources by patient reference
+      Bundle bundle = fhirClient
+              .search()
+              .forResource(Condition.class)
+              .where(Condition.SUBJECT.hasId(patientReference)) // Full reference here
+              .returnBundle(Bundle.class)
+              .execute();
+
+
+      if (!bundle.hasEntry()) {
+        logger.warn("extractConditionCodesFromPatient: bundle has no entries, returning empty list.");
+        return conditionCodes;
+      }
 
       // Create a stream of Condition resources from the Bundle
       Stream<Condition> conditionStream = bundle.getEntry().stream()
@@ -699,6 +715,8 @@ public class FhirApi {
             .distinct()
             .collect(Collectors.toList());
 
+    logger.debug("fetchDiagnoses: number of diagnoses from specimens: " + diagnoses.size());
+
     // Get diagnoses from Patients
     Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
     List<String> patientDiagnoses = patientsByCollection.values().stream()
@@ -707,6 +725,8 @@ public class FhirApi {
             .flatMap(List::stream)
             .distinct()
             .collect(Collectors.toList());
+
+    logger.debug("fetchDiagnoses: patientsByCollection.size(): " + patientsByCollection.size());
 
     // Combine diagnoses from specimens and patients, ensuring that there
     // are no duplicates.
@@ -717,6 +737,7 @@ public class FhirApi {
     return diagnoses;
   }
 
+  int materialWarnCount = 0;
   /**
    * Extracts unique material codes from a list of specimens.
    *
@@ -732,9 +753,15 @@ public class FhirApi {
     Set<String> materialSet = new HashSet<>();
     for (Specimen specimen : specimenList) {
       CodeableConcept codeableConcept = specimen.getType();
-      if (codeableConcept != null && codeableConcept.getCoding().size() > 0) {
-        materialSet.add(codeableConcept.getCoding().get(0).getCode());
-      }
+      if (codeableConcept != null) {
+        if (codeableConcept.getCoding().size() > 0)
+          materialSet.add(codeableConcept.getCoding().get(0).getCode());
+        else if (codeableConcept.hasText())
+          materialSet.add(codeableConcept.getText());
+        else if (materialWarnCount++ < 5)
+          logger.warn("extractMaterialsFromSpecimenList: no material in type for specimen: " + specimen.getId());
+      } else if (materialWarnCount++ < 5)
+        logger.warn("extractMaterialsFromSpecimenList: no type for specimen: " + specimen.getId());
     }
 
     return new ArrayList<>(materialSet);

@@ -192,8 +192,11 @@ public class DirectoryCollectionGet extends HashMap {
             }
         }
 
-        if (item == null)
+        if (item == null) {
             logger.warn("DirectoryCollectionGet.getItem: could not find item with id " + id);
+            logger.warn("DirectoryCollectionGet.getItem: known items: " + Util.jsonStringFomObject(items));
+
+        }
 
         return item;
     }
