@@ -43,7 +43,6 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
       convertAgeHigh(directoryCollectionPut, fhirCollection);
       convertMaterials(directoryCollectionPut, fhirCollection);
       convertStorageTemperatures(directoryCollectionPut, fhirCollection);
-      // convertDiagnosisAvailableEmpty(directoryCollectionPut, fhirCollection);
       convertDiagnosisAvailable(directoryCollectionPut, fhirCollection);
     } catch(Exception e) {
         logger.error("Problem converting FHIR attributes to Directory attributes. " + Util.traceFromException(e));
@@ -61,7 +60,7 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
       directoryCollectionPut.setOrderOfMagnitude(id, (int) Math.floor(Math.log10(size)));
   }
 
-  public static void convertNumberOfDonors(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertNumberOfDonors(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
       String id = fhirCollection.getId();
       Integer size = fhirCollection.getNumberOfDonors();
       directoryCollectionPut.setNumberOfDonors(id, size);
@@ -69,7 +68,7 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
       directoryCollectionPut.setOrderOfMagnitudeDonors(id, (int) Math.floor(Math.log10(size)));
   }
 
-  public static void convertSex(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertSex(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
       String id = fhirCollection.getId();
       List<String> sex = fhirCollection.getSex();
 
@@ -82,21 +81,21 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
       directoryCollectionPut.setSex(id, ucSex);
   }
 
-  public static void convertAgeLow(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertAgeLow(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
       String id = fhirCollection.getId();
       Integer ageLow = fhirCollection.getAgeLow();
       // No conversion needed
       directoryCollectionPut.setAgeLow(id, ageLow);
   }
 
-  public static void convertAgeHigh(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertAgeHigh(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
       String id = fhirCollection.getId();
       Integer ageHigh = fhirCollection.getAgeHigh();
       // No conversion needed
       directoryCollectionPut.setAgeHigh(id, ageHigh);
   }
 
-  public static void convertMaterials(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertMaterials(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
       String id = fhirCollection.getId();
       List<String> materials = fhirCollection.getMaterials();
 
@@ -112,7 +111,7 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
       directoryCollectionPut.setMaterials(id, directoryMaterials);
   }
 
-  public static void convertStorageTemperatures(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertStorageTemperatures(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
     String id = fhirCollection.getId();
     List<String> storageTemperatures = fhirCollection.getStorageTemperatures();
 
@@ -128,7 +127,7 @@ public class FhirCollectionToDirectoryCollectionPutConverter {
     directoryCollectionPut.setStorageTemperatures(id, directoryStorageTemperatures);
   }
 
-    public static void convertDiagnosisAvailable(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
+  private static void convertDiagnosisAvailable(DirectoryCollectionPut directoryCollectionPut, FhirCollection fhirCollection) {
     String id = fhirCollection.getId();
     List<String> diagnoses = fhirCollection.getDiagnosisAvailable();
 

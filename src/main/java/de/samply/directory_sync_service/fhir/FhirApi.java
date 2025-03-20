@@ -145,6 +145,12 @@ public class FhirApi {
     return organizations;
   }
 
+  /**
+   * Retrieves a list of all known collections.
+   *
+   * @return A list of {@link Organization} objects representing biobank collections,
+   *         or {@code null} if an error occurs.
+   */
   private List<Organization> listAllCollections() {
     // List all organizations with the specified biobank profile URI
     Bundle organizationBundle = listAllOrganizations(COLLECTION_PROFILE_URI);
@@ -162,6 +168,15 @@ public class FhirApi {
     return organizations;
   }
 
+  /**
+   * Retrieves all organizations that conform to a given FHIR profile URI.
+   *
+   * <p>This method performs a FHIR search query to find organizations matching the provided profile URI.
+   * If an exception occurs during the search, it logs the error and returns {@code null}.
+   *
+   * @param profileUri The URI of the FHIR profile used to filter the organizations.
+   * @return A {@link Bundle} containing the matching organizations, or {@code null} if an error occurs.
+   */
   private Bundle listAllOrganizations(String profileUri) {
     try {
       return (Bundle) fhirClient.search().forResource(Organization.class)
@@ -173,6 +188,17 @@ public class FhirApi {
     }
   }
 
+  /**
+   * Extracts a list of {@link Organization} resources from a given FHIR {@link Bundle}.
+   *
+   * <p>This method filters the entries in the bundle, ensuring they are of type {@link Organization}
+   * and that they conform to the specified profile URL. The extracted organizations are returned
+   * as a list.
+   *
+   * @param bundle The FHIR {@link Bundle} containing organization resources.
+   * @param profileUrl The expected profile URL to filter organizations.
+   * @return A list of {@link Organization} objects matching the specified profile.
+   */
   private static List<Organization> extractOrganizations(Bundle bundle, String profileUrl) {
     return bundle.getEntry().stream()
         .map(BundleEntryComponent::getResource)
@@ -631,6 +657,13 @@ public class FhirApi {
     return collectionId;
   }
 
+  /**
+   * Extracts and returns any diagnoses in the extension to the specimen with the
+   * URI SAMPLE_DIAGNOSIS_URI.
+   *
+   * @param specimen
+   * @return
+   */
   public List<String> extractDiagnosesFromSpecimen(Specimen specimen) {
     return extractExtensionElementValuesFromSpecimen(specimen, SAMPLE_DIAGNOSIS_URI);
   }
@@ -705,6 +738,18 @@ public class FhirApi {
     return new ArrayList<FhirCollection>(fhirCollectionMap.values());
   }
 
+  /**
+   * Updates a map of {@link FhirCollection} entities with specimen-related data.
+   *
+   * <p>This method iterates over the provided map of specimen lists, grouped by collection key.
+   * For each key, it retrieves or creates a corresponding {@link FhirCollection}, then updates its attributes
+   * based on the specimens in the list, such as size, materials, storage temperatures, and diagnosis availability.
+   *
+   * @param entities A map of existing {@link FhirCollection} entities, keyed by collection ID.
+   *                 If a collection does not exist, a new one is created.
+   * @param specimensByCollection A map where each key represents a collection ID,
+   *                              and the value is a list of {@link Specimen} objects associated with that collection.
+   */
   private void updateFhirCollectionsWithSpecimenData(Map<String,FhirCollection> entities, Map<String, List<Specimen>> specimensByCollection) {
     for (String key: specimensByCollection.keySet()) {
       List<Specimen> specimenList = specimensByCollection.get(key);
@@ -718,6 +763,18 @@ public class FhirApi {
     }
   }
 
+  /**
+   * Updates a map of {@link FhirCollection} entities with patient-related data.
+   *
+   * <p>This method iterates over the provided map of patient lists, grouped by collection key.
+   * For each key, it retrieves or creates a corresponding {@link FhirCollection}, then updates its attributes
+   * based on the patients in the list, such as number of donors, sex distribution, age range, and diagnoses.
+   *
+   * @param entities A map of existing {@link FhirCollection} entities, keyed by collection ID.
+   *                 If a collection does not exist, a new one is created.
+   * @param patientsByCollection A map where each key represents a collection ID,
+   *                              and the value is a list of {@link Patient} objects associated with that collection.
+   */
   private void updateFhirCollectionsWithPatientData(Map<String,FhirCollection> entities, Map<String, List<Patient>> patientsByCollection) {
     for (String key: patientsByCollection.keySet()) {
       List<Patient> patientList = patientsByCollection.get(key);
@@ -726,8 +783,55 @@ public class FhirApi {
       fhirCollection.setSex(extractSexFromPatientList(patientList));
       fhirCollection.setAgeLow(extractAgeLowFromPatientList(patientList));
       fhirCollection.setAgeHigh(extractAgeHighFromPatientList(patientList));
+      fhirCollection.setDiagnosisAvailable(extractDiagnosesFromPatientList(patientList));
       entities.put(key, fhirCollection);
     }
+  }
+
+  /**
+   * Extracts a list of unique diagnosis codes from a given list of patients.
+   *
+   * <p>This method searches for {@link Condition} resources that reference each patient in the provided list.
+   * If a {@link Condition} is found, it extracts the diagnosis codes from the {@link CodeableConcept}
+   * and ensures uniqueness using a {@link Set}. The final list of diagnosis codes is returned.
+   *
+   * @param patientList The list of {@link Patient} resources from which to extract diagnoses.
+   * @return A {@link List} of unique diagnosis codes as {@link String} values.
+   *         If no diagnoses are found, returns an empty list.
+   */
+  private List<String> extractDiagnosesFromPatientList(List<Patient> patientList) {
+    Set<String> diagnosisSet = new HashSet<>(); // Use Set to ensure uniqueness
+
+    for (Patient patient : patientList) {
+      // Construct the reference string for the patient
+      String patientReference = "Patient/" + patient.getIdElement().getIdPart();
+
+      // Fetch conditions associated with the patient
+      Bundle conditionBundle = fhirClient
+              .search()
+              .forResource(Condition.class)
+              .where(Condition.SUBJECT.hasId(patientReference))
+              .returnBundle(Bundle.class)
+              .execute();
+
+      // Process conditions
+      for (Bundle.BundleEntryComponent entry : conditionBundle.getEntry()) {
+        if (entry.getResource() instanceof Condition) {
+          Condition condition = (Condition) entry.getResource();
+
+          // Extract diagnosis code
+          if (condition.hasCode() && condition.getCode().hasCoding()) {
+            for (Coding coding : condition.getCode().getCoding()) {
+              if (coding.hasCode()) {
+                diagnosisSet.add(coding.getCode());
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return new ArrayList<>(diagnosisSet);
   }
 
   /**
@@ -810,6 +914,15 @@ public class FhirApi {
     return new ArrayList<>(materialSet);
   }
 
+  /**
+   * Extracts a list of unique gender values from a list of {@link Patient} objects.
+   *
+   * <p>The method filters out patients with a null gender, retrieves the gender as a string,
+   * and returns a list of unique gender values.
+   *
+   * @param patients The list of {@link Patient} objects from which to extract gender information.
+   * @return A list of unique gender values as strings.
+   */
   private List<String> extractSexFromPatientList(List<Patient> patients) {
     return patients.stream()
             .filter(patient -> Objects.nonNull(patient.getGenderElement())) // Filter out patients with null gender
@@ -817,6 +930,15 @@ public class FhirApi {
             .collect(Collectors.toSet()).stream().collect(Collectors.toList()); // Collect the results into a new list
   }
 
+  /**
+   * Determines the lowest age among a list of {@link Patient} objects.
+   *
+   * <p>The method filters out patients with a null birthdate, computes their ages using {@link #determinePatientAge(Patient)},
+   * and returns the minimum age found. If no valid age is found, it returns -1.
+   *
+   * @param patients The list of {@link Patient} objects.
+   * @return The lowest age found, or -1 if no valid ages are present.
+   */
   private Integer extractAgeLowFromPatientList(List<Patient> patients) {
     return patients.stream()
             // Filter out patients with null age
@@ -829,6 +951,15 @@ public class FhirApi {
             .orElse(-1);
   }
 
+  /**
+   * Determines the highest age among a list of {@link Patient} objects.
+   *
+   * <p>The method filters out patients with a null birthdate, computes their ages using {@link #determinePatientAge(Patient)},
+   * and returns the maximum age found. If no valid age is found, it returns -1.
+   *
+   * @param patients The list of {@link Patient} objects.
+   * @return The highest age found, or -1 if no valid ages are present.
+   */
   private Integer extractAgeHighFromPatientList(List<Patient> patients) {
     return patients.stream()
             // Filter out patients with null age
@@ -841,6 +972,15 @@ public class FhirApi {
             .orElse(-1);
   }
 
+  /**
+   * Determines the age of a given {@link Patient} based on their birth date.
+   *
+   * <p>The method calculates the difference between the current date and the patient's birth date in years.
+   * If the current date is before the patient's birthday in the current year, the age is adjusted accordingly.
+   *
+   * @param patient The {@link Patient} object whose age is to be determined.
+   * @return The patient's age in years, or {@code null} if the birth date is not available.
+   */
   private Integer determinePatientAge(Patient patient) {
     if (!patient.hasBirthDate())
       return null;
