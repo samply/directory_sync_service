@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.directory;
 
+import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,19 +57,32 @@ public class CreateFactTablesFromStarModelInputData {
      * @return The final fact table as a list of maps containing key-value pairs.
      */
     private static List<Map<String, String>> createFactTableFinal(String collectionId, int minDonors, int maxFacts, List<Map<String, String>> patientSamples) {
+        logger.debug("createFactTableFinal: patientSamples.size() " + patientSamples.size());
+
         // Transform patient sample data by standardizing fields (e.g., age range, sex, sample material)
         // and adding collection-specific metadata. This returns a list where each map represents a transformed row.
         List<Map<String, String>> patientSamplesFacts = transformData(patientSamples, collectionId);
+
+        logger.debug("createFactTableFinal: patientSamplesFacts.size() " + patientSamplesFacts.size());
+        // Print out first and last elements of patientSamplesFacts as JSON
+        if (patientSamplesFacts.size() > 0) {
+            logger.debug("createFactTableFinal: patientSamplesFacts #0: " + Util.jsonStringFomObject(patientSamplesFacts.get(0)));
+            logger.debug("createFactTableFinal: patientSamplesFacts #" + (patientSamplesFacts.size()-1) + ": " +  Util.jsonStringFomObject(patientSamplesFacts.get(patientSamplesFacts.size() - 1)));
+        }
 
         // Generate an intermediate fact table by grouping the transformed data and calculating
         // unique counts for patients and samples based on attributes like sex, disease, and age range.
         // The result is a map where keys are attribute combinations and values are maps of counts.
         Map<String, Map<String, Long>> factTable = generateFactTable(patientSamplesFacts);
 
+        logger.debug("createFactTableFinal: factTable.size() " + factTable.size());
+
         // Finalize the fact table by filtering out entries that do not meet the minimum donor requirement
         // and truncating the list if it exceeds the specified maximum number of facts. Additional metadata
         // and unique identifiers are added to each fact entry.
         List<Map<String, String>> factTableFinal = generateFactTableFinal(factTable, collectionId, minDonors, maxFacts);
+
+        logger.debug("createFactTableFinal: factTableFinal.size() " + factTableFinal.size());
 
         return factTableFinal;
     }
@@ -179,9 +193,9 @@ public class CreateFactTablesFromStarModelInputData {
      */
     private static String createFactIdStub(String collectionId) {
         return "bbmri-eric:factID:" // All fact IDs must start with this (mandatory).
-                // Snip "bbmri-eric:ID:" from collection ID and replace : with _
-                + collectionId.substring(14).replaceAll(":", "_")
-                + "_";
+                // Snip "bbmri-eric:ID:" from collection ID
+                + collectionId.substring(14)
+                + ":";
     }
 
     /**
@@ -191,7 +205,7 @@ public class CreateFactTablesFromStarModelInputData {
      * @return The age range as a string.
      */
     private static String transformAgeRange(String ageStr) {
-        int age = ageStr != null ? Integer.parseInt(ageStr) : -1;
+        int age = (ageStr != null && !ageStr.isEmpty()) ? Integer.parseInt(ageStr) : -1;
         if (age < 0) {
             return "Unknown";
         } else if (age == 0) {

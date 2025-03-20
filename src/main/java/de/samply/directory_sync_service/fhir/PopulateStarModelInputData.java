@@ -3,9 +3,12 @@ package de.samply.directory_sync_service.fhir;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -75,8 +78,14 @@ public class PopulateStarModelInputData {
       return;
     }
 
-    for (Specimen specimen: specimens)
+    int specimenCounter = 0;
+    for (Specimen specimen: specimens) {
       populateSpecimen(starModelInputData, collectionId, specimen);
+      if (specimenCounter % 1000 == 0) {
+        logger.debug("populateCollection: specimenCounter: " + specimenCounter + " of " + specimens.size());
+      }
+      specimenCounter++;
+    }
   }
 
   /**
@@ -100,7 +109,7 @@ public class PopulateStarModelInputData {
     String material = extractMaterialFromSpecimen(specimen);
     String patientId = patient.getIdElement().getIdPart();
     String sex = patient.getGender().getDisplay();
-    String age = determinePatientAgeAtCollection(patient, specimen);
+    String age = determinePatientAgeAtCollection(patient);
 
     // Create a new Row object to hold data extracted from patient and specimen
     StarModelData.InputRow row = starModelInputData.newInputRow(collectionId, material, patientId, sex, age);
@@ -114,33 +123,34 @@ public class PopulateStarModelInputData {
 
   int nullAgeCounter = 0;
   /**
-   * Determines the patient's age at the time of specimen collection.
+   * Determines the patient's age at the time of first specimen collection.
    *
    * @param patient The FHIR Patient object from which to retrieve the birth date.
-   * @param specimen The FHIR Specimen object from which to extract the collection date.
    * @return The patient's age at the time of specimen collection in years, or null if the age calculation fails.
-   *
-   * @throws NullPointerException if either patient or specimen is null.
-   * @throws RuntimeException if an unexpected error occurs during the age calculation.
    */
-  private String determinePatientAgeAtCollection(Patient patient, Specimen specimen) {
+  private String determinePatientAgeAtCollection(Patient patient) {
     String age = null;
 
     try {
       Date birthDate = patient.getBirthDate();
       if (birthDate == null) {
-        if (nullAgeCounter++ < 5)
-          logger.warn("determinePatientAgeAtCollection: patient.getBirthDate() is null, returning null.");
-        return null;
+        birthDate = patient.getBirthDateElement().getValue();
+        if (birthDate == null) {
+          if (nullAgeCounter++ < 5) { // Don't show this warning too many times
+            logger.warn("determinePatientAgeAtCollection: patient.getBirthDate() is null, returning null.");
+            logger.warn("determinePatientAgeAtCollection: patient: " + Util.jsonStringFomObject(patient));
+          }
+          return null;
+        }
       }
+
       // Get the patient's birth date as a LocalDate object
       LocalDate localBirthDate = birthDate.toInstant()
               .atZone(java.time.ZoneId.systemDefault())
               .toLocalDate();
-
-      LocalDate collectionDate = extractCollectionLocalDateFromSpecimen(specimen);
+      LocalDate collectionDate = getEarliestCollectionDate(patient);
       if (collectionDate == null) {
-        logger.warn("determinePatientAgeAtCollection: extractCollectionLocalDateFromSpecimen is null, returning null.");
+        logger.warn("determinePatientAgeAtCollection: earliest specimen collection date is null");
         return null;
       }
 
@@ -161,6 +171,42 @@ public class PopulateStarModelInputData {
 
     return age;
   }
+
+  Map <Patient,LocalDate> patientEarliestCollectionDateMap = new HashMap<>();
+  /**
+   * Retrieves the earliest specimen collection date for a given patient.
+   *
+   * <p>This method queries the underlying FHIR API to find all {@link Specimen}
+   * resources that reference the specified {@link Patient}. For each specimen,
+   * it extracts a collection date using {@code extractCollectionLocalDateFromSpecimen}.
+   * Any specimens that return a null collection date are skipped. Among the
+   * remaining specimen dates, the method selects and returns the earliest one
+   * according to natural ordering (i.e. chronologically).
+   *
+   * <p>If no specimens with a valid collection date are found, the method returns
+   * {@code null}.
+   *
+   * @param patient the patient whose specimens are to be searched; must not be {@code null}
+   * @return the earliest {@link LocalDate} found among this patient's specimens, or {@code null}
+   *         if no valid collection date is available
+   */
+  private LocalDate getEarliestCollectionDate(Patient patient) {
+    // This method is slow, so use cached results if available.
+    if (patientEarliestCollectionDateMap.containsKey(patient))
+      return patientEarliestCollectionDateMap.get(patient);
+
+    // Loop over all specimens associated with the patient and find the earliest collection date.
+    LocalDate earliestCollectionDate = fhirApi.findAllSpecimensWithReferencesToPatient(patient).stream()
+            .flatMap(specimen ->
+                    Optional.ofNullable(extractCollectionLocalDateFromSpecimen(specimen))
+                            .stream()
+            )
+            .min(Comparator.naturalOrder())
+            .orElse(null);
+    patientEarliestCollectionDateMap.put(patient,earliestCollectionDate); // cache the result
+    return earliestCollectionDate;
+  }
+
 
   /**
    * Extracts the collection date as a LocalDate from the given FHIR Specimen.

@@ -18,7 +18,8 @@ ds:
     max_facts: "-1"
     mock: "False"
     only_login: "False"
-
+    write_to_file: "False"
+    output_directory: "/tmp"
 # HAPI FHIR floods the logs at the INFO level, so cut off at WARN
 logging:
   level:

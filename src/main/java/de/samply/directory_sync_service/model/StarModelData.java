@@ -54,6 +54,7 @@ public class StarModelData {
 
     // *** Input data for the star model.
 
+    int ageAtPrimaryDiagnosisWarningCounter = 0;
     /**
      * Represents an input row of the inputData table, with attributes commonly associated with medical data.
      * Extends the HashMap class to provide a key-value mapping for attributes.
@@ -156,7 +157,6 @@ public class StarModelData {
             put("hist_loc", FhirToDirectoryAttributeConverter.convertDiagnosis(histLoc));
         }
 
-        int ageAtPrimaryDiagnosisCounter = 0;
         /**
          * Sets the age at primary diagnosis attribute for the input row.
          * 
@@ -164,7 +164,7 @@ public class StarModelData {
          */
         public void setAgeAtPrimaryDiagnosis(String age) {
             if (age == null) {
-                if (ageAtPrimaryDiagnosisCounter++ < 5)
+                if (ageAtPrimaryDiagnosisWarningCounter++ < 5) // Don't print too many warnings
                     logger.warn("setAgeAtPrimaryDiagnosis: age is null, ignoring.");
                 return;
             }

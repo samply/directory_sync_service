@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The DirectoryApiRest class provides an interface for interacting with the Directory service.
+ * The DirectoryApiGraphql class provides an interface for interacting with the Directory service.
  * This class allows for fetching and updating biobank and collection information, managing star models,
  * and performing various validation and correction operations.
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
@@ -713,8 +713,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
         logger.warn("deleteFactById: result is null");
         return false;
       }
-
-      logger.debug("deleteFactById: result: " + result);
     } catch (Exception e) {
       logger.warn("deleteFactById: Exception during fact deletion: " + Util.traceFromException(e));
       return false;

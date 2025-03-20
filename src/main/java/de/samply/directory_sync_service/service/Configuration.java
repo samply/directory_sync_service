@@ -47,4 +47,9 @@ public class Configuration {
     @Value("${ds.directory.only_login}")
     private String directoryOnlyLogin;
 
+    @Value("${ds.directory.write_to_file}")
+    private String directoryWriteToFile;
+
+    @Value("${ds.directory.output_directory}")
+    private String directoryOutputDirectory;
 }

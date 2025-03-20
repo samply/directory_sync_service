@@ -2,6 +2,7 @@ package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
+import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
@@ -43,13 +44,13 @@ public class Sync {
      *
      * @throws IOException
      */
-    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
+    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory) {
         logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting");
         boolean success = false;
         int retryNum;
         for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             logger.info("syncWithDirectoryFailover: +++++++++++++++++++ trying sync, attempt " + retryNum + " of " + retryMax);
-            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin)) {
+            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory)) {
                 success = true;
                 break;
             }
@@ -69,20 +70,25 @@ public class Sync {
         return success;
     }
 
-    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin) {
+    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory) {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses = null;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
-        DirectoryApi directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+        DirectoryApi directoryApi;
+        if (directoryWriteToFile) {
+            directoryApi = new DirectoryApiWriteToFile(directoryOutputDirectory);
+        } else {
+            directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 
-        // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
-        if (!directoryApi.login()) {
-            logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
-            directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+            // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
             if (!directoryApi.login()) {
-                logger.warn("syncWithDirectory: there was a problem during login to Directory");
-                return false;
+                logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
+                directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+                if (!directoryApi.login()) {
+                    logger.warn("syncWithDirectory: there was a problem during login to Directory");
+                    return false;
+                }
             }
         }
 

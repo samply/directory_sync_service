@@ -302,8 +302,6 @@ public class FhirApi {
             result.get(collectionId).add(specimen);
         }
 
-        logger.debug("getAllSpecimensAsMap: Added " + bundle.getEntry().size() + " entries to result, result size: " + result.size());
-
         // Check if there are more pages
         if (bundle.getLink(Bundle.LINK_NEXT) != null)
             // Use ITransactionTyped to load the next page
@@ -373,18 +371,66 @@ public class FhirApi {
 
     return patients;
   }
-  private List<Patient> extractPatientListFromSpecimenList_old(List<Specimen> specimens) {
-    List<Patient> patients = specimens.stream()
-            // filter out specimens without a patient reference
-            .filter(specimen -> specimen.hasSubject())
-            // Find a Patient object corresponding to the specimen's subject
-            .map(specimen -> extractPatientFromSpecimen(specimen))
-            // Avoid duplicating the same patient
-            .filter(distinctBy(Patient::getId))
-            // collect the patients into a new list
-            .collect(Collectors.toList());
 
-    return patients;
+  /**
+   * Finds all {@link Specimen} resources that reference the given {@link Patient}.
+   *
+   * <p>This method performs a FHIR search query to retrieve all Specimen resources
+   * where the {@code subject} field contains a reference to the specified Patient.
+   * It handles paginated results by iterating through multiple response bundles.
+   *
+   * @param patient The {@link Patient} resource whose related Specimen resources should be retrieved.
+   *               Must be a valid Patient object with an assigned FHIR ID.
+   * @return A {@link List} of {@link Specimen} objects that reference the given Patient.
+   *         If no Specimen resources are found, an empty list is returned.
+   */
+  public List<Specimen> findAllSpecimensWithReferencesToPatient(Patient patient) {
+    List<Specimen> result = new ArrayList<>();
+    try {
+      // Form the proper reference value. Using getIdElement() is usually safer.
+      String patientReference = "Patient/" + patient.getIdElement().getIdPart();
+
+      // Initiate the search
+      Bundle bundle = fhirClient
+              .search()
+              .forResource(Specimen.class)
+              // Use a search method that matches the patient reference properly.
+              .where(Specimen.SUBJECT.hasId(patientReference))
+              .returnBundle(Bundle.class)
+              .execute();
+
+      // Process pages
+      while (bundle != null) {
+        if (bundle.hasEntry()) {
+          for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+            if (entry.getResource() instanceof Specimen) {
+              result.add((Specimen) entry.getResource());
+            }
+          }
+        }
+        // Check if there's a next page link and, if so, load it.
+        bundle = getNextPage(bundle);
+      }
+    } catch (Exception e) {
+      System.err.println("Error during FHIR search: " + Util.traceFromException(e));
+    }
+    return result;
+  }
+
+  /**
+   * Helper method to get the next page of a bundle, if it exists.
+   *
+   * @param bundle
+   * @return
+   */
+  private Bundle getNextPage(Bundle bundle) {
+    // TODO: This is a simplistic implementation; it might be better to use fhirClient.loadPage() or follow the next link yourself.
+    Bundle nextBundle = null;
+    Bundle.BundleLinkComponent nextLink = bundle.getLink("next");
+    if (nextLink != null && nextLink.getUrl() != null) {
+      nextBundle = fhirClient.loadPage().next(bundle).execute();
+    }
+    return nextBundle;
   }
 
   /**
@@ -445,8 +491,6 @@ public class FhirApi {
       }
       String patientReference = "Patient/" + idPart;
 
-      logger.debug("extractConditionCodesFromPatient: patient id is " + patientReference);
-
       // Search for Condition resources by patient reference
       Bundle bundle = fhirClient
               .search()
@@ -454,7 +498,6 @@ public class FhirApi {
               .where(Condition.SUBJECT.hasId(patientReference)) // Full reference here
               .returnBundle(Bundle.class)
               .execute();
-
 
       if (!bundle.hasEntry()) {
         logger.warn("extractConditionCodesFromPatient: bundle has no entries, returning empty list.");

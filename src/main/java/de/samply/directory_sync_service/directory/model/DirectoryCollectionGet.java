@@ -39,8 +39,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getCountryId(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getCountryId: item is null for id: " + id);
+            return "";
+        }
 
         if (!getItem(id).containsKey("country"))
             return "";
@@ -48,8 +50,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getContactId(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getContactId: item is null for id: " + id);
+            return "";
+        }
 
         if (!getItem(id).containsKey("contact"))
             return "";
@@ -57,8 +61,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getBiobankId(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getBiobankId: item is null for id: " + id);
+            return "";
+        }
 
         if (!getItem(id).containsKey("biobank"))
             return "";
@@ -66,8 +72,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public List<String> getTypeIds(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getTypeIds: item is null for id: " + id);
+            return new ArrayList<String>();
+        }
 
         if (!getItem(id).containsKey("type"))
             return new ArrayList<String>();
@@ -88,8 +96,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public List<String> getDataCategoryIds(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getDataCategoryIds: item is null for id: " + id);
+            return new ArrayList<String>();
+        }
 
         if (!getItem(id).containsKey("data_categories"))
             return new ArrayList<String>();
@@ -110,8 +120,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public List<String> getNetworkIds(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getNetworkIds: item is null for id: " + id);
+            return new ArrayList<String>();
+        }
 
         if (!getItem(id).containsKey("network"))
             return new ArrayList<String>();
@@ -125,11 +137,8 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getName(String id) {
-        if (getItem(id) == null)
-            logger.warn("getName: item is null for id: " + id);
-
         if (getItem(id) == null) {
-            logger.warn("getName: item is null for id: " + id + ", aborting");
+            logger.warn("getName: item is null for id: " + id);
             return "";
         }
         if (!getItem(id).containsKey("name")) {
@@ -140,8 +149,10 @@ public class DirectoryCollectionGet extends HashMap {
     }
 
     public String getDescription(String id) {
-        if (getItem(id) == null)
+        if (getItem(id) == null) {
             logger.warn("getDescription: item is null for id: " + id);
+            return "";
+        }
 
         if (!getItem(id).containsKey("description"))
             return "";

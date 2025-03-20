@@ -8,13 +8,10 @@ import de.samply.directory_sync_service.fhir.FhirApi;
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.StarModelData;
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -110,8 +107,6 @@ public class StarModelUpdater {
             if (factTable.containsKey("number_of_samples")) {
                 int numberOfSamples = Integer.parseInt(factTable.get("number_of_samples"));
                 totalStarModelSpecimenCount += numberOfSamples;
-                if (numberOfSamples > 1)
-                    logger.debug("sampleCountSanityCheck: number of samples: " + numberOfSamples);
             }
         if (totalFhirSpecimenCount < totalStarModelSpecimenCount)
             logger.warn("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
@@ -155,6 +150,11 @@ public class StarModelUpdater {
         }
     }
 
+    /**
+     * Sanity check: is the disease count less than the fact table count?
+     *
+     * @param starModelInputData
+     */
     private static void diseaseSanityCheck(StarModelData starModelInputData) {
         int diseaseCount = 0;
         for (Map<String, String> factTable: starModelInputData.getFactTables())
