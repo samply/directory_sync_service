@@ -99,6 +99,9 @@ public class Util {
             rows.add(String.join(delimiter, row));
         }
 
+        // Sort the list alphabetically, to make the return value more predictable.
+        Collections.sort(rows);
+
         // Combine header and rows into the final table
         rows.add(0, headerRow);
         return String.join("\n", rows);

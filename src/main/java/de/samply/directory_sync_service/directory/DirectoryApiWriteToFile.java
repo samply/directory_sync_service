@@ -23,16 +23,27 @@ import java.io.IOException;
  */
 public class DirectoryApiWriteToFile extends DirectoryApi {
   private String directoryOutputDirectory;
+  private String factTableString = null;
+  private String entityTableString = null;
 
   /**
    * Constructs a new DirectoryApiWriteToFile instance.
-   * If we are not in mocking mode, log in to the Directory.
+   * If directoryOutputDirectory is null, data will simply be placed into memory,
+   * and can be retrieved using the getFactTableString() and getEntityTableString() methods.
    *
    * @param directoryOutputDirectory
    */
   public DirectoryApiWriteToFile(String directoryOutputDirectory) {
     super(null, false, null, null);
     this.directoryOutputDirectory = directoryOutputDirectory;
+  }
+
+  public String getFactTableString() {
+    return factTableString;
+  }
+
+  public String getEntityTableString() {
+    return entityTableString;
   }
 
   /**
@@ -89,7 +100,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
 
     List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>();
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      logger.debug("DirectoryApiRest.updateEntities: about to update collection: " + collectionId);
+      logger.debug("updateEntities: about to update collection: " + collectionId);
 
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       cleanEntity(entity);
@@ -271,17 +282,23 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * and writes the resulting data to a file named "DirectoryCollections.csv". The file is stored
    * in the directory specified by {@code directoryOutputDirectory}.
    *
+   * If directoryOutputDirectory is null, this method only puts data into entityTableString
+   * without tring to write to a file.
+   *
    * @param entities A list of maps where each map represents an entity with key-value pairs.
    */
   private void writeEntitiesToFile(List<Map<String, Object>> entities) {
     logger.debug("writeEntitiesToFile: entities:\n" + Util.jsonStringFomObject(entities));
 
     List<String> columnNames = List.of("id", "country", "type", "data_categories", "order_of_magnitude", "size", "timestamp", "number_of_donors", "order_of_magnitude_donors", "sex", "diagnosis_available", "age_low", "age_high", "materials", "storage_temperatures");
-    String tableData = Util.convertListOfMapsToTable(entities, ";", columnNames);
+    entityTableString = Util.convertListOfMapsToTable(entities, ";", columnNames);
+
+    if (directoryOutputDirectory == null)
+        return;
     File outputFile = new File(directoryOutputDirectory, "DirectoryCollections.csv");
 
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-      writer.write(tableData);
+      writer.write(entityTableString);
       logger.debug("writeFactTablesToFile: Fact tables successfully written to file: " + outputFile.getAbsolutePath());
     } catch (IOException e) {
       logger.error("writeFactTablesToFile: Failed to write fact tables to file", Util.traceFromException(e));
@@ -294,16 +311,21 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * <p>This method formats the given fact tables as a delimited table using a predefined
    * column order and writes the output to a file named "DirectoryFactTables.csv".
    *
+   * If directoryOutputDirectory is null, this method only puts data into factTableString
+   * without tring to write to a file.
+   *
    * @param factTables A list of maps representing fact tables, with string key-value pairs.
    */
   private void writeFactTablesToFile(List<Map<String, String>> factTables) {
     logger.debug("writeFactTableToFile: factTables:\n" + Util.jsonStringFomObject(factTables));
 
     List<String> columnNames = List.of("id", "sex", "disease", "age_range", "sample_type", "number_of_donors", "number_of_samples", "last_update", "collection");
-    String tableData = Util.convertListOfStringMapsToTable(factTables, ";", columnNames);
+    factTableString = Util.convertListOfStringMapsToTable(factTables, ";", columnNames);
+    if (directoryOutputDirectory == null)
+      return;
     File outputFile = new File(directoryOutputDirectory, "DirectoryFactTables.csv");
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-      writer.write(tableData);
+      writer.write(factTableString);
       logger.debug("writeFactTablesToFile: Fact tables successfully written to file: " + outputFile.getAbsolutePath());
     } catch (IOException e) {
       logger.error("writeFactTablesToFile: Failed to write fact tables to file", Util.traceFromException(e));

@@ -36,23 +36,14 @@ public class CollectionUpdater {
      *     collections.
      *  5. Push the new information back to the Directory.
      *
-     * @param defaultCollectionId The default collection ID to use for fetching collections from the FHIR store.
+     * @param directoryApi API for communicating with Directory.
+     * @param correctedDiagnoses Maps ICD10 codes to corrected ICD10 codes.
+     * @param fhirCollections List of FHIR collection objects.
      * @return A list of OperationOutcome objects indicating the outcome of the update operation.
      */
-    public static boolean sendUpdatesToDirectory(FhirApi fhirApi, DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, String defaultCollectionId) {
+    public static boolean sendUpdatesToDirectory(DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, List<FhirCollection> fhirCollections) {
         try {
-            BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
-                    .valueOf(defaultCollectionId)
-                    .orElse(null);
-
-            List<FhirCollection> fhirCollection = fhirApi.fetchFhirCollections(defaultBbmriEricCollectionId);
-            if (fhirCollection == null) {
-                logger.warn("Problem getting collections from FHIR store");
-                return false;
-            }
-            logger.info("sendUpdatesToDirectory: FHIR collection count): " + fhirCollection.size());
-
-            DirectoryCollectionPut directoryCollectionPut = FhirCollectionToDirectoryCollectionPutConverter.convert(fhirCollection);
+            DirectoryCollectionPut directoryCollectionPut = FhirCollectionToDirectoryCollectionPutConverter.convert(fhirCollections);
             if (directoryCollectionPut == null) {
                 logger.warn("Problem converting FHIR attributes to Directory attributes");
                 return false;

@@ -43,7 +43,10 @@ public class PopulateStarModelInputData {
    * @param defaultBbmriEricCollectionId The default BBMRI-ERIC collection ID to group specimens. May be null.
    * @return A StarModelData object populated with data extracted from the fetched specimens.
    */
-  public StarModelData populate(BbmriEricId defaultBbmriEricCollectionId) {
+  public StarModelData populate(String directoryDefaultCollectionId) {
+    BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+            .valueOf(directoryDefaultCollectionId)
+            .orElse(null);
     // Group specimens according to collection.
     Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollection(defaultBbmriEricCollectionId);
     if (specimensByCollection == null) {

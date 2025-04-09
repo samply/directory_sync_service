@@ -34,7 +34,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
 
   /**
-   * Constructs a new DirectoryApiRest instance.
+   * Constructs a new instance.
    * If we are not in mocking mode, log in to the Directory.
    *
    * @param baseUrl The base URL of the Directory service.
@@ -240,7 +240,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      logger.debug("DirectoryApiRest.updateEntities: :::::::::::::::::::: about to update collection: " + collectionId);
+      logger.debug("updateEntities: about to update collection: " + collectionId);
 
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       cleanEntity(entity);

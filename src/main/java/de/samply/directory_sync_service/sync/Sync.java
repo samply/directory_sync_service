@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.fhir.model.FhirCollection;
 import de.samply.directory_sync_service.model.BbmriEricId;
+import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,27 +102,38 @@ public class Sync {
 
         logger.debug("syncWithDirectory: starting synchronization");
 
-        // Get FHIR collections from the FHIR store and list them to debug
-        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
-                .valueOf(directoryDefaultCollectionId)
-                .orElse(null);
-        List<FhirCollection> fhirCollections = fhirApi.fetchFhirCollections(defaultBbmriEricCollectionId);
-        logger.debug("syncWithDirectory: FHIR collections: ");
-        for  (FhirCollection collection : fhirCollections) {
-            logger.debug(",  " + collection.getId());
-        }
-
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {
             logger.warn("syncWithDirectory: there was a problem during diagnosis corrections");
             return false;
         }
-        if (directoryAllowStarModel)
-            if (!StarModelUpdater.sendStarModelUpdatesToDirectory(fhirApi, directoryApi, correctedDiagnoses, directoryDefaultCollectionId, directoryMinDonors, directoryMaxFacts)) {
+        if (directoryAllowStarModel) {
+            // Pull data from the FHIR store and save it in a format suitable for generating
+            // star model hypercubes.
+            StarModelData starModelInputData = (new PopulateStarModelInputData(fhirApi)).populate(directoryDefaultCollectionId);
+            if (starModelInputData == null) {
+                logger.warn("syncWithDirectory: Problem getting star model information from FHIR store");
+                return false;
+            }
+            logger.debug("syncWithDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
+
+            // Send fact tables to Directory
+            if (!StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, directoryMinDonors, directoryMaxFacts)) {
                 logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
                 return false;
             }
-        if (!CollectionUpdater.sendUpdatesToDirectory(fhirApi, directoryApi, correctedDiagnoses, directoryDefaultCollectionId)) {
+            starModelInputData.runSanityChecks(fhirApi, directoryDefaultCollectionId);
+
+        }
+        List<FhirCollection> fhirCollections = fhirApi.fetchFhirCollections(directoryDefaultCollectionId);
+        if (fhirCollections == null) {
+            logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
+            return false;
+        }
+        for  (FhirCollection collection : fhirCollections)
+            logger.debug(",  " + collection.getId());
+        logger.info("syncWithDirectory: FHIR collection count): " + fhirCollections.size());
+        if (!CollectionUpdater.sendUpdatesToDirectory(directoryApi, correctedDiagnoses, fhirCollections)) {
             logger.warn("syncWithDirectory: there was a problem during sync to Directory");
             return false;
         }

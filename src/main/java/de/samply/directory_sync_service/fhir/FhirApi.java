@@ -714,7 +714,11 @@ public class FhirApi {
    * @param defaultBbmriEricCollectionId
    * @return
    */
-  public List<FhirCollection> fetchFhirCollections(BbmriEricId defaultBbmriEricCollectionId) {
+  public List<FhirCollection> fetchFhirCollections(String directoryDefaultCollectionId) {
+    BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+            .valueOf(directoryDefaultCollectionId)
+            .orElse(null);
+
     Map<String,FhirCollection> fhirCollectionMap = new HashMap<String,FhirCollection>();
 
     // Group specimens according to collection, extract aggregated information

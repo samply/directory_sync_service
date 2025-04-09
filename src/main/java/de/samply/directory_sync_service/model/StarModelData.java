@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
+import de.samply.directory_sync_service.fhir.FhirApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -315,4 +317,89 @@ public class StarModelData {
         return countryCode;
     }
 
+    /**
+     * Runs sanity checks on the star model data.
+     *
+     * @param fhirApi
+     * @param directoryDefaultCollectionId
+     */
+    public void runSanityChecks(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        sampleCountSanityCheck(fhirApi, directoryDefaultCollectionId);
+        materialTypeSanityCheck(fhirApi, directoryDefaultCollectionId);
+        diseaseSanityCheck();
+    }
+
+    /**
+     * Sanity check: compare sample counts from source data with sample counts derived from star model.
+     *
+     * @param fhirApi
+     * @param directoryDefaultCollectionId
+     */
+    public void sampleCountSanityCheck(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+                .valueOf(directoryDefaultCollectionId)
+                .orElse(null);
+        int totalFhirSpecimenCount = fhirApi.calculateTotalSpecimenCount(defaultBbmriEricCollectionId);
+        int totalStarModelSpecimenCount = 0;
+        for (Map<String, String> factTable: getFactTables())
+            if (factTable.containsKey("number_of_samples")) {
+                int numberOfSamples = Integer.parseInt(factTable.get("number_of_samples"));
+                totalStarModelSpecimenCount += numberOfSamples;
+            }
+        if (totalFhirSpecimenCount < totalStarModelSpecimenCount)
+            logger.warn("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
+        logger.debug("sampleCountSanityCheck: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
+        logger.debug("sampleCountSanityCheck: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
+    }
+
+    static int starModelMaterialTypeMissingCount = 0;
+    /**
+     * Sanity check: do the material types in the star model match the material types in the FHIR store?
+     *
+     * @param fhirApi
+     * @param directoryDefaultCollectionId
+     */
+    public void materialTypeSanityCheck(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+                .valueOf(directoryDefaultCollectionId)
+                .orElse(null);
+        Map<String, String> fhirSampleMaterials = fhirApi.getSampleMaterials(defaultBbmriEricCollectionId);
+        Map<String,String> convertedFhirSampleMaterials = new HashMap<>();
+        for (String sampleMaterial: fhirSampleMaterials.keySet()) {
+            String convertedSampleMaterial = FhirToDirectoryAttributeConverter.convertMaterial(sampleMaterial);
+            if (convertedSampleMaterial != null && !convertedFhirSampleMaterials.containsKey(convertedSampleMaterial))
+                convertedFhirSampleMaterials.put(convertedSampleMaterial, convertedSampleMaterial);
+        }
+        int totalStarModelSampleMaterialCount = 0;
+        Map<String,String> starModelSampleMaterials = new HashMap<>();
+        for (Map<String, String> factTable: getFactTables())
+            if (factTable.containsKey("sample_type")) {
+                String sampleMaterial = factTable.get("sample_type");
+                if (!starModelSampleMaterials.containsKey(sampleMaterial)) {
+                    totalStarModelSampleMaterialCount++;
+                    starModelSampleMaterials.put(sampleMaterial, sampleMaterial);
+                }
+            } else if (starModelMaterialTypeMissingCount++ < 5)
+                logger.warn("materialTypeSanityCheck: fact table does not contain sample_type: " + Util.jsonStringFomObject(factTable));
+        if (convertedFhirSampleMaterials.size() != totalStarModelSampleMaterialCount && getFactTables().size() != 0) {
+            logger.warn("materialTypeSanityCheck: !!!!!!!!!!!!!!!!!!!!! converted FHIR material type count (" + convertedFhirSampleMaterials.size() + ") is different from star model material type count (" + totalStarModelSampleMaterialCount + ")");
+            logger.warn("materialTypeSanityCheck: FHIR material types: " + Util.orderedKeylistFromMap(fhirSampleMaterials));
+            logger.warn("materialTypeSanityCheck: converted FHIR material types: " + Util.orderedKeylistFromMap(convertedFhirSampleMaterials));
+            logger.warn("materialTypeSanityCheck: star model material types: " + Util.orderedKeylistFromMap(starModelSampleMaterials));
+            logger.warn("materialTypeSanityCheck: star model material fact count: " + getFactCount());
+        }
+    }
+
+    /**
+     * Sanity check: is the disease count less than the fact table count?
+     *
+     */
+    public void diseaseSanityCheck() {
+        int diseaseCount = 0;
+        for (Map<String, String> factTable: getFactTables())
+            if (factTable.containsKey("disease"))
+                diseaseCount++;
+        if (diseaseCount < getFactTables().size())
+            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! disease count (" + diseaseCount + ") is different from fact table count (" + getFactCount() + ")");
+    }
 }
