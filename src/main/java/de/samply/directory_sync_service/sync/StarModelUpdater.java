@@ -1,17 +1,12 @@
 package de.samply.directory_sync_service.sync;
 
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
 import de.samply.directory_sync_service.directory.DirectoryApi;
-import de.samply.directory_sync_service.fhir.FhirApi;
-import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
-import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**

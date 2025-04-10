@@ -117,6 +117,8 @@ public class Sync {
             }
             logger.debug("syncWithDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
 
+//            Util.serializeToFile(starModelInputData, "/test/starModelInputData.json"); // collect data for unit test
+
             // Send fact tables to Directory
             if (!StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, directoryMinDonors, directoryMaxFacts)) {
                 logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
@@ -130,6 +132,7 @@ public class Sync {
             logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
             return false;
         }
+//        Util.serializeToFile(fhirCollections, "/test/fhirCollections.json"); // collect data for unit test
         for  (FhirCollection collection : fhirCollections)
             logger.debug(",  " + collection.getId());
         logger.info("syncWithDirectory: FHIR collection count): " + fhirCollections.size());

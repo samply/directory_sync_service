@@ -47,9 +47,8 @@ public class StarModelData {
 
     public List<Map<String, String>> getInputRowsAsStringMaps(String collectionId) {
         List<Map<String, String>> rowsAsStringMaps = new ArrayList<Map<String, String>>();
-        for (InputRow row: inputData.get(collectionId)) {
-            rowsAsStringMaps.add(row);
-        }
+        for (InputRow row: inputData.get(collectionId))
+            rowsAsStringMaps.add(row.asMap());
 
         return rowsAsStringMaps;
     }
@@ -64,7 +63,13 @@ public class StarModelData {
      * The attributes include collection, sample material, patient ID, sex, histological location,
      * and age at primary diagnosis.
      */
-    public class InputRow extends HashMap<String, String> {
+    public class InputRow {
+        private String age_at_primary_diagnosis;
+        private String hist_loc;
+        private String sex;
+        private String id;
+        private String sample_material;
+        private String collection;
 
         /**
          * Constructs a new InputRow with the specified attributes.
@@ -90,9 +95,27 @@ public class StarModelData {
          * @param histLoc The new histological location to be associated with the input row.
          */
         public InputRow(InputRow row, String histLoc) {
-            for (String key : row.keySet())
-                put(key, row.get(key));
+            setAgeAtPrimaryDiagnosis(row.getAgeAtPrimaryDiagnosis());
+            setCollection(row.getCollection());
+            setId(row.getId());
+            setSex(row.getSex());
+            setSampleMaterial(row.getSampleMaterial());
             setHistLoc(histLoc);
+        }
+
+        public Map<String, String> asMap() {
+            Map<String, String> row = new HashMap<String, String>();
+            row.put("age_at_primary_diagnosis", age_at_primary_diagnosis);
+            row.put("hist_loc", hist_loc);
+            row.put("sex", sex);
+            row.put("id", id);
+            row.put("sample_material", sample_material);
+            row.put("collection", collection);
+            return row;
+        }
+
+        public String getCollection() {
+            return collection;
         }
 
         /**
@@ -103,7 +126,11 @@ public class StarModelData {
         public void setCollection(String collection) {
             if (collection == null)
                 return;
-            put("collection", collection);
+            this.collection = collection;
+        }
+
+        public String getSampleMaterial() {
+            return sample_material;
         }
 
         /**
@@ -117,7 +144,11 @@ public class StarModelData {
         public void setSampleMaterial(String sampleMaterial) {
             if (sampleMaterial == null)
                 return;
-            put("sample_material", FhirToDirectoryAttributeConverter.convertMaterial(sampleMaterial));
+            this.sample_material = FhirToDirectoryAttributeConverter.convertMaterial(sampleMaterial);
+        }
+
+        public String getId() {
+            return id;
         }
 
         /**
@@ -128,7 +159,11 @@ public class StarModelData {
         public void setId(String id) {
             if (id == null)
                 return;
-            put("id", id);
+            this.id = id;
+        }
+
+        public String getSex() {
+            return sex;
         }
 
         /**
@@ -142,7 +177,11 @@ public class StarModelData {
         public void setSex(String sex) {
             if (sex == null)
                 return;
-            put("sex", FhirToDirectoryAttributeConverter.convertSex(sex));
+            this.sex = FhirToDirectoryAttributeConverter.convertSex(sex);
+        }
+
+        public String getHistLoc() {
+            return hist_loc;
         }
 
         /**
@@ -156,7 +195,11 @@ public class StarModelData {
         public void setHistLoc(String histLoc) {
             if (histLoc == null)
                 return;
-            put("hist_loc", FhirToDirectoryAttributeConverter.convertDiagnosis(histLoc));
+            this.hist_loc = FhirToDirectoryAttributeConverter.convertDiagnosis(histLoc);
+        }
+
+        public String getAgeAtPrimaryDiagnosis() {
+            return age_at_primary_diagnosis;
         }
 
         /**
@@ -170,7 +213,7 @@ public class StarModelData {
                     logger.warn("setAgeAtPrimaryDiagnosis: age is null, ignoring.");
                 return;
             }
-            put("age_at_primary_diagnosis", age);
+            this.age_at_primary_diagnosis = age;
         }
     }
 

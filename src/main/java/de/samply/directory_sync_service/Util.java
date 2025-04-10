@@ -1,11 +1,17 @@
 package de.samply.directory_sync_service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.sync.Sync;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -190,7 +196,7 @@ public class Util {
     public static String jsonStringFomObject(Object object) {
         if (object == null)
             return null;
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(object);
     }
 
@@ -270,6 +276,44 @@ public class Util {
                 }
             }
             System.out.println();
+        }
+    }
+
+    /**
+     * Serializes the given object to a JSON string and writes it to the specified file.
+     * The method converts the provided {@code object} into its JSON representation using
+     * {@link Util#jsonStringFomObject(Object)} and writes the resulting string to the file
+     * located at {@code filePath}.
+     * <p>
+     * If the serialization or file writing operation fails, the method logs an error message.
+     * <p>
+     * Note: The file will be overwritten if it already exists.
+     *
+     * @param object   the object to serialize to JSON and save to the file. Should not be {@code null}.
+     * @param filePath the path to the file where the serialized object will be saved. Should be a valid file path.
+     * @throws IOException if an I/O error occurs while writing to the file. Logged internally in the method.
+     */
+    public static void serializeToFile(Object object, String filePath) {
+        if (object == null) {
+            logger.warn("serializeToFile: object is null");
+            return;
+        }
+        if (filePath == null) {
+            logger.warn("serializeToFile: filePath is null");
+            return;
+        }
+        if (filePath.isEmpty()) {
+            logger.warn("serializeToFile: filePath is empty");
+            return;
+        }
+
+        File outputFile = new File(filePath);
+        String objectJsonString = jsonStringFomObject(object);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+            writer.write(objectJsonString);
+        } catch (IOException e) {
+            logger.error("serializeToFile: Failed to write object to file", Util.traceFromException(e));
         }
     }
 }
