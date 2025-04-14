@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  store:
+    container_name: "store"
+    image: "samply/blaze:0.18"
+    environment:
+      BASE_URL: "http://store:8080"
+      JAVA_TOOL_OPTIONS: "-Xmx4g"
+    volumes:
+      - "store-db-data:/app/data"
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      # When a call to the Blaze API succeeds, we know it is ready.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/fhir/metadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  data-loader:
+    container_name: data-loader
+    image: samply/data-loader
+    environment:
+      FHIR_STORE_URL: "http://store:8080/fhir"
+    command: sh -c "/app/run.sh | tee /tmp/output.txt && tail -f /dev/null"
+    volumes:
+      #- "./data/crc_full:/app/sample"
+      - "./data/crc_1patient:/app/sample"
+    depends_on: # wait until Blaze is ready
+      store:
+        condition: service_healthy
+    healthcheck:
+      # When the run.sh script outputs "Done", we know that the upload is complete
+      test: ["CMD", "grep", "Done", "/tmp/output.txt"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  directory_sync_service:
+    image: "samply/directory_sync_service"
+    #build: .
+    environment:
+      DS_RETRY_INTERVAL: 20
+      DS_RETRY_MAX: 10
+      DS_FHIR_STORE_URL: "http://store:8080/fhir"
+      DS_DIRECTORY_URL: https://directory.bbmri-eric.eu
+      DS_DIRECTORY_USER_NAME: foo
+      DS_DIRECTORY_USER_PASS: foo
+      DS_DIRECTORY_ALLOW_STAR_MODEL: "true"
+      DS_DIRECTORY_WRITE_TO_FILE: "true"
+      DS_DIRECTORY_OUTPUT_DIRECTORY: "/test/"
+      DS_DIRECTORY_MIN_DONORS: 1 # just for testing
+      SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
+    volumes:
+      - ./test:/test
+    depends_on: # wait for data-loader to finish
+      data-loader:
+        condition: service_healthy
+
+volumes:
+  store-db-data:
+    name: "store-db-data"
