@@ -77,10 +77,8 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
       List<String> type = directoryCollectionGet.getTypeIds(collectionId);
       List<String> dataCategories = directoryCollectionGet.getDataCategoryIds(collectionId);
       List<String> networks = directoryCollectionGet.getNetworkIds(collectionId);
-      if (name == null && description == null && contact == null && country == null && biobank == null && type == null && dataCategories == null && networks == null) {
+      if (name == null && description == null && contact == null && country == null && biobank == null && type == null && dataCategories == null && networks == null)
           logger.warn("merge: name, description, contact, country, biobank, type, dataCategories, and networks is null for collectionId: " + collectionId);
-          return null;
-      }
       directoryCollectionPut.setName(collectionId, name);
       directoryCollectionPut.setDescription(collectionId, description);
       directoryCollectionPut.setContact(collectionId, contact);
