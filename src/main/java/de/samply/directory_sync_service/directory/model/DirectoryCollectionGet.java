@@ -41,44 +41,52 @@ public class DirectoryCollectionGet extends HashMap {
     public String getCountryId(String id) {
         if (getItem(id) == null) {
             logger.warn("getCountryId: item is null for id: " + id);
-            return "";
+            return null;
         }
 
-        if (!getItem(id).containsKey("country"))
-            return "";
+        if (!getItem(id).containsKey("country")) {
+            logger.warn("getCountryId: no country key, aborting");
+            return null;
+        }
         return (String) ((Map) getItem(id).get("country")).get("id");
     }
 
     public String getContactId(String id) {
         if (getItem(id) == null) {
             logger.warn("getContactId: item is null for id: " + id);
-            return "";
+            return null;
         }
 
-        if (!getItem(id).containsKey("contact"))
-            return "";
+        if (!getItem(id).containsKey("contact")) {
+            logger.warn("getContactId: no contact key, aborting");
+            return null;
+        }
         return (String) ((Map) getItem(id).get("contact")).get("id");
     }
 
     public String getBiobankId(String id) {
         if (getItem(id) == null) {
             logger.warn("getBiobankId: item is null for id: " + id);
-            return "";
+            return null;
         }
 
-        if (!getItem(id).containsKey("biobank"))
-            return "";
+        if (!getItem(id).containsKey("biobank")) {
+            logger.warn("getBiobankId: no biobank key, aborting");
+            return null;
+        }
         return (String) ((Map) getItem(id).get("biobank")).get("id");
     }
 
     public List<String> getTypeIds(String id) {
         if (getItem(id) == null) {
             logger.warn("getTypeIds: item is null for id: " + id);
-            return new ArrayList<String>();
+            return null;
         }
 
-        if (!getItem(id).containsKey("type"))
-            return new ArrayList<String>();
+        if (!getItem(id).containsKey("type")) {
+            logger.warn("getTypeIds: no type key, aborting");
+            return null;
+        }
         Map item = getItem(id);
         List<Map<String,Object>> types = (List<Map<String,Object>>) item.get("type");
         List<String> typeLabels = new ArrayList<String>();
@@ -98,7 +106,7 @@ public class DirectoryCollectionGet extends HashMap {
     public List<String> getDataCategoryIds(String id) {
         if (getItem(id) == null) {
             logger.warn("getDataCategoryIds: item is null for id: " + id);
-            return new ArrayList<String>();
+            return null;
         }
 
         if (!getItem(id).containsKey("data_categories"))
@@ -122,11 +130,13 @@ public class DirectoryCollectionGet extends HashMap {
     public List<String> getNetworkIds(String id) {
         if (getItem(id) == null) {
             logger.warn("getNetworkIds: item is null for id: " + id);
-            return new ArrayList<String>();
+            return null;
         }
 
-        if (!getItem(id).containsKey("network"))
-            return new ArrayList<String>();
+        if (!getItem(id).containsKey("network")) {
+            logger.warn("getNetworkIds: no network key, aborting");
+            return null;
+        }
         Map item = getItem(id);
         List<Map<String,Object>> networks = (List<Map<String,Object>>) item.get("network");
         List<String> networkLabels = new ArrayList<String>();
@@ -139,11 +149,11 @@ public class DirectoryCollectionGet extends HashMap {
     public String getName(String id) {
         if (getItem(id) == null) {
             logger.warn("getName: item is null for id: " + id);
-            return "";
+            return null;
         }
         if (!getItem(id).containsKey("name")) {
             logger.warn("getName: no name key, aborting");
-            return "";
+            return null;
         }
         return (String) getItem(id).get("name");
     }
@@ -151,11 +161,13 @@ public class DirectoryCollectionGet extends HashMap {
     public String getDescription(String id) {
         if (getItem(id) == null) {
             logger.warn("getDescription: item is null for id: " + id);
-            return "";
+            return null;
         }
 
-        if (!getItem(id).containsKey("description"))
-            return "";
+        if (!getItem(id).containsKey("description")) {
+            logger.warn("getDescription: no description key, aborting");
+            return null;
+        }
         return (String) getItem(id).get("description");
     }
 

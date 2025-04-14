@@ -264,9 +264,7 @@ public class FhirApi {
 
       return specimensByCollection;
     } catch (Exception e) {
-      logger.warn("fetchSpecimensByCollection: exception", Util.traceFromException(e));
-      OperationOutcome outcome = new OperationOutcome();
-      outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR).setDiagnostics(Util.traceFromException(e));
+      logger.warn("fetchSpecimensByCollection: exception" + Util.traceFromException(e));
       return null;
     }
   }
@@ -711,7 +709,7 @@ public class FhirApi {
    * <p>
    * Returns a list of FhirCollection objects, one per collection.
    *
-   * @param defaultBbmriEricCollectionId
+   * @param directoryDefaultCollectionId
    * @return
    */
   public List<FhirCollection> fetchFhirCollections(String directoryDefaultCollectionId) {

@@ -51,7 +51,7 @@ public class BbmriEricId {
     }
     Matcher matcher = PATTERN.matcher(s);
     if (!matcher.matches()) {
-      logger.warn("valueOf: input doesnt match BBMRI ID pattern, cannot determine an ID");
+      logger.warn("valueOf: \"" + s + "\" doesnt match BBMRI ID pattern, cannot determine an ID");
       return Optional.empty();
     }
     return Optional.of(new BbmriEricId(matcher.group(1), matcher.group(2)));
