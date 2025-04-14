@@ -3,6 +3,7 @@ package de.samply.directory_sync_service.sync;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.converter.FhirCollectionToDirectoryCollectionPutConverter;
 import de.samply.directory_sync_service.directory.DirectoryApi;
+import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
@@ -60,7 +61,14 @@ public class CollectionUpdater {
             }
             logger.debug("sendUpdatesToDirectory: directoryCollectionGet.size(): " + directoryCollectionGet.size());
 
-            if (!MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut)) {
+            // Merge the information relating to the collection that was pulled from the
+            // Directory (directoryCollectionGet) with the information pulled from
+            // the FHIR store (directoryCollectionPut). Don't do this however if
+            // directoryApi is an instance of DirectoryApiWriteToFile, because this
+            // class does not actually operate with a real Directory, so the
+            // information will not actually be present.
+            if (!(directoryApi instanceof DirectoryApiWriteToFile) &&
+                    !MergeDirectoryCollectionGetToDirectoryCollectionPut.merge(directoryCollectionGet, directoryCollectionPut)) {
                 logger.warn("Problem merging Directory GET attributes to Directory PUT attributes");
                 return false;
             }

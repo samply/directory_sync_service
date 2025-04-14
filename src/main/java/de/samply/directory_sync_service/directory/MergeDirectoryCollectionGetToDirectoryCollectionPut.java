@@ -46,11 +46,13 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
       logger.warn("merge: collectionIds.size() is zero");
 
     boolean mergeSuccess = false;
-    for (String collectionId: collectionIds)
-        if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null)
-          logger.warn("merge: Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
-        else
-          mergeSuccess = true;
+    for (String collectionId: collectionIds) {
+      logger.debug("merge: processing collectionId: " + collectionId);
+      if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null)
+        logger.warn("merge: Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
+      else
+        mergeSuccess = true;
+    }
 
     if (!mergeSuccess)
       logger.warn("merge: mergeSuccess is false");
@@ -69,24 +71,14 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
   private static DirectoryCollectionPut merge(String collectionId, DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
     logger.debug("Merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
     try {
-      String name = directoryCollectionGet.getName(collectionId);
-      String description = directoryCollectionGet.getDescription(collectionId);
-      String contact = directoryCollectionGet.getContactId(collectionId);
-      String country = directoryCollectionGet.getCountryId(collectionId);
-      String biobank = directoryCollectionGet.getBiobankId(collectionId);
-      List<String> type = directoryCollectionGet.getTypeIds(collectionId);
-      List<String> dataCategories = directoryCollectionGet.getDataCategoryIds(collectionId);
-      List<String> networks = directoryCollectionGet.getNetworkIds(collectionId);
-      if (name == null && description == null && contact == null && country == null && biobank == null && type == null && dataCategories == null && networks == null)
-          logger.warn("merge: name, description, contact, country, biobank, type, dataCategories, and networks is null for collectionId: " + collectionId);
-      directoryCollectionPut.setName(collectionId, name);
-      directoryCollectionPut.setDescription(collectionId, description);
-      directoryCollectionPut.setContact(collectionId, contact);
-      directoryCollectionPut.setCountry(collectionId, country);
-      directoryCollectionPut.setBiobank(collectionId, biobank);
-      directoryCollectionPut.setType(collectionId, type);
-      directoryCollectionPut.setDataCategories(collectionId, dataCategories);
-      directoryCollectionPut.setNetworks(collectionId, networks);
+      directoryCollectionPut.setName(collectionId, directoryCollectionGet.getName(collectionId));
+      directoryCollectionPut.setDescription(collectionId, directoryCollectionGet.getDescription(collectionId));
+      directoryCollectionPut.setContact(collectionId, directoryCollectionGet.getContactId(collectionId));
+      directoryCollectionPut.setCountry(collectionId, directoryCollectionGet.getCountryId(collectionId));
+      directoryCollectionPut.setBiobank(collectionId, directoryCollectionGet.getBiobankId(collectionId));
+      directoryCollectionPut.setType(collectionId, directoryCollectionGet.getTypeIds(collectionId));
+      directoryCollectionPut.setDataCategories(collectionId, directoryCollectionGet.getDataCategoryIds(collectionId));
+      directoryCollectionPut.setNetworks(collectionId, directoryCollectionGet.getNetworkIds(collectionId));
     } catch(Exception e) {
       logger.error("Problem merging DirectoryCollectionGet into DirectoryCollectionPut. " + Util.traceFromException(e));
       return null;
