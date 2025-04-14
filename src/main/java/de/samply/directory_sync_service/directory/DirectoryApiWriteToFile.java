@@ -288,8 +288,6 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * @param entities A list of maps where each map represents an entity with key-value pairs.
    */
   private void writeEntitiesToFile(List<Map<String, Object>> entities) {
-    logger.debug("writeEntitiesToFile: entities:\n" + Util.jsonStringFomObject(entities));
-
     List<String> columnNames = List.of("id", "country", "type", "data_categories", "order_of_magnitude", "size", "timestamp", "number_of_donors", "order_of_magnitude_donors", "sex", "diagnosis_available", "age_low", "age_high", "materials", "storage_temperatures");
     entityTableString = Util.convertListOfMapsToTable(entities, ";", columnNames);
 
@@ -317,8 +315,6 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * @param factTables A list of maps representing fact tables, with string key-value pairs.
    */
   private void writeFactTablesToFile(List<Map<String, String>> factTables) {
-    logger.debug("writeFactTableToFile: factTables:\n" + Util.jsonStringFomObject(factTables));
-
     List<String> columnNames = List.of("id", "sex", "disease", "age_range", "sample_type", "number_of_donors", "number_of_samples", "last_update", "collection");
     factTableString = Util.convertListOfStringMapsToTable(factTables, ";", columnNames);
     if (directoryOutputDirectory == null)

@@ -67,7 +67,9 @@ public class CreateFactTablesFromStarModelInputData {
         // Print out first and last elements of patientSamplesFacts as JSON
         if (patientSamplesFacts.size() > 0) {
             logger.debug("createFactTableFinal: patientSamplesFacts #0: " + Util.jsonStringFomObject(patientSamplesFacts.get(0)));
-            logger.debug("createFactTableFinal: patientSamplesFacts #" + (patientSamplesFacts.size()-1) + ": " +  Util.jsonStringFomObject(patientSamplesFacts.get(patientSamplesFacts.size() - 1)));
+            int lastFactNum = patientSamplesFacts.size()-1;
+            if (lastFactNum > 0)
+                logger.debug("createFactTableFinal: patientSamplesFacts #" + lastFactNum + ": " +  Util.jsonStringFomObject(patientSamplesFacts.get(patientSamplesFacts.size() - 1)));
         }
 
         // Generate an intermediate fact table by grouping the transformed data and calculating
