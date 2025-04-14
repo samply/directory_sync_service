@@ -46,12 +46,12 @@ public class BbmriEricId {
    */
   public static Optional<BbmriEricId> valueOf(String s) {
     if (s == null) {
-      logger.warn("valueOf: input is null, cannot determine an ID");
+      logger.info("valueOf: input is null, cannot determine an ID");
       return Optional.empty();
     }
     Matcher matcher = PATTERN.matcher(s);
     if (!matcher.matches()) {
-      logger.warn("valueOf: \"" + s + "\" doesnt match BBMRI ID pattern, cannot determine an ID");
+      logger.info("valueOf: \"" + s + "\" doesnt match BBMRI ID pattern, cannot determine an ID");
       return Optional.empty();
     }
     return Optional.of(new BbmriEricId(matcher.group(1), matcher.group(2)));
