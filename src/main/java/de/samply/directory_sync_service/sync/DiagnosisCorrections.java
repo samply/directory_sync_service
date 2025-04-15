@@ -41,7 +41,7 @@ public class DiagnosisCorrections {
                     .valueOf(defaultCollectionId)
                     .orElse(null);
 
-            // Get all diagnoses from the FHIR store for specemins with identifiable
+            // Get all diagnoses from the FHIR store for specimens with identifiable
             // collections and their associated patients.
             List<String> fhirDiagnoses = fhirApi.fetchDiagnoses(defaultBbmriEricCollectionId);
             if (fhirDiagnoses == null) {
