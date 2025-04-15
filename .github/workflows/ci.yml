@@ -35,6 +35,27 @@ jobs:
     - name: Build with Maven
       run: mvn -B install
 
+    - name: Set up Docker Compose
+      run: apt-get -y update && apt-get install -y docker-compose
+
+    - name: Build data-loader
+      run: sh build_data_loader.sh
+
+    - name: Build directory_sync_service
+      run: docker build --progress=plain -t samply/directory_sync_service .
+
+    - name: Remove any cached data
+      docker volume rm store-db-data || true
+
+    - name: Run integration test stack
+      run: docker-compose -f docker-compose.ci.yml up --abort-on-container-exit --exit-code-from directory_sync_service
+
+    - name: Clear up the containers created by docker-compose
+      run: docker-compose  -f docker-compose.ci.yml down
+
+    - name: Compare output with standard
+      run: ./ci_compare_with_standard.sh
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
 
