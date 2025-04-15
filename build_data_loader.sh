@@ -14,5 +14,5 @@ else
 fi
 
 echo "Building Docker image..."
-docker build -t samply/data-loader .
+docker build --progress=plain -t samply/data-loader .
 

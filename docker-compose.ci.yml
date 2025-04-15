@@ -28,8 +28,8 @@ services:
       FHIR_STORE_URL: "http://store:8080/fhir"
     command: sh -c "/app/run.sh | tee /tmp/output.txt && tail -f /dev/null"
     volumes:
-      #- "./data/crc_full:/app/sample"
-      - "./data/crc_1patient:/app/sample"
+      - "./data/crc_full:/app/sample"
+      #- "./data/crc_1patient:/app/sample"
     depends_on: # wait until Blaze is ready
       store:
         condition: service_healthy
@@ -53,7 +53,7 @@ services:
       DS_DIRECTORY_ALLOW_STAR_MODEL: "true"
       DS_DIRECTORY_WRITE_TO_FILE: "true"
       DS_DIRECTORY_OUTPUT_DIRECTORY: "/test/"
-      DS_DIRECTORY_MIN_DONORS: 1 # just for testing
+      #DS_DIRECTORY_MIN_DONORS: 1 # just for testing
       SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
     volumes:
       - ./test:/test

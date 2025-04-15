@@ -38,7 +38,7 @@ jobs:
 
 
     - name: Set up Docker Compose
-      run: sudo apt-get update && sudo apt-get install -y docker-compose
+      run: apt-get -y update && apt-get install -y docker-compose
 
     - name: Build data-loader
       run: sh build_data_loader.sh
@@ -49,8 +49,8 @@ jobs:
     - name: Run integration test stack
       run: docker-compose -f docker-compose.ci.yml up --abort-on-container-exit --exit-code-from directory_sync_service
 
-    - name: Compare output
-      run: ./test_output.sh
+    - name: Compare output with standard
+      run: ./ci_compare_with_standard.sh
 
 
 
