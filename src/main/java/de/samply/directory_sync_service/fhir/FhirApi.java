@@ -316,22 +316,28 @@ public class FhirApi {
 
     // Keep looping until the store has no more specimens.
     // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
+    int pageNum = 0;
     do {
-        // Add entries to the result map
-        for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-            Specimen specimen = (Specimen) entry.getResource();
-            String collectionId = extractCollectionIdFromSpecimen(specimen);
-            if (!result.containsKey(collectionId))
-                result.put(collectionId, new ArrayList<>());
-            result.get(collectionId).add(specimen);
-        }
+      if (pageNum % 10 == 0)
+        logger.debug("getAllSpecimensAsMap: pageNum: " + pageNum);
 
-        // Check if there are more pages
-        if (bundle.getLink(Bundle.LINK_NEXT) != null)
-            // Use ITransactionTyped to load the next page
-            bundle = fhirClient.loadPage().next(bundle).execute();
-        else
-            bundle = null;
+      // Add entries to the result map
+      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+          Specimen specimen = (Specimen) entry.getResource();
+          String collectionId = extractCollectionIdFromSpecimen(specimen);
+          if (!result.containsKey(collectionId))
+              result.put(collectionId, new ArrayList<>());
+          result.get(collectionId).add(specimen);
+      }
+
+      // Check if there are more pages
+      if (bundle.getLink(Bundle.LINK_NEXT) != null)
+          // Use ITransactionTyped to load the next page
+          bundle = fhirClient.loadPage().next(bundle).execute();
+      else
+          bundle = null;
+
+      pageNum++;
     } while (bundle != null);
 
     logger.debug("getAllSpecimensAsMap: done, result.size(): " + result.size());
