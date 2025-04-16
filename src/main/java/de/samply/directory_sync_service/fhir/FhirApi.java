@@ -1,5 +1,7 @@
 package de.samply.directory_sync_service.fhir;
 
+import de.samply.directory_sync_service.directory.model.Collections;
+
 import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
@@ -718,13 +720,12 @@ public class FhirApi {
    * @param directoryDefaultCollectionId
    * @return
    */
-  public List<Collection> fetchCollections(String directoryDefaultCollectionId) {
+  public Collections fetchCollections(String directoryDefaultCollectionId) {
     BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
             .valueOf(directoryDefaultCollectionId)
             .orElse(null);
 
-    // Map of collection IDs to Collection objects.
-    Map<String, Collection> collectionMap = new HashMap<String, Collection>();
+    Collections collections = new Collections();
 
     // Group specimens according to collection, extract aggregated information
     // from each group, and put this information into Collection objects.
@@ -733,7 +734,7 @@ public class FhirApi {
       logger.warn("fetchFhirCollections: Problem finding specimens");
       return null;
     }
-    updateCollectionsWithSpecimenData(collectionMap, specimensByCollection);
+    updateCollectionsWithSpecimenData(collections, specimensByCollection);
 
     // Group patients according to collection, extract aggregated information
     // from each group, and put this information into Collection objects.
@@ -742,9 +743,9 @@ public class FhirApi {
       logger.warn("fetchFhirCollections: Problem finding patients");
       return null;
     }
-    updateCollectionsWithPatientData(collectionMap, patientsByCollection);
+    updateCollectionsWithPatientData(collections, patientsByCollection);
 
-    return new ArrayList<Collection>(collectionMap.values());
+    return collections;
   }
 
   /**
@@ -754,21 +755,21 @@ public class FhirApi {
    * For each key, it retrieves or creates a corresponding {@link Collection}, then updates its attributes
    * based on the specimens in the list, such as size, materials, storage temperatures, and diagnosis availability.
    *
-   * @param entities A map of existing {@link Collection} entities, keyed by collection ID.
+   * @param collections A map of existing {@link Collection} entities, keyed by collection ID.
    *                 If a collection does not exist, a new one is created.
    * @param specimensByCollection A map where each key represents a collection ID,
    *                              and the value is a list of {@link Specimen} objects associated with that collection.
    */
-  private void updateCollectionsWithSpecimenData(Map<String, Collection> entities, Map<String, List<Specimen>> specimensByCollection) {
-    for (String key: specimensByCollection.keySet()) {
-      List<Specimen> specimenList = specimensByCollection.get(key);
-      Collection collection = entities.getOrDefault(key, new Collection());
-      collection.setId(key);
+  private void updateCollectionsWithSpecimenData(Collections collections, Map<String, List<Specimen>> specimensByCollection) {
+    for (String collectionId: specimensByCollection.keySet()) {
+      List<Specimen> specimenList = specimensByCollection.get(collectionId);
+      Collection collection = collections.getOrDefault(collectionId, new Collection());
+      collection.setId(collectionId);
       collection.setSize(specimenList.size());
       collection.setMaterials(extractMaterialsFromSpecimenList(specimenList));
       collection.setStorageTemperatures(extractExtensionElementValuesFromSpecimens(specimenList, STORAGE_TEMPERATURE_URI));
       collection.setDiagnosisAvailable(extractExtensionElementValuesFromSpecimens(specimenList, SAMPLE_DIAGNOSIS_URI));
-      entities.put(key, collection);
+      collections.addCollection(collection, collectionId);
     }
   }
 
@@ -779,21 +780,21 @@ public class FhirApi {
    * For each key, it retrieves or creates a corresponding {@link Collection}, then updates its attributes
    * based on the patients in the list, such as number of donors, sex distribution, age range, and diagnoses.
    *
-   * @param entities A map of existing {@link Collection} entities, keyed by collection ID.
+   * @param collections A map of existing {@link Collection} entities, keyed by collection ID.
    *                 If a collection does not exist, a new one is created.
    * @param patientsByCollection A map where each key represents a collection ID,
    *                              and the value is a list of {@link Patient} objects associated with that collection.
    */
-  private void updateCollectionsWithPatientData(Map<String, Collection> entities, Map<String, List<Patient>> patientsByCollection) {
-    for (String key: patientsByCollection.keySet()) {
-      List<Patient> patientList = patientsByCollection.get(key);
-      Collection collection = entities.getOrDefault(key, new Collection());
+  private void updateCollectionsWithPatientData(Collections collections, Map<String, List<Patient>> patientsByCollection) {
+    for (String collectionId: patientsByCollection.keySet()) {
+      List<Patient> patientList = patientsByCollection.get(collectionId);
+      Collection collection = collections.getOrDefault(collectionId, new Collection());
       collection.setNumberOfDonors(patientList.size());
       collection.setSex(extractSexFromPatientList(patientList));
       collection.setAgeLow(extractAgeLowFromPatientList(patientList));
       collection.setAgeHigh(extractAgeHighFromPatientList(patientList));
       collection.setDiagnosisAvailable(extractDiagnosesFromPatientList(patientList));
-      entities.put(key, collection);
+      collections.addCollection(collection, collectionId);
     }
   }
 

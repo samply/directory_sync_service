@@ -4,6 +4,7 @@ import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
+import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
@@ -77,21 +78,29 @@ public class Sync {
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi;
-        if (directoryWriteToFile) {
-            directoryApi = new DirectoryApiWriteToFile(directoryOutputDirectory);
-        } else {
-            directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+//        if (directoryWriteToFile) {
+//            directoryApi = new DirectoryApiWriteToFile(directoryOutputDirectory);
+//        } else {
+//            directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+//
+//            // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
+//            if (!directoryApi.login()) {
+//                logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
+//                directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+//                if (!directoryApi.login()) {
+//                    logger.warn("syncWithDirectory: there was a problem during login to Directory");
+//                    return false;
+//                }
+//            }
+//        }
 
-            // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
-            if (!directoryApi.login()) {
-                logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
-                directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-                if (!directoryApi.login()) {
-                    logger.warn("syncWithDirectory: there was a problem during login to Directory");
-                    return false;
-                }
-            }
+        // For testing purposes, use the REST API.
+        directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+        if (!directoryApi.login()) {
+            logger.warn("syncWithDirectory: there was a problem during login to Directory");
+            return false;
         }
+
 
         // Login test. Don't perform any further actions on the Directory.
         if (directoryOnlyLogin) {
@@ -126,14 +135,12 @@ public class Sync {
             starModelInputData.runSanityChecks(fhirApi, directoryDefaultCollectionId);
 
         }
-        List<Collection> collections = fhirApi.fetchCollections(directoryDefaultCollectionId);
+        Collections collections = fhirApi.fetchCollections(directoryDefaultCollectionId);
         if (collections == null) {
             logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
             return false;
         }
 //        Util.serializeToFile(collections, "/test/collections.json"); // collect data for unit test
-        for  (Collection collection : collections)
-            logger.debug(",  " + collection.getId());
         logger.info("syncWithDirectory: FHIR collection count): " + collections.size());
         if (!CollectionUpdater.sendUpdatesToDirectory(directoryApi, correctedDiagnoses, collections)) {
             logger.warn("syncWithDirectory: there was a problem during sync to Directory");

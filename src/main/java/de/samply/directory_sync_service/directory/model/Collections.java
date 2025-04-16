@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.List;
 
 /**
  * A class for holding multiple Collection objects.
@@ -46,5 +47,13 @@ public class Collections {
 
     public int size() {
         return collections.size();
+    }
+
+    public Collection getOrDefault(String key, Collection collection) {
+        return collections.getOrDefault(key, collection);
+    }
+
+    public List<Collection> getCollections() {
+        return List.copyOf(collections.values());
     }
 }

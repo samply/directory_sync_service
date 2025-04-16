@@ -40,12 +40,12 @@ public class CollectionUpdater {
      *
      * @param directoryApi API for communicating with Directory.
      * @param correctedDiagnoses Maps ICD10 codes to corrected ICD10 codes.
-     * @param collectionList List of FHIR collection objects.
+     * @param putCollections List of FHIR collection objects.
      * @return A list of OperationOutcome objects indicating the outcome of the update operation.
      */
-    public static boolean sendUpdatesToDirectory(DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, List<Collection> collectionList) {
+    public static boolean sendUpdatesToDirectory(DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, Collections putCollections) {
         try {
-            DirectoryCollectionPut directoryCollectionPut = convert(collectionList);
+            DirectoryCollectionPut directoryCollectionPut = convert(putCollections);
             if (directoryCollectionPut == null) {
                 logger.warn("sendUpdatesToDirectory: Problem converting FHIR attributes to Directory attributes");
                 return false;
@@ -95,10 +95,10 @@ public class CollectionUpdater {
         }
     }
 
-    public static DirectoryCollectionPut convert(List<Collection> collections) {
+    public static DirectoryCollectionPut convert(Collections collections) {
         DirectoryCollectionPut directoryCollectionPut = new DirectoryCollectionPut();
 
-        for (Collection collection : collections)
+        for (Collection collection : collections.getCollections())
             if (convert(directoryCollectionPut, collection) == null) {
                 directoryCollectionPut = null;
                 break;
