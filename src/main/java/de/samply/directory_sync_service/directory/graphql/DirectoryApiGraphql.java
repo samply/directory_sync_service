@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.model.Biobank;
-import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
+import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
@@ -160,18 +160,17 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @param collectionIds IDs of the collections whose data will be harvested.
    * @return
    */
-  public DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
-    DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
-    directoryCollectionGet.init();
+  public Collections fetchCollections(String countryCode, List<String> collectionIds) {
+    Collections collections = new Collections();
 
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      directoryCollectionGet.setMockDirectory(true);
-      return directoryCollectionGet;
+      collections.setMockDirectory(true);
+      return collections;
     }
 
     for (String collectionId: collectionIds) {
-      logger.debug("fetchCollectionGetOutcomes: collectionId: " + collectionId);
+      logger.debug("fetchCollections: collectionId: " + collectionId);
       String graphqlCommand = "query {" +
               "  Collections( filter: { id: { equals: \"" + collectionId + "\" } } ) {\n" +
               "    id\n" +
@@ -207,24 +206,24 @@ public class DirectoryApiGraphql extends DirectoryApi {
       String collectionCountryCode = extractCountryCodeFromBbmriEricId(collectionId);
       List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(collectionCountryCode), graphqlCommand);
       if (collectionsList == null) {
-        logger.warn("fetchCollectionGetOutcomes: biobankList list is null");
+        logger.warn("fetchCollections: biobankList list is null");
         continue;
       }
       if (collectionsList.size() == 0) {
-        logger.warn("fetchCollectionGetOutcomes: collectionFactsList list is empty");
+        logger.warn("fetchCollections: collectionFactsList list is empty");
         continue;
       }
 
-      Map<String, Object> item = collectionsList.get(0);
+      Map<String, Object> collectionMap = collectionsList.get(0);
 
-      if (item == null) {
-        logger.warn("fetchCollectionGetOutcomes: entity get item is null, does the collection exist in the Directory: " + collectionId);
+      if (collectionMap == null) {
+        logger.warn("fetchCollections: entity get item is null, does the collection exist in the Directory: " + collectionId);
         continue;
       }
-      directoryCollectionGet.getItems().add(item);
+      collections.addCollectionFromMap(collectionMap, collectionId);
     }
 
-    return directoryCollectionGet;
+    return collections;
   }
 
   /**

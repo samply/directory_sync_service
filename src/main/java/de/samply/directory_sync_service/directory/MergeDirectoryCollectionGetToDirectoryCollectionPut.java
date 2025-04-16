@@ -2,6 +2,8 @@ package de.samply.directory_sync_service.directory;
 
 import java.util.List;
 
+import de.samply.directory_sync_service.directory.model.Collection;
+import de.samply.directory_sync_service.directory.model.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,18 +27,18 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
    * Returns false if there is a problem, e.g. if there are discrepancies between
    * the collection IDs in the two objects.
    * 
-   * @param directoryCollectionGet
+   * @param collections
    * @param directoryCollectionPut
    * @return
    */
-  public static boolean merge(DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
+  public static boolean merge(Collections collections, DirectoryCollectionPut directoryCollectionPut) {
     logger.debug("merge: entered");
 
     // Only do a merge if we are not mocking
-    if (directoryCollectionGet.isMockDirectory())
+    if (collections.isMockDirectory())
       return true;
 
-    if (directoryCollectionGet.size() == 0) {
+    if (collections.size() == 0) {
       logger.warn("merge: directoryCollectionGet.size() is zero");
       return true;
     }
@@ -48,7 +50,7 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
     boolean mergeSuccess = false;
     for (String collectionId: collectionIds) {
       logger.debug("merge: processing collectionId: " + collectionId);
-      if (merge(collectionId, directoryCollectionGet, directoryCollectionPut) == null)
+      if (merge(collectionId, collections, directoryCollectionPut) == null)
         logger.warn("merge: Problem merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
       else
         mergeSuccess = true;
@@ -64,21 +66,26 @@ public class MergeDirectoryCollectionGetToDirectoryCollectionPut {
    * Merges data from a DirectoryCollectionGet object into a DirectoryCollectionPut object.
    *
    * @param collectionId The ID of the collection to merge.
-   * @param directoryCollectionGet The DirectoryCollectionGet object containing data to merge.
+   * @param collections The DirectoryCollectionGet object containing data to merge.
    * @param directoryCollectionPut The DirectoryCollectionPut object to merge data into.
    * @return The DirectoryCollectionPut object with merged data, or null if an exception occurs.
    */
-  private static DirectoryCollectionPut merge(String collectionId, DirectoryCollectionGet directoryCollectionGet, DirectoryCollectionPut directoryCollectionPut) {
+  private static DirectoryCollectionPut merge(String collectionId, Collections collections, DirectoryCollectionPut directoryCollectionPut) {
     logger.debug("Merging DirectoryCollectionGet into DirectoryCollectionPut for collectionId: " + collectionId);
+    Collection collection = collections.getCollection(collectionId);
+    if (collection == null) {
+      logger.warn("merge: collection is null for collectionId: " + collectionId);
+      return null;
+    }
     try {
-      directoryCollectionPut.setName(collectionId, directoryCollectionGet.getName(collectionId));
-      directoryCollectionPut.setDescription(collectionId, directoryCollectionGet.getDescription(collectionId));
-      directoryCollectionPut.setContact(collectionId, directoryCollectionGet.getContactId(collectionId));
-      directoryCollectionPut.setCountry(collectionId, directoryCollectionGet.getCountryId(collectionId));
-      directoryCollectionPut.setBiobank(collectionId, directoryCollectionGet.getBiobankId(collectionId));
-      directoryCollectionPut.setType(collectionId, directoryCollectionGet.getTypeIds(collectionId));
-      directoryCollectionPut.setDataCategories(collectionId, directoryCollectionGet.getDataCategoryIds(collectionId));
-      directoryCollectionPut.setNetworks(collectionId, directoryCollectionGet.getNetworkIds(collectionId));
+      directoryCollectionPut.setName(collectionId, collection.getName());
+      directoryCollectionPut.setDescription(collectionId, collection.getDescription());
+      directoryCollectionPut.setContact(collectionId, collection.getContact());
+      directoryCollectionPut.setCountry(collectionId, collection.getCountry());
+      directoryCollectionPut.setBiobank(collectionId, collection.getBiobank());
+      directoryCollectionPut.setType(collectionId, collection.getType());
+      directoryCollectionPut.setDataCategories(collectionId, collection.getDataCategories());
+      directoryCollectionPut.setNetworks(collectionId, collection.getNetwork());
     } catch(Exception e) {
       logger.error("Problem merging DirectoryCollectionGet into DirectoryCollectionPut. " + Util.traceFromException(e));
       return null;

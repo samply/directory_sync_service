@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
-import de.samply.directory_sync_service.fhir.model.FhirCollection;
-import de.samply.directory_sync_service.model.BbmriEricId;
+import de.samply.directory_sync_service.directory.model.Collection;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,16 +126,16 @@ public class Sync {
             starModelInputData.runSanityChecks(fhirApi, directoryDefaultCollectionId);
 
         }
-        List<FhirCollection> fhirCollections = fhirApi.fetchFhirCollections(directoryDefaultCollectionId);
-        if (fhirCollections == null) {
+        List<Collection> collections = fhirApi.fetchCollections(directoryDefaultCollectionId);
+        if (collections == null) {
             logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
             return false;
         }
-//        Util.serializeToFile(fhirCollections, "/test/fhirCollections.json"); // collect data for unit test
-        for  (FhirCollection collection : fhirCollections)
+//        Util.serializeToFile(collections, "/test/collections.json"); // collect data for unit test
+        for  (Collection collection : collections)
             logger.debug(",  " + collection.getId());
-        logger.info("syncWithDirectory: FHIR collection count): " + fhirCollections.size());
-        if (!CollectionUpdater.sendUpdatesToDirectory(directoryApi, correctedDiagnoses, fhirCollections)) {
+        logger.info("syncWithDirectory: FHIR collection count): " + collections.size());
+        if (!CollectionUpdater.sendUpdatesToDirectory(directoryApi, correctedDiagnoses, collections)) {
             logger.warn("syncWithDirectory: there was a problem during sync to Directory");
             return false;
         }

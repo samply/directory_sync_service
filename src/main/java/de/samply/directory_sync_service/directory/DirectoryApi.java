@@ -2,6 +2,7 @@ package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
+import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
@@ -9,6 +10,7 @@ import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +79,7 @@ public abstract class DirectoryApi {
    * @param collectionIds IDs of the collections whose data will be harvested.
    * @return
    */
-  public abstract DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds);
+  public abstract Collections fetchCollections(String countryCode, List<String> collectionIds);
 
   /**
    * Send aggregated collection information to the Directory.
@@ -150,37 +152,41 @@ public abstract class DirectoryApi {
    */
   protected boolean deleteStarModel(StarModelData starModelInputData) {
     try {
-      for (String collectionId: starModelInputData.getInputCollectionIds()) {
-        String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
-
-        // Loop until no more facts are left in the Directory.
-        // We need to do things this way, because the Directory implements paging
-        // and a single pass may not get all facts.
-        do {
-          List<String> factIds = getNextPageOfFactIdsForCollection(collectionId);
-
-          if (factIds == null) {
-            logger.warn("deleteStarModel: Problem getting facts for collection: " + collectionId);
-            return false;
-          }
-          if (factIds.size() == 0) {
-            // Terminate the do loop if there are no more facts left.
-            break;
-          }
-          logger.debug("deleteStarModel: number of facts found: " + factIds.size() + " for collection: " + collectionId);
-
-          // Take the list of fact IDs and delete all of the corresponding facts
-          // at the Directory.
-          if (!deleteFactsByIds(countryCode, factIds)) {
-            logger.warn("deleteStarModel: Problem deleting facts for collection: " + collectionId);
-            return false;
-          }
-        } while (true);
-      }
+      for (String collectionId: starModelInputData.getInputCollectionIds())
+        if (!deleteStarModelForCollection(starModelInputData, collectionId)) {
+          logger.warn("deleteStarModel: Problem deleting star model for collection: " + collectionId);
+          return false;
+        }
     } catch(Exception e) {
       logger.warn("deleteStarModel: Exception during delete: " + Util.traceFromException(e));
       return false;
     }
+
+    return true;
+  }
+
+  private boolean deleteStarModelForCollection(StarModelData starModelInputData, String collectionId) {
+    String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
+
+    // Collect fact IDs by looping until no more facts are left in the Directory.
+    // We need to do things this way, because the Directory implements paging
+    // and a single pass may not get all facts.
+    do {
+      List<String> pageFactIds = getNextPageOfFactIdsForCollection(collectionId);
+
+      if (pageFactIds == null) {
+        logger.warn("deleteStarModelForCollection: Problem getting facts for collection: " + collectionId);
+        return false;
+      }
+      if (pageFactIds.size() == 0)
+        // Terminate the do loop if there are no more facts left.
+        break;
+
+      logger.debug("deleteStarModelForCollection: number of facts found: " + pageFactIds.size() + " for collection: " + collectionId);
+
+      if (!deleteFactsByIds(countryCode, pageFactIds))
+        logger.warn("deleteStarModelForCollection: Problem deleting facts for collection: " + collectionId);
+    } while (true);
 
     return true;
   }

@@ -3,6 +3,7 @@ package de.samply.directory_sync_service.directory.rest;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 
+import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
@@ -101,50 +102,49 @@ public class DirectoryApiRest extends DirectoryApi {
    * @param collectionIds IDs of the collections whose data will be harvested.
    * @return
    */
-  public DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
-    logger.debug("fetchCollectionGetOutcomes(Rest): countryCode: " + countryCode);
-    DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
-    directoryCollectionGet.init();
+  public Collections fetchCollections(String countryCode, List<String> collectionIds) {
+    logger.debug("fetchCollections(Rest): countryCode: " + countryCode);
+    Collections collections = new Collections();
 
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      directoryCollectionGet.setMockDirectory(true);
-      return directoryCollectionGet;
+      collections.setMockDirectory(true);
+      return collections;
     }
 
     boolean warnFlag = false;
     for (String collectionId: collectionIds) {
-      logger.debug("fetchCollectionGetOutcomes(Rest): collectionId: " + collectionId);
+      logger.debug("fetchCollections(Rest): collectionId: " + collectionId);
       String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
-      logger.debug("fetchCollectionGetOutcomes(Rest): commandUrl: " + commandUrl);
+      logger.debug("fetchCollections(Rest): commandUrl: " + commandUrl);
       DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
       if (singleDirectoryCollectionGet == null) {
-        logger.info("fetchCollectionGetOutcomes(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
+        logger.info("fetchCollections(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
         commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
         singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
         if (singleDirectoryCollectionGet == null) {
-          logger.warn("fetchCollectionGetOutcomes(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+          logger.warn("fetchCollections(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
           warnFlag = true;
           continue;
         }
       }
-      Map item = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
-      if (item == null) {
-        logger.warn("fetchCollectionGetOutcomes(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
+      Map collectionMap = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
+      if (collectionMap == null) {
+        logger.warn("fetchCollections(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
         warnFlag = true;
         continue;
       }
-      directoryCollectionGet.getItems().add(item);
+      collections.addCollectionFromMap(collectionMap, collectionId);
     }
 
-    if (warnFlag && directoryCollectionGet.isEmpty()) {
-      logger.warn("fetchCollectionGetOutcomes(Rest): No entities retrieved from Directory");
+    if (warnFlag && collections.isEmpty()) {
+      logger.warn("fetchCollections(Rest): No entities retrieved from Directory");
       return null;
     }
 
-    logger.debug("fetchCollectionGetOutcomes(Rest): done");
+    logger.debug("fetchCollections(Rest): done");
 
-    return directoryCollectionGet;
+    return collections;
   }
 
   /**

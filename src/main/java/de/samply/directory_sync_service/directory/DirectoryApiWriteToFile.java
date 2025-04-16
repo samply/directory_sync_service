@@ -2,6 +2,7 @@ package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
+import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
@@ -75,15 +76,12 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * @param collectionIds IDs of the collections whose data will be harvested.
    * @return
    */
-  public DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
-    DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
-    directoryCollectionGet.init();
+  public Collections fetchCollections(String countryCode, List<String> collectionIds) {
+    Collections collections = new Collections();
 
-    if (mockDirectory)
-      // Dummy return if we're in mock mode
-      directoryCollectionGet.setMockDirectory(true);
+    collections.setMockDirectory(mockDirectory);
 
-    return directoryCollectionGet;
+    return collections;
   }
 
   /**

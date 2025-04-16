@@ -1,4 +1,5 @@
-FROM eclipse-temurin:23.0.2_7-jre-alpine
+#FROM eclipse-temurin:23.0.2_7-jre-alpine
+FROM eclipse-temurin:23.0.2_7-jre
 
 # This Dockerfile is optimized to work together with a GitHub build
 # pipeline, which compiles the source code and packs it into a
