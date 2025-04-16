@@ -153,7 +153,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * Make API calls to the Directory to fill a DirectoryCollectionGet object containing attributes
+   * Make API calls to the Directory to fill a Collections object with attributes
    * for all of the collections listed in collectionIds. The countryCode is not used.
    * 
    * @param countryCode E.g. "DE".

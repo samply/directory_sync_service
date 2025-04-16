@@ -6,7 +6,6 @@ import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
-import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 
 import java.util.ArrayList;
@@ -94,7 +93,7 @@ public class DirectoryApiRest extends DirectoryApi {
   }
 
   /**
-   * Make API calls to the Directory to fill a DirectoryCollectionGet object containing attributes
+   * Make API calls to the Directory to fill a Collections object containing attributes
    * for all of the collections listed in collectionIds. The countryCode is used solely for
    * constructing the URL for the API call.
    * 
@@ -117,18 +116,18 @@ public class DirectoryApiRest extends DirectoryApi {
       logger.debug("fetchCollections(Rest): collectionId: " + collectionId);
       String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
       logger.debug("fetchCollections(Rest): commandUrl: " + commandUrl);
-      DirectoryCollectionGet singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
+      Map singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
       if (singleDirectoryCollectionGet == null) {
         logger.info("fetchCollections(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
         commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
-        singleDirectoryCollectionGet = (DirectoryCollectionGet) directoryCallsRest.get(commandUrl, DirectoryCollectionGet.class);
+        singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
         if (singleDirectoryCollectionGet == null) {
           logger.warn("fetchCollections(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
           warnFlag = true;
           continue;
         }
       }
-      Map collectionMap = singleDirectoryCollectionGet.getItemZero(); // assume that only one collection matches collectionId
+      Map collectionMap = getItemZero(singleDirectoryCollectionGet); // assume that only one collection matches collectionId
       if (collectionMap == null) {
         logger.warn("fetchCollections(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
         warnFlag = true;
@@ -146,6 +145,32 @@ public class DirectoryApiRest extends DirectoryApi {
 
     return collections;
   }
+
+  private Map getItemZero(Map singleDirectoryCollectionGet) {
+    if (singleDirectoryCollectionGet == null) {
+      logger.warn("getItemZero: singleDirectoryCollectionGet is null");
+      return null;
+    }
+    if (!singleDirectoryCollectionGet.containsKey("items")) {
+      logger.warn("getItemZero: no items in singleDirectoryCollectionGet");
+      return null;
+    }
+    if (!(singleDirectoryCollectionGet.get("items") instanceof List)) {
+      logger.warn("getItemZero: items in singleDirectoryCollectionGet is not a list");
+      return null;
+    }
+    List<Map> itemList = null;
+    try {
+      itemList = (List<Map>) singleDirectoryCollectionGet.get("items");
+      if (itemList == null || itemList.size() == 0)
+        return null;
+    } catch (Exception e) {
+      logger.warn("getItemZero: exception: " + Util.traceFromException(e));
+      return null;
+    }
+    return itemList.get(0);
+  }
+
 
   /**
    * Send aggregated collection information to the Directory.
@@ -271,7 +296,7 @@ public class DirectoryApiRest extends DirectoryApi {
 
     // Directory likes to have its delete data wrapped in a map with key "entityIds".
     HashMap<String, List<String>> factIdMap = new HashMap<>(Map.of("entityIds", factIds));
-    logger.info("deleteFactsByIds, the following IDs will be deleted: " + Util.jsonStringFomObject(factIdMap));
+    logger.debug("deleteFactsByIds, the following IDs will be deleted: " + Util.jsonStringFomObject(factIdMap));
     String result = directoryCallsRest.delete(directoryEndpointsRest.getFactEndpoint(countryCode), factIdMap);
     if (result == null) {
       logger.info("deleteFactsByIds, Problem during delete of factIds, trying without country code");

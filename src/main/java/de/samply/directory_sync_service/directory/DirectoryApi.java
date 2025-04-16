@@ -3,14 +3,12 @@ package de.samply.directory_sync_service.directory;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.Collections;
-import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +69,7 @@ public abstract class DirectoryApi {
   public abstract Biobank fetchBiobank(BbmriEricId id);
 
   /**
-   * Make API calls to the Directory to fill a DirectoryCollectionGet object containing attributes
+   * Make API calls to the Directory to fill a Collections object with attributes
    * for all of the collections listed in collectionIds. The countryCode is used solely for
    * constructing the URL for the API call.
    * 
@@ -113,7 +111,8 @@ public abstract class DirectoryApi {
     logger.debug("updateStarModel: deleting old star models");
     if (!deleteStarModel(starModelInputData)) {
       logger.warn("updateStarModel: Problem deleting star models");
-      return false;
+      logger.warn("updateStarModel: carrying on regardless");
+//      return false;
     }
 
     String countryCode = starModelInputData.getCountryCode();

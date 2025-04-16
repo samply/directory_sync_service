@@ -6,7 +6,6 @@ import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
 import de.samply.directory_sync_service.directory.MergeDirectoryCollectionGetToDirectoryCollectionPut;
 import de.samply.directory_sync_service.directory.model.Collections;
-import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.directory.model.Collection;
 import org.slf4j.Logger;
@@ -41,7 +40,7 @@ public class CollectionUpdater {
      *
      * @param directoryApi API for communicating with Directory.
      * @param correctedDiagnoses Maps ICD10 codes to corrected ICD10 codes.
-     * @param collections List of FHIR collection objects.
+     * @param collectionList List of FHIR collection objects.
      * @return A list of OperationOutcome objects indicating the outcome of the update operation.
      */
     public static boolean sendUpdatesToDirectory(DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, List<Collection> collectionList) {
