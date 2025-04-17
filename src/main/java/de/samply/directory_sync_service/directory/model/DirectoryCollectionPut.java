@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This is a data transfer object that maps onto the JSON needed for a PUT request
- * to the Directory API when you want to update one or more collections.
+ * to the Directory RESTful API when you want to update one or more collections.
  * <p>
  * It simply extends a Map and adds a single key, "entities". This contains a list
  * of collections. Each collection is also a Map, with keys corresponding to the

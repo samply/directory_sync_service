@@ -7,6 +7,7 @@ import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
+import de.samply.directory_sync_service.converter.ConvertCollectionsToDirectoryCollectionPut;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,52 +97,53 @@ public class DirectoryApiRest extends DirectoryApi {
    * Make API calls to the Directory to fill a Collections object containing attributes
    * for all of the collections listed in collectionIds. The countryCode is used solely for
    * constructing the URL for the API call.
-   * 
-   * @param countryCode E.g. "DE".
-   * @param collectionIds IDs of the collections whose data will be harvested.
+   *
+   * @param collections
    * @return
    */
-  public Collections fetchCollections(String countryCode, List<String> collectionIds) {
-    logger.debug("fetchCollections(Rest): countryCode: " + countryCode);
-    Collections collections = new Collections();
-
+  public Collections fetchBasicCollectionData(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
       collections.setMockDirectory(true);
       return collections;
     }
 
+    login();
+
+    List<String> collectionIds = collections.getCollectionIds();
+    String countryCode = collections.getCountryCode();
+
     boolean warnFlag = false;
     for (String collectionId: collectionIds) {
-      logger.debug("fetchCollections(Rest): collectionId: " + collectionId);
+      logger.debug("generateCollections(Rest): collectionId: " + collectionId);
       String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
-      logger.debug("fetchCollections(Rest): commandUrl: " + commandUrl);
+      logger.debug("generateCollections(Rest): commandUrl: " + commandUrl);
       Map singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
       if (singleDirectoryCollectionGet == null) {
-        logger.info("fetchCollections(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
+        logger.info("generateCollections(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
         commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
         singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
         if (singleDirectoryCollectionGet == null) {
-          logger.warn("fetchCollections(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+          logger.warn("generateCollections(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
           warnFlag = true;
           continue;
         }
       }
       Map collectionMap = getItemZero(singleDirectoryCollectionGet); // assume that only one collection matches collectionId
       if (collectionMap == null) {
-        logger.warn("fetchCollections(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
+        logger.warn("generateCollections(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
         warnFlag = true;
         continue;
       }
-      collections.addCollectionFromMap(collectionMap, collectionId);
+      collections.addCollectionFromMap(collectionId, collectionMap);
     }
 
     if (warnFlag && collections.isEmpty()) {
-      logger.warn("fetchCollections(Rest): No entities retrieved from Directory");
+      logger.warn("generateCollections(Rest): No entities retrieved from Directory");
       return null;
     }
 
-    logger.debug("fetchCollections(Rest): done");
+    logger.debug("generateCollections(Rest): done");
 
     return collections;
   }
@@ -175,21 +177,32 @@ public class DirectoryApiRest extends DirectoryApi {
   /**
    * Send aggregated collection information to the Directory.
    *
-   * @param directoryCollectionPut Summary information about one or more collections
+   * @param collections Summary information about one or more collections
    * @return an outcome, either successful or null
    */
-  public boolean updateEntities(DirectoryCollectionPut directoryCollectionPut) {
+  public boolean sendUpdatedCollections(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
       return true;
     }
 
+    // Munge the Collection data into a form that can be turned into JSON and
+    // sent to the Directory.
+    DirectoryCollectionPut directoryCollectionPut = ConvertCollectionsToDirectoryCollectionPut.convert(collections);
+    if (directoryCollectionPut == null) {
+      logger.warn("sendUpdatedCollections: Problem converting FHIR attributes to Directory attributes");
+      return false;
+    }
+    logger.debug("sendUpdatedCollections: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+
+    login();
+
     String response = updateEntities(directoryCollectionPut.getCountryCode(), directoryCollectionPut);
     if (response == null) {
-      logger.info("updateEntities: PUT problem, trying URL without country code");
+      logger.info("sendUpdatedCollections: PUT problem, trying URL without country code");
       response = updateEntities(null, directoryCollectionPut);
       if (response == null) {
-        logger.warn("updateEntities: PUT problem even without country code, aborting");
+        logger.warn("sendUpdatedCollections: PUT problem even without country code, aborting");
         return false;
       }
     }

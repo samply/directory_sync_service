@@ -720,7 +720,7 @@ public class FhirApi {
    * @param directoryDefaultCollectionId
    * @return
    */
-  public Collections fetchCollections(String directoryDefaultCollectionId) {
+  public Collections generateCollections(String directoryDefaultCollectionId) {
     BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
             .valueOf(directoryDefaultCollectionId)
             .orElse(null);
@@ -769,7 +769,7 @@ public class FhirApi {
       collection.setMaterials(extractMaterialsFromSpecimenList(specimenList));
       collection.setStorageTemperatures(extractExtensionElementValuesFromSpecimens(specimenList, STORAGE_TEMPERATURE_URI));
       collection.setDiagnosisAvailable(extractExtensionElementValuesFromSpecimens(specimenList, SAMPLE_DIAGNOSIS_URI));
-      collections.addCollection(collection, collectionId);
+      collections.addCollection(collectionId, collection);
     }
   }
 
@@ -794,7 +794,7 @@ public class FhirApi {
       collection.setAgeLow(extractAgeLowFromPatientList(patientList));
       collection.setAgeHigh(extractAgeHighFromPatientList(patientList));
       collection.setDiagnosisAvailable(extractDiagnosesFromPatientList(patientList));
-      collections.addCollection(collection, collectionId);
+      collections.addCollection(collectionId, collection);
     }
   }
 

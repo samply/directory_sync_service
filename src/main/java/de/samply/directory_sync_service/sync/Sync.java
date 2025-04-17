@@ -9,11 +9,9 @@ import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
-import de.samply.directory_sync_service.directory.model.Collection;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,29 +76,21 @@ public class Sync {
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi;
-//        if (directoryWriteToFile) {
-//            directoryApi = new DirectoryApiWriteToFile(directoryOutputDirectory);
-//        } else {
-//            directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-//
-//            // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
-//            if (!directoryApi.login()) {
-//                logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
-//                directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-//                if (!directoryApi.login()) {
-//                    logger.warn("syncWithDirectory: there was a problem during login to Directory");
-//                    return false;
-//                }
-//            }
-//        }
+        if (directoryWriteToFile) {
+            directoryApi = new DirectoryApiWriteToFile(directoryOutputDirectory);
+        } else {
+            directoryApi = new DirectoryApiGraphql(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
 
-        // For testing purposes, use the REST API.
-        directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
-        if (!directoryApi.login()) {
-            logger.warn("syncWithDirectory: there was a problem during login to Directory");
-            return false;
+            // First try to log in via the GraphQL API. If that doesn't work, try the REST API.
+            if (!directoryApi.login()) {
+                logger.info("syncWithDirectory: Directory GraphQL API is not available, trying REST API");
+                directoryApi = new DirectoryApiRest(directoryUrl, directoryMock, directoryUserName, directoryUserPass);
+                if (!directoryApi.login()) {
+                    logger.warn("syncWithDirectory: there was a problem during login to Directory");
+                    return false;
+                }
+            }
         }
-
 
         // Login test. Don't perform any further actions on the Directory.
         if (directoryOnlyLogin) {
@@ -135,15 +125,34 @@ public class Sync {
             starModelInputData.runSanityChecks(fhirApi, directoryDefaultCollectionId);
 
         }
-        Collections collections = fhirApi.fetchCollections(directoryDefaultCollectionId);
+
+        // Mine the FHIR store for all available collections. This gets aggregated
+        // information about the collections, like the number of samples, the number
+        // of patients, a list of diagnosis codes, etc.
+        Collections collections = fhirApi.generateCollections(directoryDefaultCollectionId);
         if (collections == null) {
             logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
             return false;
         }
-//        Util.serializeToFile(collections, "/test/collections.json"); // collect data for unit test
-        logger.info("syncWithDirectory: FHIR collection count): " + collections.size());
-        if (!CollectionUpdater.sendUpdatesToDirectory(directoryApi, correctedDiagnoses, collections)) {
-            logger.warn("syncWithDirectory: there was a problem during sync to Directory");
+
+        // Apply corrections to ICD 10 diagnoses, to make them compatible with
+        // the Directory.
+        collections.applyDiagnosisCorrections(correctedDiagnoses);
+
+        // Get basic information for each collection from the Directory.
+        // This is stuff like collection name, description, associated biobank,
+        // etc. It gets combined with the information from the FHIR store.
+        directoryApi.fetchBasicCollectionData(collections);
+        if (collections == null) {
+            logger.warn("syncWithDirectory: Problem getting collections from Directory");
+            return false;
+        }
+        logger.debug("syncWithDirectory: collections.size(): " + collections.size());
+
+        // Push the combined collection information (from the FHIR store and the basic
+        // information from the Directory) to the Directory.
+        if (!directoryApi.sendUpdatedCollections(collections)) {
+            logger.warn("syncWithDirectory: Problem during collection update");
             return false;
         }
 
