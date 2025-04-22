@@ -1,6 +1,7 @@
 package de.samply.directory_sync_service.directory.rest;
 
 import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.converter.ConvertDirectoryCollectionGetToCollections;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 
 import de.samply.directory_sync_service.directory.model.Collections;
@@ -104,7 +105,6 @@ public class DirectoryApiRest extends DirectoryApi {
   public Collections fetchBasicCollectionData(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      collections.setMockDirectory(true);
       return collections;
     }
 
@@ -135,7 +135,7 @@ public class DirectoryApiRest extends DirectoryApi {
         warnFlag = true;
         continue;
       }
-      collections.addCollectionFromMap(collectionId, collectionMap);
+      ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
     }
 
     if (warnFlag && collections.isEmpty()) {

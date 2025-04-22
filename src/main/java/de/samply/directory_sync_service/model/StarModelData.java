@@ -47,7 +47,7 @@ public class StarModelData {
 
     public List<Map<String, String>> getInputRowsAsStringMaps(String collectionId) {
         List<Map<String, String>> rowsAsStringMaps = new ArrayList<Map<String, String>>();
-        for (InputRow row: inputData.get(collectionId))
+        for (StarModelInputRow row: inputData.get(collectionId))
             rowsAsStringMaps.add(row.asMap());
 
         return rowsAsStringMaps;
@@ -55,173 +55,173 @@ public class StarModelData {
 
     // *** Input data for the star model.
 
-    int ageAtPrimaryDiagnosisWarningCounter = 0;
-    /**
-     * Represents an input row of the inputData table, with attributes commonly associated with medical data.
-     * Extends the HashMap class to provide a key-value mapping for attributes.
-     * <p>
-     * The attributes include collection, sample material, patient ID, sex, histological location,
-     * and age at primary diagnosis.
-     */
-    public class InputRow {
-        private String age_at_primary_diagnosis;
-        private String hist_loc;
-        private String sex;
-        private String id;
-        private String sample_material;
-        private String collection;
-
-        /**
-         * Constructs a new InputRow with the specified attributes.
-         * 
-         * @param collection The identifier for the collection associated with the input row.
-         * @param sampleMaterial The sample material associated with the input row.
-         * @param patientId The identifier of the patient associated with the input row.
-         * @param sex The gender information of the patient.
-         * @param age The age at primary diagnosis of the patient.
-         */
-        public InputRow(String collection, String sampleMaterial, String patientId, String sex, String age) {
-            setCollection(collection);
-            setSampleMaterial(sampleMaterial);
-            setId(patientId);
-            setSex(sex);
-            setAgeAtPrimaryDiagnosis(age);
-        }
-
-        /**
-         * Constructs a new InputRow based on an existing row and updates it with a new diagnosis.
-         * 
-         * @param row The existing input row to base the new row on.
-         * @param histLoc The new histological location to be associated with the input row.
-         */
-        public InputRow(InputRow row, String histLoc) {
-            setAgeAtPrimaryDiagnosis(row.getAgeAtPrimaryDiagnosis());
-            setCollection(row.getCollection());
-            setId(row.getId());
-            setSex(row.getSex());
-            setSampleMaterial(row.getSampleMaterial());
-            setHistLoc(histLoc);
-        }
-
-        public Map<String, String> asMap() {
-            Map<String, String> row = new HashMap<String, String>();
-            row.put("age_at_primary_diagnosis", age_at_primary_diagnosis);
-            row.put("hist_loc", hist_loc);
-            row.put("sex", sex);
-            row.put("id", id);
-            row.put("sample_material", sample_material);
-            row.put("collection", collection);
-            return row;
-        }
-
-        public String getCollection() {
-            return collection;
-        }
-
-        /**
-         * Sets the collection attribute for the input row.
-         * 
-         * @param collection The identifier for the collection to be associated with the input row.
-         */
-        public void setCollection(String collection) {
-            if (collection == null)
-                return;
-            this.collection = collection;
-        }
-
-        public String getSampleMaterial() {
-            return sample_material;
-        }
-
-        /**
-         * Sets the sample material attribute for the input row.
-         * Converts the provided sample material using the FhirToDirectoryAttributeConverter.
-         * 
-         * @param sampleMaterial The sample material to be associated with the input row.
-         * 
-         * @see FhirToDirectoryAttributeConverter#convertMaterial(String)
-         */
-        public void setSampleMaterial(String sampleMaterial) {
-            if (sampleMaterial == null)
-                return;
-            this.sample_material = FhirToDirectoryAttributeConverter.convertMaterial(sampleMaterial);
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        /**
-         * Sets the patient ID attribute for the input row.
-         * 
-         * @param id The identifier of the patient to be associated with the input row.
-         */
-        public void setId(String id) {
-            if (id == null)
-                return;
-            this.id = id;
-        }
-
-        public String getSex() {
-            return sex;
-        }
-
-        /**
-         * Sets the sex attribute for the input row.
-         * Converts the provided sex information using the FhirToDirectoryAttributeConverter.
-         * 
-         * @param sex The gender information to be associated with the input row.
-         * 
-         * @see FhirToDirectoryAttributeConverter#convertSex(String)
-         */
-        public void setSex(String sex) {
-            if (sex == null)
-                return;
-            this.sex = FhirToDirectoryAttributeConverter.convertSex(sex);
-        }
-
-        public String getHistLoc() {
-            return hist_loc;
-        }
-
-        /**
-         * Sets the histological location attribute for the input row.
-         * Converts the provided histological location using the FhirToDirectoryAttributeConverter.
-         * 
-         * @param histLoc The histological location to be associated with the input row.
-         * 
-         * @see FhirToDirectoryAttributeConverter#convertDiagnosis(String)
-         */
-        public void setHistLoc(String histLoc) {
-            if (histLoc == null)
-                return;
-            this.hist_loc = FhirToDirectoryAttributeConverter.convertDiagnosis(histLoc);
-        }
-
-        public String getAgeAtPrimaryDiagnosis() {
-            return age_at_primary_diagnosis;
-        }
-
-        /**
-         * Sets the age at primary diagnosis attribute for the input row.
-         * 
-         * @param age The age at primary diagnosis to be associated with the input row.
-         */
-        public void setAgeAtPrimaryDiagnosis(String age) {
-            if (age == null) {
-                if (ageAtPrimaryDiagnosisWarningCounter++ < 5) // Don't print too many warnings
-                    logger.warn("setAgeAtPrimaryDiagnosis: age is null, ignoring.");
-                return;
-            }
-            this.age_at_primary_diagnosis = age;
-        }
-    }
+//    int ageAtPrimaryDiagnosisWarningCounter = 0;
+//    /**
+//     * Represents an input row of the inputData table, with attributes commonly associated with medical data.
+//     * Extends the HashMap class to provide a key-value mapping for attributes.
+//     * <p>
+//     * The attributes include collection, sample material, patient ID, sex, histological location,
+//     * and age at primary diagnosis.
+//     */
+//    public class InputRow {
+//        private String age_at_primary_diagnosis;
+//        private String hist_loc;
+//        private String sex;
+//        private String id;
+//        private String sample_material;
+//        private String collection;
+//
+//        /**
+//         * Constructs a new InputRow with the specified attributes.
+//         *
+//         * @param collection The identifier for the collection associated with the input row.
+//         * @param sampleMaterial The sample material associated with the input row.
+//         * @param patientId The identifier of the patient associated with the input row.
+//         * @param sex The gender information of the patient.
+//         * @param age The age at primary diagnosis of the patient.
+//         */
+//        public InputRow(String collection, String sampleMaterial, String patientId, String sex, String age) {
+//            setCollection(collection);
+//            setSampleMaterial(sampleMaterial);
+//            setId(patientId);
+//            setSex(sex);
+//            setAgeAtPrimaryDiagnosis(age);
+//        }
+//
+//        /**
+//         * Constructs a new InputRow based on an existing row and updates it with a new diagnosis.
+//         *
+//         * @param row The existing input row to base the new row on.
+//         * @param histLoc The new histological location to be associated with the input row.
+//         */
+//        public InputRow(InputRow row, String histLoc) {
+//            setAgeAtPrimaryDiagnosis(row.getAgeAtPrimaryDiagnosis());
+//            setCollection(row.getCollection());
+//            setId(row.getId());
+//            setSex(row.getSex());
+//            setSampleMaterial(row.getSampleMaterial());
+//            setHistLoc(histLoc);
+//        }
+//
+//        public Map<String, String> asMap() {
+//            Map<String, String> row = new HashMap<String, String>();
+//            row.put("age_at_primary_diagnosis", age_at_primary_diagnosis);
+//            row.put("hist_loc", hist_loc);
+//            row.put("sex", sex);
+//            row.put("id", id);
+//            row.put("sample_material", sample_material);
+//            row.put("collection", collection);
+//            return row;
+//        }
+//
+//        public String getCollection() {
+//            return collection;
+//        }
+//
+//        /**
+//         * Sets the collection attribute for the input row.
+//         *
+//         * @param collection The identifier for the collection to be associated with the input row.
+//         */
+//        public void setCollection(String collection) {
+//            if (collection == null)
+//                return;
+//            this.collection = collection;
+//        }
+//
+//        public String getSampleMaterial() {
+//            return sample_material;
+//        }
+//
+//        /**
+//         * Sets the sample material attribute for the input row.
+//         * Converts the provided sample material using the FhirToDirectoryAttributeConverter.
+//         *
+//         * @param sampleMaterial The sample material to be associated with the input row.
+//         *
+//         * @see FhirToDirectoryAttributeConverter#convertMaterial(String)
+//         */
+//        public void setSampleMaterial(String sampleMaterial) {
+//            if (sampleMaterial == null)
+//                return;
+//            this.sample_material = FhirToDirectoryAttributeConverter.convertMaterial(sampleMaterial);
+//        }
+//
+//        public String getId() {
+//            return id;
+//        }
+//
+//        /**
+//         * Sets the patient ID attribute for the input row.
+//         *
+//         * @param id The identifier of the patient to be associated with the input row.
+//         */
+//        public void setId(String id) {
+//            if (id == null)
+//                return;
+//            this.id = id;
+//        }
+//
+//        public String getSex() {
+//            return sex;
+//        }
+//
+//        /**
+//         * Sets the sex attribute for the input row.
+//         * Converts the provided sex information using the FhirToDirectoryAttributeConverter.
+//         *
+//         * @param sex The gender information to be associated with the input row.
+//         *
+//         * @see FhirToDirectoryAttributeConverter#convertSex(String)
+//         */
+//        public void setSex(String sex) {
+//            if (sex == null)
+//                return;
+//            this.sex = FhirToDirectoryAttributeConverter.convertSex(sex);
+//        }
+//
+//        public String getHistLoc() {
+//            return hist_loc;
+//        }
+//
+//        /**
+//         * Sets the histological location attribute for the input row.
+//         * Converts the provided histological location using the FhirToDirectoryAttributeConverter.
+//         *
+//         * @param histLoc The histological location to be associated with the input row.
+//         *
+//         * @see FhirToDirectoryAttributeConverter#convertDiagnosis(String)
+//         */
+//        public void setHistLoc(String histLoc) {
+//            if (histLoc == null)
+//                return;
+//            this.hist_loc = FhirToDirectoryAttributeConverter.convertDiagnosis(histLoc);
+//        }
+//
+//        public String getAgeAtPrimaryDiagnosis() {
+//            return age_at_primary_diagnosis;
+//        }
+//
+//        /**
+//         * Sets the age at primary diagnosis attribute for the input row.
+//         *
+//         * @param age The age at primary diagnosis to be associated with the input row.
+//         */
+//        public void setAgeAtPrimaryDiagnosis(String age) {
+//            if (age == null) {
+//                if (ageAtPrimaryDiagnosisWarningCounter++ < 5) // Don't print too many warnings
+//                    logger.warn("setAgeAtPrimaryDiagnosis: age is null, ignoring.");
+//                return;
+//            }
+//            this.age_at_primary_diagnosis = age;
+//        }
+//    }
 
     // Data relevant for Directory sync that has been read in from the FHIR store.
     // This comprises of one row per Patient/Specimen/Diagnosis combination.
     // Each row is a map containing attributes relevant to the star model.
     // A Map of a List of Maps: collectionID_1 -> [row0, row1, ...]
-    private final Map<String,List<InputRow>> inputData = new HashMap<String,List<InputRow>>();
+    private final Map<String,List<StarModelInputRow>> inputData = new HashMap<String,List<StarModelInputRow>>();
 
     /**
      * Adds an input row to the specified collection in the inputData map.
@@ -232,10 +232,10 @@ public class StarModelData {
      * 
      * @throws NullPointerException if collectionId or row is null.
      */
-    public void addInputRow(String collectionId, InputRow row) {
+    public void addInputRow(String collectionId, StarModelInputRow row) {
         if (!inputData.containsKey(collectionId))
-            inputData.put(collectionId, new ArrayList<InputRow>());
-        List<InputRow> rows = inputData.get(collectionId);
+            inputData.put(collectionId, new ArrayList<StarModelInputRow>());
+        List<StarModelInputRow> rows = inputData.get(collectionId);
         rows.add(row);
     }
 
@@ -252,10 +252,10 @@ public class StarModelData {
      * 
      * @throws NullPointerException if any of the parameters is null.
      * 
-     * @see InputRow
+     * @see StarModelInputRow
      */
-    public InputRow newInputRow(String collection, String sampleMaterial, String patientId, String sex, String age) {
-        return new InputRow(collection, sampleMaterial, patientId, sex, age);
+    public StarModelInputRow newInputRow(String collection, String sampleMaterial, String patientId, String sex, String age) {
+        return new StarModelInputRow(collection, sampleMaterial, patientId, sex, age);
     }
 
     /**
@@ -268,8 +268,8 @@ public class StarModelData {
      * 
      * @throws NullPointerException if row or histLoc is null.
      */
-    public InputRow newInputRow(InputRow row, String histLoc) {
-        return new InputRow(row, histLoc);
+    public StarModelInputRow newInputRow(StarModelInputRow row, String histLoc) {
+        return new StarModelInputRow(row, histLoc);
     }
 
     public Set<String> getInputCollectionIds() {

@@ -74,8 +74,6 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * @return
    */
   public Collections fetchBasicCollectionData(Collections collections) {
-    collections.setMockDirectory(mockDirectory);
-
     return collections;
   }
 

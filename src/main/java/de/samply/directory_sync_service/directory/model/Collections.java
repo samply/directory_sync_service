@@ -18,7 +18,6 @@ public class Collections {
     private static final Logger logger = LoggerFactory.getLogger(Collections.class);
     // A Map of Collections, keyed by collection ID.
     private TreeMap <String, Collection> collections = new TreeMap<>();
-    private boolean mockDirectory = false;
 
 
     public Collection getCollection(String id) {
@@ -35,18 +34,6 @@ public class Collections {
             existingCollection.combineCollections(collection);
         } else
             collections.put(collectionId, collection);
-    }
-
-    public void setMockDirectory(boolean mockDirectory) {
-        this.mockDirectory = mockDirectory;
-    }
-
-    public boolean isMockDirectory() {
-        return mockDirectory;
-    }
-
-    public void addCollectionFromMap(String collectionId, Map<String, Object> collectionMap) {
-        addCollection(collectionId, Collection.newFromMap(collectionMap));
     }
 
     public boolean isEmpty() {

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.StarModelInputRow;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
@@ -40,7 +41,7 @@ public class PopulateStarModelInputData {
    * Populates a Star Model input data object based on specimens fetched from the FHIR server,
    * grouped according to the specified default BBMRI-ERIC collection ID.
    *
-   * @param defaultBbmriEricCollectionId The default BBMRI-ERIC collection ID to group specimens. May be null.
+   * @param directoryDefaultCollectionId The default BBMRI-ERIC collection ID to group specimens. May be null.
    * @return A StarModelData object populated with data extracted from the fetched specimens.
    */
   public StarModelData populate(String directoryDefaultCollectionId) {
@@ -115,7 +116,7 @@ public class PopulateStarModelInputData {
     String age = determinePatientAgeAtCollection(patient);
 
     // Create a new Row object to hold data extracted from patient and specimen
-    StarModelData.InputRow row = starModelInputData.newInputRow(collectionId, material, patientId, sex, age);
+    StarModelInputRow row = starModelInputData.newInputRow(collectionId, material, patientId, sex, age);
 
     List<String> diagnoses = extractDiagnosesFromPatientAndSpecimen(patient, specimen);
 

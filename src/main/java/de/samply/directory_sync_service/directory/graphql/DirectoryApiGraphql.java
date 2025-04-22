@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.samply.directory_sync_service.Util;
+import de.samply.directory_sync_service.converter.ConvertDirectoryCollectionGetToCollections;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.Collections;
@@ -162,7 +163,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
   public Collections fetchBasicCollectionData(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      collections.setMockDirectory(true);
       return collections;
     }
 
@@ -219,7 +219,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
         logger.warn("generateCollections: entity get item is null, does the collection exist in the Directory: " + collectionId);
         continue;
       }
-      collections.addCollectionFromMap(collectionId, collectionMap);
+      ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
     }
 
     return collections;
