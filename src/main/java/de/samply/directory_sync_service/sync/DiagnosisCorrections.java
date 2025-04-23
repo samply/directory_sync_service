@@ -41,7 +41,7 @@ public class DiagnosisCorrections {
                     .valueOf(defaultCollectionId)
                     .orElse(null);
 
-            // Get all diagnoses from the FHIR store for specemins with identifiable
+            // Get all diagnoses from the FHIR store for specimens with identifiable
             // collections and their associated patients.
             List<String> fhirDiagnoses = fhirApi.fetchDiagnoses(defaultBbmriEricCollectionId);
             if (fhirDiagnoses == null) {
@@ -51,7 +51,7 @@ public class DiagnosisCorrections {
             logger.debug("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
             if (fhirDiagnoses.size() == 0) {
-                logger.warn("generateDiagnosisCorrections: No diagnoses found in FHIR store, no need to continu");
+                logger.warn("generateDiagnosisCorrections: No diagnoses found in FHIR store, no need to continue");
                 return correctedDiagnoses;
             }
 

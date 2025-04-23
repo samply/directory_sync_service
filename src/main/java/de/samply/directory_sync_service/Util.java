@@ -2,7 +2,6 @@ package de.samply.directory_sync_service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import de.samply.directory_sync_service.model.StarModelData;
 import de.samply.directory_sync_service.sync.Sync;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
