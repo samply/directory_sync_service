@@ -5,6 +5,7 @@ import de.samply.directory_sync_service.directory.model.Biobank;
 import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
+import de.samply.directory_sync_service.model.FactTable;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The DirectoryApi class provides an interface for interacting with the Directory service.
@@ -96,10 +98,11 @@ public abstract class DirectoryApi {
    * star model data for all known collections will be deleted from the
    * Directory.
    *
-   * @param starModelInputData The input data for updating the Star Model.
+   * @param factTable          The input data for updating the Star Model.
+   * @param inputCollectionIds
    * @return An OperationOutcome indicating the success or failure of the update.
    */
-  public boolean updateStarModel(StarModelData starModelInputData) {
+  public boolean updateStarModel(FactTable factTable, List<String> inputCollectionIds) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
       return true;
@@ -111,14 +114,14 @@ public abstract class DirectoryApi {
     // 3. We will be using a POST and it will return an error if we try
     //    to overwrite an existing fact.
     logger.debug("updateStarModel: deleting old star models");
-    if (!deleteStarModel(starModelInputData)) {
+    if (!deleteStarModel(inputCollectionIds)) {
       logger.warn("updateStarModel: Problem deleting star models");
       logger.warn("updateStarModel: carrying on regardless");
 //      return false;
     }
 
-    String countryCode = starModelInputData.getCountryCode();
-    List<Map<String, String>> factTables = starModelInputData.getFactTables();
+    String countryCode = factTable.getCountryCode();
+    List<Map<String, String>> factTables = factTable.getFactTables();
     int blockSize = 1000;
 
     // Break the fact table into blocks of 1000 before sending to the Directory.
@@ -148,13 +151,13 @@ public abstract class DirectoryApi {
   /**
    * Deletes existing star models from the Directory service for each of the collection IDs in the supplied StarModelInputData object.
    *
-   * @param starModelInputData The input data for deleting existing star models.
+   * @param collectionIds a list of relevant collection IDs.
    * @return An boolean indicating the success or failure of the deletion.
    */
-  protected boolean deleteStarModel(StarModelData starModelInputData) {
+  protected boolean deleteStarModel(List<String> collectionIds) {
     try {
-      for (String collectionId: starModelInputData.getInputCollectionIds())
-        if (!deleteStarModelForCollection(starModelInputData, collectionId)) {
+      for (String collectionId: collectionIds)
+        if (!deleteStarModelForCollection(collectionId)) {
           logger.warn("deleteStarModel: Problem deleting star model for collection: " + collectionId);
           return false;
         }
@@ -166,7 +169,7 @@ public abstract class DirectoryApi {
     return true;
   }
 
-  private boolean deleteStarModelForCollection(StarModelData starModelInputData, String collectionId) {
+  private boolean deleteStarModelForCollection(String collectionId) {
     String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
 
     // Collect fact IDs by looping until no more facts are left in the Directory.

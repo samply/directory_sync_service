@@ -2,6 +2,7 @@ package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.FactTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,8 @@ public class CreateFactTablesFromStarModelInputData {
      *
      * @throws NullPointerException if starModelInputData is null.
      */
-    public static void createFactTables(StarModelData starModelInputData, int maxFacts) {
+    public static FactTable createFactTables(StarModelData starModelInputData, int maxFacts) {
+        FactTable factTable = new FactTable();
         for (String collectionId: starModelInputData.getInputCollectionIds()) {
             List<Map<String, String>> factTableFinal = createFactTableFinal(collectionId,
                     starModelInputData.getMinDonors(),
@@ -41,8 +43,10 @@ public class CreateFactTablesFromStarModelInputData {
             logger.debug("createFactTables: collectionId: " + collectionId + ", factTableFinal.size() " + factTableFinal.size());
             if (factTableFinal.size() == 0)
                 logger.warn("createFactTables: factTableFinal.size() is zero");
-            starModelInputData.addFactTable(factTableFinal);
+            factTable.addFactTable(factTableFinal);
         }
+
+        return factTable;
     }
 
     /**

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
+import de.samply.directory_sync_service.model.FactTable;
 import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,12 +119,12 @@ public class Sync {
 //            Util.serializeToFile(starModelInputData, "/test/starModelInputData.json"); // collect data for unit test
 
             // Send fact tables to Directory
-            if (!StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, directoryMinDonors, directoryMaxFacts)) {
+            FactTable factTable = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, directoryMinDonors, directoryMaxFacts);
+            if (factTable == null) {
                 logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
                 return false;
             }
-            starModelInputData.runSanityChecks(fhirApi, directoryDefaultCollectionId);
-
+            factTable.runSanityChecks(fhirApi, directoryDefaultCollectionId);
         }
 
         // Mine the FHIR store for all available collections. This gets aggregated
