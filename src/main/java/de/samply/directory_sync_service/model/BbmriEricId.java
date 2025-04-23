@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
  * This class represents a BBMRI-ERIC identifier which has the following form:
  * <p>
  * {@literal bbmri-eric:ID:<country-code>_<suffix>}
+ *
+ * Can be used for both biobank and collection IDs
  */
 public class BbmriEricId {
   private static final Logger logger = LogManager.getLogger(BbmriEricId.class);

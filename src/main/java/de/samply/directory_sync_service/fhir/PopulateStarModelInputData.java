@@ -20,7 +20,8 @@ import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.StarModelInput;
+import de.samply.directory_sync_service.model.StarModelInputRow;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
@@ -40,10 +41,10 @@ public class PopulateStarModelInputData {
    * Populates a Star Model input data object based on specimens fetched from the FHIR server,
    * grouped according to the specified default BBMRI-ERIC collection ID.
    *
-   * @param defaultBbmriEricCollectionId The default BBMRI-ERIC collection ID to group specimens. May be null.
-   * @return A StarModelData object populated with data extracted from the fetched specimens.
+   * @param directoryDefaultCollectionId The default BBMRI-ERIC collection ID to group specimens. May be null.
+   * @return A StarModelInput object populated with data extracted from the fetched specimens.
    */
-  public StarModelData populate(String directoryDefaultCollectionId) {
+  public StarModelInput populate(String directoryDefaultCollectionId) {
     BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
             .valueOf(directoryDefaultCollectionId)
             .orElse(null);
@@ -54,28 +55,28 @@ public class PopulateStarModelInputData {
       return null;
     }
 
-    StarModelData starModelInputData = new StarModelData();
+    StarModelInput starModelInput = new StarModelInput();
     if (specimensByCollection.keySet().size() ==0)
       logger.warn("populate: specimensByCollection.keySet() is empty");
     for (String collectionId: specimensByCollection.keySet()) {
       logger.debug("populate: collectionId: " + collectionId);
-      populateCollection(starModelInputData, collectionId, specimensByCollection.get(collectionId));
+      populateCollection(starModelInput, collectionId, specimensByCollection.get(collectionId));
     }
 
-    return starModelInputData;
+    return starModelInput;
   }
 
   /**
    * Populates the Star Model input data with information extracted from a list of specimens
    * associated with a specific collection.
    *
-   * @param starModelInputData The Star Model input data to be populated.
+   * @param starModelInput The Star Model input data to be populated.
    * @param collectionId The identifier for the collection to which the specimens belong.
    * @param specimens The list of specimens from which to extract data and populate the input data.
    *
    * @throws NullPointerException if starModelInputData, collectionId, or specimens is null.
    */
-  private void populateCollection(StarModelData starModelInputData, String collectionId, List<Specimen> specimens) {
+  private void populateCollection(StarModelInput starModelInput, String collectionId, List<Specimen> specimens) {
     if (specimens.size() == 0) {
       logger.warn("populateCollection: specimens list is empty, skipping collection: " + collectionId);
       return;
@@ -83,7 +84,7 @@ public class PopulateStarModelInputData {
 
     int specimenCounter = 0;
     for (Specimen specimen: specimens) {
-      populateSpecimen(starModelInputData, collectionId, specimen);
+      populateSpecimen(starModelInput, collectionId, specimen);
       if (specimenCounter % 1000 == 0) {
         logger.debug("populateCollection: specimenCounter: " + specimenCounter + " of " + specimens.size());
       }
@@ -94,13 +95,13 @@ public class PopulateStarModelInputData {
   /**
    * Populates the Star Model input data with information extracted from a single specimen.
    *
-   * @param starModelInputData The Star Model input data to be populated.
+   * @param starModelInput The Star Model input data to be populated.
    * @param collectionId The identifier for the collection to which the specimen belongs.
    * @param specimen The specimen from which to extract data and populate the input data.
    *
    * @throws NullPointerException if starModelInputData, collectionId, or specimen is null.
    */
-  private void populateSpecimen(StarModelData starModelInputData, String collectionId, Specimen specimen) {
+  private void populateSpecimen(StarModelInput starModelInput, String collectionId, Specimen specimen) {
     // Get the Patient who donated the sample
     Patient patient = fhirApi.extractPatientFromSpecimen(specimen);
 
@@ -115,13 +116,13 @@ public class PopulateStarModelInputData {
     String age = determinePatientAgeAtCollection(patient);
 
     // Create a new Row object to hold data extracted from patient and specimen
-    StarModelData.InputRow row = starModelInputData.newInputRow(collectionId, material, patientId, sex, age);
+    StarModelInputRow row = new StarModelInputRow(collectionId, material, patientId, sex, age);
 
     List<String> diagnoses = extractDiagnosesFromPatientAndSpecimen(patient, specimen);
 
     // Add all of the collected information to the input data table.
     for (String diagnosis: diagnoses)
-      starModelInputData.addInputRow(collectionId, starModelInputData.newInputRow(row, diagnosis));
+      starModelInput.addInputRow(collectionId, StarModelInputRow.newInputRow(row, diagnosis));
   }
 
   int nullAgeCounter = 0;

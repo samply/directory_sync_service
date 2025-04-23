@@ -2,13 +2,12 @@ package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
-import de.samply.directory_sync_service.directory.model.DirectoryCollectionGet;
+import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
+import de.samply.directory_sync_service.converter.ConvertCollectionsToDirectoryCollectionPut;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.io.BufferedWriter;
@@ -70,37 +69,39 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
 
   /**
    * More or less a dummy operator.
-   * 
-   * @param countryCode E.g. "DE".
-   * @param collectionIds IDs of the collections whose data will be harvested.
+   *
+   * @param collections
    * @return
    */
-  public DirectoryCollectionGet fetchCollectionGetOutcomes(String countryCode, List<String> collectionIds) {
-    DirectoryCollectionGet directoryCollectionGet = new DirectoryCollectionGet(); // for all collections retrieved from Directory
-    directoryCollectionGet.init();
-
-    if (mockDirectory)
-      // Dummy return if we're in mock mode
-      directoryCollectionGet.setMockDirectory(true);
-
-    return directoryCollectionGet;
+  public Collections fetchBasicCollectionData(Collections collections) {
+    return collections;
   }
 
   /**
    * Deposits aggregated collection information into a file.
    *
-   * @param directoryCollectionPut Summary information about one or more collections
+   * @param collections Summary information about one or more collections
    * @return an outcome, either successful or null
    */
-  public boolean updateEntities(DirectoryCollectionPut directoryCollectionPut) {
+  public boolean sendUpdatedCollections(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
       return true;
     }
 
+    // Convert Collections object into a DirectoryCollectionPut object. This is
+    // really intended for use with the RESTful API, but it can be mutated to
+    // work with a tabular interface as well.
+    DirectoryCollectionPut directoryCollectionPut = ConvertCollectionsToDirectoryCollectionPut.convert(collections);
+    if (directoryCollectionPut == null) {
+      logger.warn("sendUpdatedCollections: Problem converting FHIR attributes to Directory attributes");
+      return false;
+    }
+    logger.debug("sendUpdatedCollections: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+
     List<Map<String, Object>> entities = new ArrayList<Map<String, Object>>();
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      logger.debug("updateEntities: about to update collection: " + collectionId);
+      logger.debug("sendUpdatedCollections: about to update collection: " + collectionId);
 
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       cleanEntity(entity);
@@ -113,138 +114,6 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
     writeEntitiesToFile(entities);
 
     return true;
-  }
-
-  /**
-   * Removes keys from the given collection if the corresponding value is an empty list or a list with a single null element.
-   *
-   * @param entity The collection to clean.
-   */
-  private void cleanEntity(Map<String, Object> entity) {
-    List<String> badKeys = new ArrayList<String>(); // List of keys to remove>
-    for (String key: entity.keySet()) {
-      if (entity.get(key) instanceof List list) {
-        if (list.size() == 0) {
-          logger.debug("cleanEntity: attribute \"" + key + "\" is an empty list");
-          badKeys.add(key);
-        }
-        if (list.size() == 1 && list.get(0) == null) {
-          logger.debug("cleanEntity: attribute \"" + key + "\" has a single null element");
-          badKeys.add(key);
-        }
-      }
-    }
-    for (String key: badKeys) {
-      logger.debug("cleanEntity: removing bad attribute: \"" + key + "\"");
-      entity.remove(key);
-    }
-  }
-
-  /**
-   * Inserts missing attributes into the collection based on the provided DirectoryCollectionPut object.
-   *
-   * @param directoryCollectionPut The object containing the missing attributes.
-   * @param entity The collection to insert missing attributes into.
-   */
-  private void insertMissingAttributesIntoEntity(DirectoryCollectionPut directoryCollectionPut, Map<String, Object> entity) {
-    if (!entity.containsKey("country"))
-      entity.put("country", directoryCollectionPut.getCountryCode());
-    if (!entity.containsKey("timestamp"))
-      entity.put("timestamp", LocalDateTime.now().toString());
-    if (!entity.containsKey("national_node"))
-      entity.put("national_node", directoryCollectionPut.getCountryCode());
-    if (!entity.containsKey("biobank_label") && entity.containsKey("biobank") && entity.get("biobank") instanceof String)
-      entity.put("biobank_label", entity.get("biobank"));
-    if (!entity.containsKey("type")) {
-      List<String> type = new ArrayList<>();
-      type.add("SAMPLE");
-      entity.put("type", type);
-    }
-    if (!entity.containsKey("data_categories")) {
-      List<String> dataCategories = new ArrayList<>();
-      dataCategories.add("BIOLOGICAL_SAMPLES");
-      entity.put("data_categories", dataCategories);
-    }
-  }
-
-  /**
-   * Cleans the timestamp by removing any trailing non-numeric characters.
-   * E.g. there might be a 'Z' at the end of the timestamp, which the GrapQL
-   * API doesn't need.
-   *
-   * @param timestamp The timestamp string to be cleaned.
-   * @return The cleaned timestamp string without any trailing non-numeric characters.
-   */
-  private String cleanTimestamp(String timestamp) {
-    // Use the String.matches method to check if the timestamp ends with a non-numeric character
-    if (timestamp.matches(".*[^\\d]$")) {
-      timestamp = timestamp.substring(0, timestamp.length() - 1);
-      logger.debug("cleanTimestamp: corrected timestamp: " + timestamp);
-    }
-
-    return timestamp;
-  }
-
-  /**
-   * Transforms the collection for the EMX2 format by transforming specific attributes.
-   *
-   * @param entity The collection to transform.
-   */
-  private void transformEntityForEmx2(Map<String, Object> entity) {
-    transformAttributeForEmx2(entity, "diagnosis_available", "name");
-    transformAttributeForEmx2(entity, "data_categories", "name");
-    transformAttributeForEmx2(entity, "storage_temperatures", "name");
-    transformAttributeForEmx2(entity, "sex", "name");
-    transformAttributeForEmx2(entity, "materials", "name");
-    transformAttributeForEmx2(entity, "order_of_magnitude_donors", "name");
-    transformAttributeForEmx2(entity, "order_of_magnitude", "name");
-    transformAttributeForEmx2(entity, "country", "name");
-    transformAttributeForEmx2(entity, "type", "name");
-    transformAttributeForEmx2(entity, "data_categories", "name");
-    transformAttributeForEmx2(entity, "national_node", "id");
-    transformAttributeForEmx2(entity, "contact", "id");
-    transformAttributeForEmx2(entity, "biobank", "id");
-  }
-
-  /**
-   * Transforms a specific attribute of a collection for the EMX2 format by converting it into a specific structure.
-   *
-   * @param entity The collection containing the attribute to transform.
-   * @param attributeName The name of the attribute to transform.
-   * @param attributeElementName The name of the element within the attribute to transform.
-   */
-  private void transformAttributeForEmx2(Map<String, Object> entity, String attributeName, String attributeElementName) {
-    // Transform a single attribute
-    if (entity.containsKey(attributeName)) {
-      Object attribute = entity.get(attributeName);
-      if (attribute instanceof List) {
-        List<Object> attributeList = (List<Object>) attribute;
-        List newAttributeList = new ArrayList();
-        if (attributeList.size() > 0) {
-          for (Object attributeElementValue : attributeList) {
-            if (attributeElementValue instanceof String || attributeElementValue instanceof Integer) {
-              Map<String, String> newAttributeValue = new HashMap();
-              newAttributeValue.put(attributeElementName, attributeElementValue.toString());
-              newAttributeList.add(newAttributeValue);
-            } else if (attributeElementValue instanceof Map) {
-              // Looks like this attribute has already been transformed, so keep it unchanged
-              newAttributeList.add(attributeElementValue);
-            } else {
-              logger.warn("transformAttributeForEmx2: attribute \"" + attributeName + "\" is not a list or string, value: " + Util.jsonStringFomObject(attributeElementValue));
-            }
-          }
-          entity.remove(attributeName); // Remove old attribute
-          entity.put(attributeName, newAttributeList);
-        }
-      } else if (attribute instanceof String || attribute instanceof Integer) {
-        Map<String,String> newAttributeValue = new HashMap();
-        newAttributeValue.put(attributeElementName, attribute.toString());
-        entity.remove(attributeName); // Remove old attribute
-        entity.put(attributeName, newAttributeValue);
-      } else {
-        logger.warn("transformAttributeForEmx2: attribute \"" + attributeName + "\" is not a list or string");
-      }
-    }
   }
 
   /**
