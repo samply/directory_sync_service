@@ -3,7 +3,8 @@ package de.samply.directory_sync_service.sync;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
-import de.samply.directory_sync_service.fhir.model.FhirCollection;
+import de.samply.directory_sync_service.directory.model.Collection;
+import de.samply.directory_sync_service.directory.model.Collections;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class CollectionUpdaterTest {
         DirectoryApiWriteToFile directoryApi = new DirectoryApiWriteToFile(null);
 
         // Synthetic input data for the method being tested.
-        String fhirCollectionsJsonString = "[\n" +
-                "  {\n" +
+        String fhirCollectionsJsonString = "{\"collections\": {\n" +
+                "  \"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\": {\n" +
                 "    \"id\": \"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\",\n" +
                 "    \"size\": 1,\n" +
                 "    \"numberOfDonors\": 1,\n" +
@@ -39,13 +40,13 @@ public class CollectionUpdaterTest {
                 "      \"C18.0\"\n" +
                 "    ]\n" +
                 "  }\n" +
-                "]";
+                "}}";
         Gson gson = new Gson();
-        List<FhirCollection> fhirCollections = gson.fromJson(fhirCollectionsJsonString, new TypeToken<List<FhirCollection>>() {}.getType());
+        Collections fhirCollections = gson.fromJson(fhirCollectionsJsonString, Collections.class);
         Map<String, String> correctedDiagnoses = null;
 
         // Call the method
-        boolean result = CollectionUpdater.sendUpdatesToDirectory(directoryApi, correctedDiagnoses, fhirCollections);
+        boolean result = directoryApi.sendUpdatedCollections(fhirCollections);
 
         // Assert expected outcomes
         assertTrue(result, "Method should return true if the updates were successful");

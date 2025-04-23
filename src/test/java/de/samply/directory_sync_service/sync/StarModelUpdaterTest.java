@@ -2,7 +2,8 @@ package de.samply.directory_sync_service.sync;
 
 import com.google.gson.Gson;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
-import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.FactTable;
+import de.samply.directory_sync_service.model.StarModelInput;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,16 +35,16 @@ public class StarModelUpdaterTest {
                 "  \"factTables\": []\n" +
                 "}";
         Gson gson = new Gson();
-        StarModelData starModelInputData = gson.fromJson(starModelInputDataJsonString, StarModelData.class);
+        StarModelInput starModelInputData = gson.fromJson(starModelInputDataJsonString, StarModelInput.class);
         Map<String, String> correctedDiagnoses = null;
         int minDonors = 0;
         int maxFacts = (-1);
 
         // Call the method
-        boolean result = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, minDonors, maxFacts);
+        FactTable result = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, minDonors, maxFacts);
 
         // Assert expected outcomes
-        assertTrue(result, "Method should return true if the updates were successful");
+        assertNotNull(result, "Method should return non-null if the updates were successful");
 
         // Get the results from the DirectoryApiWriteToFile object.
         String factTableString = directoryApi.getFactTableString();
