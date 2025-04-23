@@ -204,11 +204,11 @@ public class FactTable {
      *
      */
     public void diseaseSanityCheck() {
-        int diseaseCount = 0;
+        int factTablesWithoutDiseaseCount = 0;
         for (Map<String, String> factTable: getFactTables())
-            if (factTable.containsKey("disease"))
-                diseaseCount++;
-        if (diseaseCount < getFactTables().size())
-            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! disease count (" + diseaseCount + ") is different from fact table count (" + getFactCount() + ")");
+            if (!factTable.containsKey("disease"))
+                factTablesWithoutDiseaseCount++;
+        if (factTablesWithoutDiseaseCount > 0)
+            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! " + factTablesWithoutDiseaseCount + " fact tables have no \"disease\" key");
     }
 }
