@@ -152,7 +152,11 @@ public class FactTable {
                 totalStarModelSpecimenCount += numberOfSamples;
             }
         if (totalFhirSpecimenCount < totalStarModelSpecimenCount)
-            logger.warn("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
+            logger.info("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! FHIR sample count (" + totalFhirSpecimenCount + ") is less than star model sample count (" + totalStarModelSpecimenCount + ")");
+        if (totalStarModelSpecimenCount < totalFhirSpecimenCount)
+            logger.info("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! star model sample count (" + totalStarModelSpecimenCount + ") is less than FHIR sample count (" + totalFhirSpecimenCount + ")");
+        if (totalStarModelSpecimenCount < (totalFhirSpecimenCount * 0.8))
+            logger.warn("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! star model sample count (" + totalStarModelSpecimenCount + ") is much less than FHIR sample count (" + totalFhirSpecimenCount + ")");
         logger.debug("sampleCountSanityCheck: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
         logger.debug("sampleCountSanityCheck: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
     }
