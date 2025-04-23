@@ -11,9 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents data for the STAR model, organized by collection.
  * <p>
- * Input data represents data read in from the FHIR store.
- * <p>
- * Output data is in a format that is ready to be exported to the Directory.
+ * This data is read in from the FHIR store.
  */
 public class StarModelInput {
     private static final Logger logger = LoggerFactory.getLogger(StarModelInput.class);

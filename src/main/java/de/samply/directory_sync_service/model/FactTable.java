@@ -12,11 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents data for the STAR model, organized by collection.
- * <p>
- * Input data represents data read in from the FHIR store.
- * <p>
- * Output data is in a format that is ready to be exported to the Directory.
+ * STAR model data in a format that is ready to be exported to the Directory.
  */
 public class FactTable {
     private static final Logger logger = LoggerFactory.getLogger(FactTable.class);
