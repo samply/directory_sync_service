@@ -1,5 +1,7 @@
 package de.samply.directory_sync_service.fhir;
 
+import de.samply.directory_sync_service.directory.model.Collections;
+
 import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
@@ -11,7 +13,7 @@ import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.fhir.model.FhirCollection;
+import de.samply.directory_sync_service.directory.model.Collection;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
 import java.time.LocalDate;
@@ -713,86 +715,86 @@ public class FhirApi {
   /**
    * Pulls information relevant to collections from the FHIR store.
    * <p>
-   * Returns a list of FhirCollection objects, one per collection.
+   * Returns a list of Collection objects, one per collection.
    *
    * @param directoryDefaultCollectionId
    * @return
    */
-  public List<FhirCollection> fetchFhirCollections(String directoryDefaultCollectionId) {
+  public Collections generateCollections(String directoryDefaultCollectionId) {
     BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
             .valueOf(directoryDefaultCollectionId)
             .orElse(null);
 
-    Map<String,FhirCollection> fhirCollectionMap = new HashMap<String,FhirCollection>();
+    Collections collections = new Collections();
 
     // Group specimens according to collection, extract aggregated information
-    // from each group, and put this information into FhirCollection objects.
+    // from each group, and put this information into Collection objects.
     Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
     if (specimensByCollection == null) {
       logger.warn("fetchFhirCollections: Problem finding specimens");
       return null;
     }
-    updateFhirCollectionsWithSpecimenData(fhirCollectionMap, specimensByCollection);
+    updateCollectionsWithSpecimenData(collections, specimensByCollection);
 
     // Group patients according to collection, extract aggregated information
-    // from each group, and put this information into FhirCollection objects.
+    // from each group, and put this information into Collection objects.
     Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
     if (patientsByCollection == null) {
       logger.warn("fetchFhirCollections: Problem finding patients");
       return null;
     }
-    updateFhirCollectionsWithPatientData(fhirCollectionMap, patientsByCollection);
+    updateCollectionsWithPatientData(collections, patientsByCollection);
 
-    return new ArrayList<FhirCollection>(fhirCollectionMap.values());
+    return collections;
   }
 
   /**
-   * Updates a map of {@link FhirCollection} entities with specimen-related data.
+   * Updates a map of {@link Collection} entities with specimen-related data.
    *
    * <p>This method iterates over the provided map of specimen lists, grouped by collection key.
-   * For each key, it retrieves or creates a corresponding {@link FhirCollection}, then updates its attributes
+   * For each key, it retrieves or creates a corresponding {@link Collection}, then updates its attributes
    * based on the specimens in the list, such as size, materials, storage temperatures, and diagnosis availability.
    *
-   * @param entities A map of existing {@link FhirCollection} entities, keyed by collection ID.
+   * @param collections A map of existing {@link Collection} entities, keyed by collection ID.
    *                 If a collection does not exist, a new one is created.
    * @param specimensByCollection A map where each key represents a collection ID,
    *                              and the value is a list of {@link Specimen} objects associated with that collection.
    */
-  private void updateFhirCollectionsWithSpecimenData(Map<String,FhirCollection> entities, Map<String, List<Specimen>> specimensByCollection) {
-    for (String key: specimensByCollection.keySet()) {
-      List<Specimen> specimenList = specimensByCollection.get(key);
-      FhirCollection fhirCollection = entities.getOrDefault(key, new FhirCollection());
-      fhirCollection.setId(key);
-      fhirCollection.setSize(specimenList.size());
-      fhirCollection.setMaterials(extractMaterialsFromSpecimenList(specimenList));
-      fhirCollection.setStorageTemperatures(extractExtensionElementValuesFromSpecimens(specimenList, STORAGE_TEMPERATURE_URI));
-      fhirCollection.setDiagnosisAvailable(extractExtensionElementValuesFromSpecimens(specimenList, SAMPLE_DIAGNOSIS_URI));
-      entities.put(key, fhirCollection);
+  private void updateCollectionsWithSpecimenData(Collections collections, Map<String, List<Specimen>> specimensByCollection) {
+    for (String collectionId: specimensByCollection.keySet()) {
+      List<Specimen> specimenList = specimensByCollection.get(collectionId);
+      Collection collection = collections.getOrDefault(collectionId, new Collection());
+      collection.setId(collectionId);
+      collection.setSize(specimenList.size());
+      collection.setMaterials(extractMaterialsFromSpecimenList(specimenList));
+      collection.setStorageTemperatures(extractExtensionElementValuesFromSpecimens(specimenList, STORAGE_TEMPERATURE_URI));
+      collection.setDiagnosisAvailable(extractExtensionElementValuesFromSpecimens(specimenList, SAMPLE_DIAGNOSIS_URI));
+      collections.addCollection(collectionId, collection);
     }
   }
 
   /**
-   * Updates a map of {@link FhirCollection} entities with patient-related data.
+   * Updates a map of {@link Collection} entities with patient-related data.
    *
    * <p>This method iterates over the provided map of patient lists, grouped by collection key.
-   * For each key, it retrieves or creates a corresponding {@link FhirCollection}, then updates its attributes
+   * For each key, it retrieves or creates a corresponding {@link Collection}, then updates its attributes
    * based on the patients in the list, such as number of donors, sex distribution, age range, and diagnoses.
    *
-   * @param entities A map of existing {@link FhirCollection} entities, keyed by collection ID.
+   * @param collections A map of existing {@link Collection} entities, keyed by collection ID.
    *                 If a collection does not exist, a new one is created.
    * @param patientsByCollection A map where each key represents a collection ID,
    *                              and the value is a list of {@link Patient} objects associated with that collection.
    */
-  private void updateFhirCollectionsWithPatientData(Map<String,FhirCollection> entities, Map<String, List<Patient>> patientsByCollection) {
-    for (String key: patientsByCollection.keySet()) {
-      List<Patient> patientList = patientsByCollection.get(key);
-      FhirCollection fhirCollection = entities.getOrDefault(key, new FhirCollection());
-      fhirCollection.setNumberOfDonors(patientList.size());
-      fhirCollection.setSex(extractSexFromPatientList(patientList));
-      fhirCollection.setAgeLow(extractAgeLowFromPatientList(patientList));
-      fhirCollection.setAgeHigh(extractAgeHighFromPatientList(patientList));
-      fhirCollection.setDiagnosisAvailable(extractDiagnosesFromPatientList(patientList));
-      entities.put(key, fhirCollection);
+  private void updateCollectionsWithPatientData(Collections collections, Map<String, List<Patient>> patientsByCollection) {
+    for (String collectionId: patientsByCollection.keySet()) {
+      List<Patient> patientList = patientsByCollection.get(collectionId);
+      Collection collection = collections.getOrDefault(collectionId, new Collection());
+      collection.setNumberOfDonors(patientList.size());
+      collection.setSex(extractSexFromPatientList(patientList));
+      collection.setAgeLow(extractAgeLowFromPatientList(patientList));
+      collection.setAgeHigh(extractAgeHighFromPatientList(patientList));
+      collection.setDiagnosisAvailable(extractDiagnosesFromPatientList(patientList));
+      collections.addCollection(collectionId, collection);
     }
   }
 

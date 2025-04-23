@@ -51,7 +51,7 @@ public class DiagnosisCorrections {
             logger.debug("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
             if (fhirDiagnoses.size() == 0) {
-                logger.warn("generateDiagnosisCorrections: No diagnoses found in FHIR store, no need to continu");
+                logger.warn("generateDiagnosisCorrections: No diagnoses found in FHIR store, no need to continue");
                 return correctedDiagnoses;
             }
 
