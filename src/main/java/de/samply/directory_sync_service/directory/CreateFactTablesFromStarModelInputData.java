@@ -1,7 +1,7 @@
 package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.StarModelInput;
 import de.samply.directory_sync_service.model.FactTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,18 +28,18 @@ public class CreateFactTablesFromStarModelInputData {
      * Creates fact tables for each collection in the provided Star Model input data.
      * Fact tables are generated based on input rows and specified criteria such as minimum donors.
      *
-     * @param starModelInputData The Star Model input data containing information for fact table creation.
+     * @param starModelInput The Star Model input data containing information for fact table creation.
      * @param maxFacts
      *
      * @throws NullPointerException if starModelInputData is null.
      */
-    public static FactTable createFactTables(StarModelData starModelInputData, int maxFacts) {
+    public static FactTable createFactTables(StarModelInput starModelInput, int maxFacts) {
         FactTable factTable = new FactTable();
-        for (String collectionId: starModelInputData.getInputCollectionIds()) {
+        for (String collectionId: starModelInput.getInputCollectionIds()) {
             List<Map<String, String>> factTableFinal = createFactTableFinal(collectionId,
-                    starModelInputData.getMinDonors(),
+                    starModelInput.getMinDonors(),
                     maxFacts,
-                    starModelInputData.getInputRowsAsStringMaps(collectionId));
+                    starModelInput.getInputRowsAsStringMaps(collectionId));
             logger.debug("createFactTables: collectionId: " + collectionId + ", factTableFinal.size() " + factTableFinal.size());
             if (factTableFinal.size() == 0)
                 logger.warn("createFactTables: factTableFinal.size() is zero");

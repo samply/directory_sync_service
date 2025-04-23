@@ -4,7 +4,7 @@ import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.CreateFactTablesFromStarModelInputData;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.model.FactTable;
-import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.StarModelInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,25 +25,25 @@ public class StarModelUpdater {
      * </p>
      * @param directoryApi
      * @param correctedDiagnoses
-     * @param starModelInputData Data in a format suitable for generating star model hypercubes.
+     * @param starModelInput Data in a format suitable for generating star model hypercubes.
      * @param minDonors The minimum number of donors required for a fact to be included in the star model output.
      * @param maxFacts The maximum number of facts to be included in the star model output. Negative number means no limit.
      * @return A list of OperationOutcome objects indicating the outcome of the star model updates.
      *
      * @throws IllegalArgumentException if the defaultCollectionId is not a valid BbmriEricId.
      */
-    public static FactTable sendStarModelUpdatesToDirectory(DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, StarModelData starModelInputData, int minDonors, int maxFacts) {
+    public static FactTable sendStarModelUpdatesToDirectory(DirectoryApi directoryApi, Map<String, String> correctedDiagnoses, StarModelInput starModelInput, int minDonors, int maxFacts) {
         logger.debug("sendStarModelUpdatesToDirectory: minDonors: " + minDonors);
         try {
             directoryApi.login();
 
             // Hypercubes containing less than the minimum number of donors will not be
             // included in the star model output.
-            starModelInputData.setMinDonors(minDonors);
+            starModelInput.setMinDonors(minDonors);
 
             // Take the patient list and the specimen list from starModelInputData and
             // use them to generate the star model fact tables.
-            FactTable factTable = CreateFactTablesFromStarModelInputData.createFactTables(starModelInputData, maxFacts);
+            FactTable factTable = CreateFactTablesFromStarModelInputData.createFactTables(starModelInput, maxFacts);
             logger.debug("sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + factTable.getFactCount());
             if (factTable.getFactCount() == 0) {
                 logger.warn("sendStarModelUpdatesToDirectory: no starModelInputData has been generated, FHIR store might be empty");
@@ -58,7 +58,7 @@ public class StarModelUpdater {
             // Send fact tables to Direcory.
             directoryApi.login();
 
-            if (!directoryApi.updateStarModel(factTable, starModelInputData.getInputCollectionIds())) {
+            if (!directoryApi.updateStarModel(factTable, starModelInput.getInputCollectionIds())) {
                 logger.warn("sendStarModelUpdatesToDirectory: Problem during star model update");
                 return null;
             }

@@ -4,11 +4,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
-import de.samply.directory_sync_service.fhir.FhirApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +15,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Output data is in a format that is ready to be exported to the Directory.
  */
-public class StarModelData {
-    private static final Logger logger = LoggerFactory.getLogger(StarModelData.class);
+public class StarModelInput {
+    private static final Logger logger = LoggerFactory.getLogger(StarModelInput.class);
 
     // *** Miscellaneous data
 
@@ -73,39 +69,6 @@ public class StarModelData {
             inputData.put(collectionId, new ArrayList<StarModelInputRow>());
         List<StarModelInputRow> rows = inputData.get(collectionId);
         rows.add(row);
-    }
-
-    /**
-     * Creates and returns a new InputRow with the specified attributes.
-     * 
-     * @param collection The identifier for the collection of the new input row.
-     * @param sampleMaterial The sample material associated with the input row.
-     * @param patientId The identifier of the patient associated with the input row.
-     * @param sex The gender information of the patient.
-     * @param age The age information of the patient.
-     * 
-     * @return A new InputRow with the provided attributes.
-     * 
-     * @throws NullPointerException if any of the parameters is null.
-     * 
-     * @see StarModelInputRow
-     */
-    public StarModelInputRow newInputRow(String collection, String sampleMaterial, String patientId, String sex, String age) {
-        return new StarModelInputRow(collection, sampleMaterial, patientId, sex, age);
-    }
-
-    /**
-     * Creates a new InputRow based on an existing row and adds a diagnosis.
-     * 
-     * @param row The existing input row to base the new row on.
-     * @param histLoc The diagnosis.
-     * 
-     * @return A new InputRow with the diagnosis added.
-     * 
-     * @throws NullPointerException if row or histLoc is null.
-     */
-    public StarModelInputRow newInputRow(StarModelInputRow row, String histLoc) {
-        return new StarModelInputRow(row, histLoc);
     }
 
     public List<String> getInputCollectionIds() {

@@ -6,7 +6,6 @@ import de.samply.directory_sync_service.directory.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.FactTable;
-import de.samply.directory_sync_service.model.StarModelData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * The DirectoryApi class provides an interface for interacting with the Directory service.

@@ -169,4 +169,18 @@ public class StarModelInputRow {
         }
         this.age_at_primary_diagnosis = age;
     }
+
+    /**
+     * Creates a new InputRow based on an existing row and adds a diagnosis.
+     *
+     * @param row The existing input row to base the new row on.
+     * @param histLoc The diagnosis.
+     *
+     * @return A new InputRow with the diagnosis added.
+     *
+     * @throws NullPointerException if row or histLoc is null.
+     */
+    public static StarModelInputRow newInputRow(StarModelInputRow row, String histLoc) {
+        return new StarModelInputRow(row, histLoc);
+    }
 }

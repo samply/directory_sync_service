@@ -13,7 +13,7 @@ import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.FactTable;
-import de.samply.directory_sync_service.model.StarModelData;
+import de.samply.directory_sync_service.model.StarModelInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,17 +109,15 @@ public class Sync {
         if (directoryAllowStarModel) {
             // Pull data from the FHIR store and save it in a format suitable for generating
             // star model hypercubes.
-            StarModelData starModelInputData = (new PopulateStarModelInputData(fhirApi)).populate(directoryDefaultCollectionId);
-            if (starModelInputData == null) {
+            StarModelInput starModelInput = (new PopulateStarModelInputData(fhirApi)).populate(directoryDefaultCollectionId);
+            if (starModelInput == null) {
                 logger.warn("syncWithDirectory: Problem getting star model information from FHIR store");
                 return false;
             }
-            logger.debug("syncWithDirectory: number of collection IDs: " + starModelInputData.getInputCollectionIds().size());
-
-//            Util.serializeToFile(starModelInputData, "/test/starModelInputData.json"); // collect data for unit test
+            logger.debug("syncWithDirectory: number of collection IDs: " + starModelInput.getInputCollectionIds().size());
 
             // Send fact tables to Directory
-            FactTable factTable = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInputData, directoryMinDonors, directoryMaxFacts);
+            FactTable factTable = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInput, directoryMinDonors, directoryMaxFacts);
             if (factTable == null) {
                 logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
                 return false;
