@@ -154,6 +154,8 @@ public class CreateFactTablesFromStarModelInputData {
         List<Map<String, String>> factTableFinal = new ArrayList<>();
         int factCount = 0;
         String factIdStub = createFactIdStub(collectionId);
+        boolean isDiseaseNull = false;
+        boolean isDiseaseEmpty = false;
         for (Map.Entry<String, Map<String, Long>> entry : factTable.entrySet()) {
             // Skip entries that don't meet the minimum donor requirement
             if (entry.getValue().get("number_of_donors") < minDonors) {
@@ -177,6 +179,15 @@ public class CreateFactTablesFromStarModelInputData {
             row.put("id", factIdStub+ Math.abs(entry.getKey().hashCode())); // Add hash code to make ID unique
             row.put("collection", collectionId);
             row.put("last_update", LocalDate.now().toString());
+
+            if (!isDiseaseNull && row.get("disease") == null) {
+                isDiseaseNull = true;
+                logger.info("generateFactTableFinal: Disease is null for row: " + Util.jsonStringFomObject(row));
+            }
+            if (!isDiseaseEmpty && row.get("disease").isEmpty()) {
+                isDiseaseEmpty = true;
+                logger.info("generateFactTableFinal: Disease is empty for row: " + Util.jsonStringFomObject(row));
+            }
 
             // Add the row to the final list
             factTableFinal.add(row);
