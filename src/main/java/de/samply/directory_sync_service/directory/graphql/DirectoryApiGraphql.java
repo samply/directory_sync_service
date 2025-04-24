@@ -44,10 +44,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @param password The password for authenticating with the Directory.
    */
   public DirectoryApiGraphql(String baseUrl, boolean mockDirectory, String username, String password) {
-    super(baseUrl, mockDirectory, username, password);
+    super(mockDirectory);
     this.directoryCallsGraphql = new DirectoryCallsGraphql(baseUrl, username, password);
     this.directoryEndpointsGraphql = new DirectoryEndpointsGraphql();
-    directoryCalls = directoryCallsGraphql; // Used in superclass
     directoryEndpoints = new DirectoryEndpointsGraphql();
     this.username = username;
     this.password = password;
@@ -158,12 +157,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * for all of the collections listed in collectionIds. The countryCode is not used.
    *
    * @param collections
-   * @return
    */
-  public Collections fetchBasicCollectionData(Collections collections) {
+  public void fetchBasicCollectionData(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      return collections;
+      return;
     }
 
     login();
@@ -222,7 +220,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
       ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
     }
 
-    return collections;
   }
 
   /**
@@ -281,7 +278,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
   /**
    * Deletes unknown fields from an entity.
-   *
+   * <p>
    * Background: different implementations of the Directory support different fields
    * in the Collection type. In particular, the "national_node" and "biobank_label"
    * fields are not universally supported. This method will make an API call to the
@@ -316,10 +313,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     String json = gson.toJson(map);
 
     // Post-process JSON for GraphQL syntax
-    String graphQLFormatted = json
-            .replaceAll("\"([^\"]+)\":", "$1:");   // Remove quotes around keys
-
-    return graphQLFormatted;
+    return json.replaceAll("\"([^\"]+)\":", "$1:");
   }
 
   /**
@@ -644,7 +638,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
   /**
    * Retrieves the database endpoint for the ERIC database API based on the country code.
-   *
+   * <p>
    * Uses a heuristic that looks through the available databases at the Directory and
    * builds an endpoint from the most plausible one.
    *

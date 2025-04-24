@@ -33,21 +33,13 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * @param directoryOutputDirectory
    */
   public DirectoryApiWriteToFile(String directoryOutputDirectory) {
-    super(null, false, null, null);
+    super(false);
     this.directoryOutputDirectory = directoryOutputDirectory;
-  }
-
-  public String getFactTableString() {
-    return factTableString;
-  }
-
-  public String getEntityTableString() {
-    return entityTableString;
   }
 
   /**
    * Log in to the Directory. You can log in as many times as you like.
-   *
+   * <p>
    * This is a dummy implementation that always returns true. No login
    * is needed to write to file.
    */
@@ -57,7 +49,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
 
   /**
    * Fetches the Biobank with the given {@code id}.
-   *
+   * <p>
    * Returns a dummy value.
    *
    * @param id the ID of the Biobank to fetch.
@@ -71,10 +63,8 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * More or less a dummy operator.
    *
    * @param collections
-   * @return
    */
-  public Collections fetchBasicCollectionData(Collections collections) {
-    return collections;
+  public void fetchBasicCollectionData(Collections collections) {
   }
 
   /**
@@ -134,7 +124,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
       try {
         if (!factTable.containsKey("national_node") && countryCode != null && !countryCode.isEmpty())
           factTable.put("national_node", countryCode);
-          factTables.add(factTable);
+        factTables.add(factTable);
       } catch (Exception e) {
         logger.warn("updateFactTablesBlock: Exception during fact deletion: " + Util.traceFromException(e));
         return false;
@@ -150,7 +140,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * <p>The method converts the list of maps into a table format using a predefined column order
    * and writes the resulting data to a file named "DirectoryCollections.csv". The file is stored
    * in the directory specified by {@code directoryOutputDirectory}.
-   *
+   * <p>
    * If directoryOutputDirectory is null, this method only puts data into entityTableString
    * without tring to write to a file.
    *
@@ -168,7 +158,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
       writer.write(entityTableString);
       logger.debug("writeFactTablesToFile: Fact tables successfully written to file: " + outputFile.getAbsolutePath());
     } catch (IOException e) {
-      logger.error("writeFactTablesToFile: Failed to write fact tables to file", Util.traceFromException(e));
+      logger.error("writeFactTablesToFile: Failed to write fact tables to file, exception: " + Util.traceFromException(e));
     }
   }
 
@@ -177,7 +167,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    *
    * <p>This method formats the given fact tables as a delimited table using a predefined
    * column order and writes the output to a file named "DirectoryFactTables.csv".
-   *
+   * <p>
    * If directoryOutputDirectory is null, this method only puts data into factTableString
    * without tring to write to a file.
    *
@@ -193,7 +183,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
       writer.write(factTableString);
       logger.debug("writeFactTablesToFile: Fact tables successfully written to file: " + outputFile.getAbsolutePath());
     } catch (IOException e) {
-      logger.error("writeFactTablesToFile: Failed to write fact tables to file", Util.traceFromException(e));
+      logger.error("writeFactTablesToFile: Failed to write fact tables to file, exception: " + Util.traceFromException(e));
     }
   }
 

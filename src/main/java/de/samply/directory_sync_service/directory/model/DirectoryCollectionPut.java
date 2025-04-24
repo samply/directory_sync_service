@@ -35,14 +35,8 @@ public class DirectoryCollectionPut extends HashMap {
         this.put("entities", new ArrayList<Entity>());
     }
 
-    private final Gson gson = new Gson();
-
     public void setCountry(String collectionId, String country) {
         getEntity(collectionId).setCountry(country);
-    }
-
-    public String getCountry(String collectionId) {
-        return getEntity(collectionId).getCountry();
     }
 
     public void setName(String collectionId, String name) {
@@ -132,7 +126,7 @@ public class DirectoryCollectionPut extends HashMap {
      * @return Country code
      */
     public String getCountryCode() {
-        String countryCode = null;
+        String countryCode;
         try {
             List<Entity> entities = getEntities();
             if (entities == null || entities.size() == 0) {
@@ -361,33 +355,6 @@ public class DirectoryCollectionPut extends HashMap {
                 diagnoses = new ArrayList<String>();
 
             put("diagnosis_available", diagnoses);
-        }
-
-        public List<String> getDiagnosisAvailable() {
-            return (List<String>) get("diagnosis_available");
-        }
-    }
-    
-    /**
-     * Applies corrections to the available diagnoses of each Entity based on a provided map.
-     * The method iterates through the list of entities and updates the available diagnoses
-     * using the provided map of corrections.
-     *
-     * @param correctedDiagnoses A map containing diagnosis corrections, where the keys
-     *                           represent the original diagnoses and the values represent
-     *                           the corrected diagnoses. Return without applying corrections
-     *                           if this parameter is null.
-     */
-    public void applyDiagnosisCorrections(Map<String, String> correctedDiagnoses) {
-        if (correctedDiagnoses == null)
-            return;
-        for (Entity entity: getEntities()) {
-            List<String> directoryDiagnoses = entity.getDiagnosisAvailable().stream()
-                .filter(diagnosis -> diagnosis != null && correctedDiagnoses.containsKey(diagnosis) && correctedDiagnoses.get(diagnosis) != null)
-                .map(correctedDiagnoses::get)
-                .distinct()
-                .collect(Collectors.toList());
-            entity.setDiagnosisAvailable(directoryDiagnoses);
         }
     }
 }

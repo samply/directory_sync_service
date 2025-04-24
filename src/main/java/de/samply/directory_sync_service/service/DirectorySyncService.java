@@ -1,6 +1,5 @@
 package de.samply.directory_sync_service.service;
 
-import de.samply.directory_sync_service.sync.Sync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;

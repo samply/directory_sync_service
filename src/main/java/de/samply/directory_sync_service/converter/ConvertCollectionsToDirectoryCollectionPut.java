@@ -21,8 +21,6 @@ public class ConvertCollectionsToDirectoryCollectionPut {
     /**
      * Converts a Collections object into a DirectoryCollectionPut object.
      *
-     * @param collections
-     * @return
      */
     public static DirectoryCollectionPut convert(Collections collections) {
         DirectoryCollectionPut directoryCollectionPut = new DirectoryCollectionPut();
@@ -39,9 +37,6 @@ public class ConvertCollectionsToDirectoryCollectionPut {
     /**
      * Takes a single Collection object, converts it, and then adds it to the DirectoryCollectionPut object.
      *
-     * @param directoryCollectionPut
-     * @param collection
-     * @return
      */
     private static DirectoryCollectionPut convert(Collection collection, DirectoryCollectionPut directoryCollectionPut) {
         try {

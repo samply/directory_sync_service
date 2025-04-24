@@ -236,9 +236,8 @@ public class PopulateStarModelInputData {
     if (collection.hasCollectedDateTimeType()) {
       DateTimeType collected = collection.getCollectedDateTimeType();
       Date date = collected.getValue(); // Get the java.util.Date object
-      LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-      return localDate;
+      return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     } else {
       logger.warn("extractCollectionLocalDateFromSpecimen: no date/time for specimen collection, returning null");
       return null;

@@ -90,7 +90,7 @@ public class FhirApi {
 
   /**
    * Updates the provided resource on the FHIR server.
-   *
+   * <p>
    * This method updates the specified resource on the FHIR server and returns the operation outcome.
    *
    * @param resource The resource to be updated on the FHIR server.
@@ -140,11 +140,8 @@ public class FhirApi {
       return null;
     }
 
-    // Extract the organizations from the Bundle
-    List<Organization> organizations = extractOrganizations(organizationBundle, BIOBANK_PROFILE_URI);
-
-    // Return the list of organizations
-    return organizations;
+    // Extract the organizations from the Bundle and return them
+    return extractOrganizations(organizationBundle, BIOBANK_PROFILE_URI);
   }
 
   /**
@@ -163,11 +160,8 @@ public class FhirApi {
       return null;
     }
 
-    // Extract the organizations from the Bundle
-    List<Organization> organizations = extractOrganizations(organizationBundle, COLLECTION_PROFILE_URI);
-
-    // Return the list of organizations
-    return organizations;
+    // Extract the organizations from the Bundle and return them
+    return extractOrganizations(organizationBundle, COLLECTION_PROFILE_URI);
   }
 
   /**
@@ -291,6 +285,8 @@ public class FhirApi {
     Map<String, String> fhirSampleMaterials = new HashMap<String, String>();
     for (List<Specimen> specimenList : specimensByCollection.values()) {
       List<String> materials = extractMaterialsFromSpecimenList(specimenList);
+      if (materials == null)
+        continue;
       for (String material : materials)
         if (!fhirSampleMaterials.containsKey(material))
           fhirSampleMaterials.put(material, material);
@@ -389,7 +385,7 @@ public class FhirApi {
    * @return
    */
   private List<Patient> extractPatientListFromSpecimenList(List<Specimen> specimens) {
-    List<Patient> patients = specimens.stream()
+    return specimens.stream()
             // filter out specimens without a patient reference
             .filter(specimen -> specimen.hasSubject())
             // Find a Patient object corresponding to the specimen's subject
@@ -400,8 +396,6 @@ public class FhirApi {
             .filter(distinctBy(Patient::getId))
             // collect the patients into a new list
             .collect(Collectors.toList());
-
-    return patients;
   }
 
   /**
@@ -631,14 +625,12 @@ public class FhirApi {
     String reference = ((Reference) extension.getValue()).getReference();
     String localCollectionId = reference.replaceFirst("Organization/", "");
 
-    String collectionId = extractValidDirectoryIdentifierFromCollection(
+    return extractValidDirectoryIdentifierFromCollection(
             fhirClient
                     .read()
                     .resource(Organization.class)
                     .withId(localCollectionId)
                     .execute());
-
-    return collectionId;
   }
 
   /**

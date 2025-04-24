@@ -126,7 +126,8 @@ public class CreateFactTablesFromStarModelInputData {
      *         and the values are maps containing aggregated counts of patients and samples.
      */
     private static Map<String, Map<String, Long>> generateFactTable(List<Map<String, String>> data) {
-        Map<String, Map<String, Long>> factTable = data.stream()
+
+        return data.stream()
                 .collect(Collectors.groupingBy(
                         row -> row.get("sex") + "|" + row.get("hist_loc") + "|" + row.get("age_range") + "|" + row.get("sample_material"),
                         Collectors.collectingAndThen(Collectors.toList(), records -> {
@@ -138,8 +139,6 @@ public class CreateFactTablesFromStarModelInputData {
                             return counts;
                         })
                 ));
-
-        return factTable;
     }
 
     /**

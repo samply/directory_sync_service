@@ -18,11 +18,6 @@ public class Collections {
     // A Map of Collections, keyed by collection ID.
     private TreeMap <String, Collection> collections = new TreeMap<>();
 
-
-    public Collection getCollection(String id) {
-        return collections.get(id);
-    }
-
     public void addCollection(String collectionId, Collection collection) {
         if (collection == null) {
             logger.warn("addCollection: collection is null");

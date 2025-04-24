@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
  * The DirectoryApiRest class provides an interface for interacting with the Directory service.
  * This class allows for fetching and updating biobank and collection information, managing star models,
  * and performing various validation and correction operations.
- *
+ * <p>
  * It supports a mock mode for testing purposes, where no real Directory interactions are performed.
- *
+ * <p>
  * Most methods will first try using a URL containing the country code, and If that fails, they will
  * use a URL without country code. This is because the inclusion of the country code is necessary when
  * synchronizing with a national node Directory, but not when synchronizing with the central Directory.
@@ -43,10 +43,9 @@ public class DirectoryApiRest extends DirectoryApi {
    * @param password The password for authenticating with the Directory.
    */
   public DirectoryApiRest(String baseUrl, boolean mockDirectory, String username, String password) {
-    super(baseUrl, mockDirectory, username, password);
+    super(mockDirectory);
     this.directoryCallsRest = new DirectoryCallsRest(baseUrl, username, password);
     this.directoryEndpointsRest = new DirectoryEndpointsRest();
-    directoryCalls = directoryCallsRest; // Used in superclass
     directoryEndpoints = new DirectoryEndpointsRest();
   }
 
@@ -100,12 +99,11 @@ public class DirectoryApiRest extends DirectoryApi {
    * constructing the URL for the API call.
    *
    * @param collections
-   * @return
    */
-  public Collections fetchBasicCollectionData(Collections collections) {
+  public void fetchBasicCollectionData(Collections collections) {
     if (mockDirectory) {
       // Dummy return if we're in mock mode
-      return collections;
+      return;
     }
 
     login();
@@ -140,12 +138,11 @@ public class DirectoryApiRest extends DirectoryApi {
 
     if (warnFlag && collections.isEmpty()) {
       logger.warn("generateCollections(Rest): No entities retrieved from Directory");
-      return null;
+      return;
     }
 
     logger.debug("generateCollections(Rest): done");
 
-    return collections;
   }
 
   private Map getItemZero(Map singleDirectoryCollectionGet) {
@@ -161,7 +158,7 @@ public class DirectoryApiRest extends DirectoryApi {
       logger.warn("getItemZero: items in singleDirectoryCollectionGet is not a list");
       return null;
     }
-    List<Map> itemList = null;
+    List<Map> itemList;
     try {
       itemList = (List<Map>) singleDirectoryCollectionGet.get("items");
       if (itemList == null || itemList.size() == 0)
@@ -277,16 +274,18 @@ public class DirectoryApiRest extends DirectoryApi {
       logger.warn("getNextPageOfFactIdsForCollection: Problem getting facts for collection, no item key present: " + collectionId);
       return null;
     }
+    if (!(factWrapper.get("items") instanceof List<?>)) {
+      logger.warn("getNextPageOfFactIdsForCollection: items is not a List: " + Util.jsonStringFomObject(factWrapper.get("items")));
+      return null;
+    }
     List<Map<String, String>> facts = (List<Map<String, String>>) factWrapper.get("items");
     if (facts.size() == 0)
       // No more facts left
       return new ArrayList<String>();
 
-    List<String> factIds = facts.stream()
+    return facts.stream()
             .map(map -> map.get("id"))
             .collect(Collectors.toList());
-
-    return factIds;
   }
 
   /**

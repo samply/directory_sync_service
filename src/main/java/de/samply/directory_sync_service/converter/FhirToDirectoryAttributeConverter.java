@@ -33,7 +33,7 @@ public class FhirToDirectoryAttributeConverter {
         if (material == null)
             return null;
 
-        String directoryMaterial = material
+        return material
                 // Basic conversion: make everything upper case, replace - with _
                 .toUpperCase()
                 .replaceAll("-", "_")
@@ -52,10 +52,7 @@ public class FhirToDirectoryAttributeConverter {
                 .replaceAll("^LIQUID$", "OTHER")
                 .replaceAll("^ASCITES$", "OTHER")
                 .replaceAll("^BONE_MARROW$", "OTHER")
-                .replaceAll("^TISSUE_PAXGENE_OR_ELSE$", "OTHER")
-                ;
-    
-        return directoryMaterial;
+                .replaceAll("^TISSUE_PAXGENE_OR_ELSE$", "OTHER");
     }
 
     /**
@@ -70,10 +67,8 @@ public class FhirToDirectoryAttributeConverter {
 
         // The Directory understands most of the FHIR temperature codes, but it doesn't
         // know about gaseous nitrogen.
-        String directoryStorageTemperature = storageTemperature
+        return storageTemperature
             .replaceAll("temperatureGN", "temperatureOther");
-
-        return directoryStorageTemperature;
     }
 
     /**

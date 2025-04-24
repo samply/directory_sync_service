@@ -43,7 +43,6 @@ public class Sync {
      * Attempts to perform synchronization with the Directory repeatedly, until it either
      * succeeds, or the number of attempts exceeds a threshold.
      *
-     * @throws IOException
      */
     public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory) {
         logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting");
@@ -73,7 +72,7 @@ public class Sync {
 
     private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory) {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
-        Map<String, String> correctedDiagnoses = null;
+        Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         DirectoryApi directoryApi;
@@ -142,10 +141,6 @@ public class Sync {
         // This is stuff like collection name, description, associated biobank,
         // etc. It gets combined with the information from the FHIR store.
         directoryApi.fetchBasicCollectionData(collections);
-        if (collections == null) {
-            logger.warn("syncWithDirectory: Problem getting collections from Directory");
-            return false;
-        }
         logger.debug("syncWithDirectory: collections.size(): " + collections.size());
 
         // Push the combined collection information (from the FHIR store and the basic

@@ -100,7 +100,7 @@ public class ConvertDirectoryCollectionGetToCollections {
             return null;
         }
 
-        List<String> attributeListOfStrings = null;
+        List<String> attributeListOfStrings;
         try {
             List attributeListOfMaps = (List) attribute;
             attributeListOfStrings = new ArrayList<String>();
