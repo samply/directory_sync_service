@@ -134,10 +134,6 @@ public class StarModelInputRow {
         this.sex = FhirToDirectoryAttributeConverter.convertSex(sex);
     }
 
-    public String getHistLoc() {
-        return hist_loc;
-    }
-
     /**
      * Sets the histological location attribute for the input row.
      * Converts the provided histological location using the FhirToDirectoryAttributeConverter.

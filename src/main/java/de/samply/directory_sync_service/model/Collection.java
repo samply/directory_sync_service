@@ -1,4 +1,4 @@
-package de.samply.directory_sync_service.directory.model;
+package de.samply.directory_sync_service.model;
 
 import de.samply.directory_sync_service.Util;
 import org.slf4j.Logger;
@@ -187,11 +187,15 @@ public class Collection {
 
     // Retrieve available diagnoses
     for (String diagnosis : getDiagnosisAvailable()) {
+      if (diagnosis == null) {
+          logger.debug("applyDiagnosisCorrections: diagnosis is null");
+          continue;
+      }
       String miriamDiagnosis = diagnosis;
       if (!miriamDiagnosis.startsWith("urn:miriam:icd:"))
         miriamDiagnosis = "urn:miriam:icd:" + diagnosis;
       logger.debug("applyDiagnosisCorrections: diagnosis: " + diagnosis);
-      if (miriamDiagnosis != null && correctedDiagnoses.containsKey(miriamDiagnosis) && correctedDiagnoses.get(miriamDiagnosis) != null) {
+      if (correctedDiagnoses.containsKey(miriamDiagnosis) && correctedDiagnoses.get(miriamDiagnosis) != null) {
         String correctedDiagnosis = correctedDiagnoses.get(miriamDiagnosis);
         logger.debug("applyDiagnosisCorrections: corrected diagnosis: " + correctedDiagnosis);
 

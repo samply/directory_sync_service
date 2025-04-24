@@ -22,24 +22,6 @@ public class FactTable {
     // Minimum number of donors per fact
     private int minDonors = 10; // default value
 
-    /**
-     * Gets the current minimum number of donors required per fact.
-     *
-     * @return The minimum number of donors per fact.
-     */
-    public int getMinDonors() {
-        return minDonors;
-    }
-
-    /**
-     * Sets the minimum number of donors required per fact.
-     *
-     * @param minDonors The new minimum number of donors per fact to be set.
-     */
-    public void setMinDonors(int minDonors) {
-        this.minDonors = minDonors;
-    }
-
     // One big fact table for everything. Every fact contains a mandatory collection ID.
     // A single "fact" is a simple String map, with medically relevant keys.
     private final List<Map<String, String>> factTables = new ArrayList<Map<String, String>>();
@@ -108,18 +90,16 @@ public class FactTable {
      * <p>
      * May throw a null pointer exception.
      * 
-     * @return Country code
+     * @return Country code. Null if no code can be found.
      */
     public String getCountryCode() {
-        if (factTables == null || factTables.size() == 0)
+        if (factTables.size() == 0)
             return null;
 
-        String countryCode = BbmriEricId
+        return BbmriEricId
                 .valueOf(factTables.get(0).get("collection"))
                 .orElse(null)
                 .getCountryCode();
-
-        return countryCode;
     }
 
     /**
@@ -205,10 +185,17 @@ public class FactTable {
      */
     public void diseaseSanityCheck() {
         int factTablesWithoutDiseaseCount = 0;
+        boolean diseaseMissing = false;
         for (Map<String, String> factTable: getFactTables())
-            if (!factTable.containsKey("disease"))
+            if (!factTable.containsKey("disease")) {
+                if (!diseaseMissing) {
+                    // Only show the first fact with a missing disease
+                    logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! disease is missing in fact: " + Util.jsonStringFomObject(factTable));
+                    diseaseMissing = true;
+                }
                 factTablesWithoutDiseaseCount++;
+            }
         if (factTablesWithoutDiseaseCount > 0)
-            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! " + factTablesWithoutDiseaseCount + " fact tables have no \"disease\" key");
+            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! " + factTablesWithoutDiseaseCount + " of " + getFactCount() + " fact tables have no \"disease\" key");
     }
 }

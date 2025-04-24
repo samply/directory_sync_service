@@ -38,9 +38,9 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
 
   /**
    * Runs a GraphQL command against the Directory API to retrieve data.
-   *
+   * <p>
    * Use this method if you want to run a query that should return a single result as a Map.
-   *
+   * <p>
    * This is not intended for running mutations.
    *
    * @param dataTableName The name of the data table to query. Must be a non-empty String.
@@ -84,9 +84,9 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
 
   /**
    * Runs a GraphQL query against the Directory API to retrieve data for a specific data table with a filter and list of attribute names.
-   *
+   * <p>
    * Use this method if you want to run a query that should return a list of results.
-   *
+   * <p>
    * This is not intended for running mutations.
    *
    * @param dataTableName The name of the data table to query. Must be a non-empty String.
@@ -101,9 +101,9 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
 
   /**
    * Runs a GraphQL command against the Directory API to retrieve data.
-   *
+   * <p>
    * Use this method if you want to run a query that should return a list of results.
-   *
+   * <p>
    * This is not intended for running mutations.
    *
    * @param graphqlCommand Full GraphQL command to be run.
@@ -131,9 +131,16 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
 
     String dataTableName = resultMap.keySet().iterator().next();
 
-    List<Map<String, Object>> retrievedList = (List<Map<String, Object>>) resultMap.get(dataTableName);
+    if (!resultMap.containsKey(dataTableName)) {
+      logger.warn("runGraphqlQueryReturnList: " + dataTableName + " is not not present in resultMap");
+      return null;
+    }
+    if (!(resultMap.get(dataTableName) instanceof List<?>)) {
+      logger.warn("runGraphqlQueryReturnList: " + dataTableName + " is not a List: " + Util.jsonStringFomObject(resultMap.get(dataTableName)));
+      return null;
+    }
 
-    return retrievedList;
+    return (List<Map<String, Object>>) resultMap.get(dataTableName);
   }
 
   /**
@@ -159,16 +166,13 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
       bracketedFilter = "( " + filter + " )";
 
     String graphqlAttributes = "";
-    if (attributeNames != null && !attributeNames.isEmpty())
-      graphqlAttributes = attributeNames.stream().collect(Collectors.joining("\n"));
+    graphqlAttributes = attributeNames.stream().collect(Collectors.joining("\n"));
 
-    String graphqlCommand = "query {\n" +
+    return "query {\n" +
             "  " + dataTableName + bracketedFilter + " {\n" +
             "    " + graphqlAttributes +
             "  }\n" +
             "}";
-
-    return graphqlCommand;
   }
 
   /**
@@ -217,8 +221,7 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    * @return The wrapped GraphQL command as a string.
    */
   private String wrapCommandInQuery(String graphqlCommand) {
-    String query = "{ \"query\": \"" + graphqlCommand + "\" }";
-    return query;
+    return "{ \"query\": \"" + graphqlCommand + "\" }";
   }
 
   /**

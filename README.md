@@ -6,6 +6,9 @@ This service keeps the [BBMRI Directory](https://directory.bbmri-eric.eu/) up to
 kept in the biobank. It also updates the local FHIR store with the latest contact
 details etc. from the Directory.
 
+If you are running a Bridgehead, Directory sync already comes prepackaged, allowing you to skip the following sections. See
+[directory-sync-tool](https://github.com/samply/bridgehead?tab=readme-ov-file#directory-sync-tool) for more details.
+
 It is assumed that you have access to a FHIR store containing information about patients
 and samples, as well as the details of your biobank. The data in this store should conform to
 the [GBA profile](https://simplifier.net/bbmri.de/~resources?category=Profile).

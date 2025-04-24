@@ -77,9 +77,8 @@ public class DirectoryCallsRest extends DirectoryCalls {
       logger.warn("DirectoryCallsRest.get: failed to get from Directory, response is null");
       return null;
     }
-    Object body = gson.fromJson(response, c);
 
-    return body;
+    return gson.fromJson(response, c);
   }
 
   /**
@@ -98,9 +97,8 @@ public class DirectoryCallsRest extends DirectoryCalls {
       logger.warn("DirectoryCallsRest.post: o: " + Util.jsonStringFomObject(o));
       return null;
     }
-    Object body = gson.fromJson(response, c);
 
-    return body;
+    return gson.fromJson(response, c);
   }
 
   /**
@@ -146,9 +144,8 @@ public class DirectoryCallsRest extends DirectoryCalls {
    */
   public String delete(String commandUrl, Object o) {
     HttpDeleteWithBody request = buildDeleteRequest(commandUrl, o);
-    String response = executeRequest(request);
 
-    return response;
+    return executeRequest(request);
   }
 
   /**

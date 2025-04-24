@@ -1,7 +1,6 @@
-package de.samply.directory_sync_service.directory.model;
+package de.samply.directory_sync_service.model;
 
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.model.BbmriEricId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,11 +17,6 @@ public class Collections {
     private static final Logger logger = LoggerFactory.getLogger(Collections.class);
     // A Map of Collections, keyed by collection ID.
     private TreeMap <String, Collection> collections = new TreeMap<>();
-
-
-    public Collection getCollection(String id) {
-        return collections.get(id);
-    }
 
     public void addCollection(String collectionId, Collection collection) {
         if (collection == null) {

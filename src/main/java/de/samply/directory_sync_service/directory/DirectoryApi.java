@@ -2,7 +2,7 @@ package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
-import de.samply.directory_sync_service.directory.model.Collections;
+import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.FactTable;
@@ -23,39 +23,19 @@ import java.util.Map;
  */
 public abstract class DirectoryApi {
   protected static final Logger logger = LoggerFactory.getLogger(DirectoryApi.class);
-  protected DirectoryCalls directoryCalls;
   protected DirectoryEndpoints directoryEndpoints;
   // Setting this variable to true will prevent any contact being made to the Directory.
   // All public methods will return feasible fake results.
-  protected boolean mockDirectory = false;
+  protected boolean mockDirectory;
 
   /**
    * Constructs a new DirectoryApiRest instance.
    * If we are not in mocking mode, log in to the Directory.
    *
-   * @param baseUrl The base URL of the Directory service.
    * @param mockDirectory If true, the instance operates in mock mode, returning fake data.
-   * @param username The username for authenticating with the Directory.
-   * @param password The password for authenticating with the Directory.
    */
-  public DirectoryApi(String baseUrl, boolean mockDirectory, String username, String password) {
+  public DirectoryApi(boolean mockDirectory) {
     this.mockDirectory = mockDirectory;
-  }
-
-  /**
-   * @return true if a login endpoint for this API is accessible, false otherwise.
-   */
-  public boolean isLoginAvailable() {
-    String endpoint = directoryEndpoints.getLoginEndpoint();
-
-    if (!directoryCalls.endpointExists(endpoint)) {
-      logger.debug("isLoginAvailable: failing availablity test because " + endpoint + " is not accessible");
-      return false;
-    }
-
-    logger.debug("isAvailable: login availability test has succeeded");
-
-    return true;
   }
 
   /**
@@ -77,9 +57,8 @@ public abstract class DirectoryApi {
    * constructing the URL for the API call.
    *
    * @param putCollections
-   * @return
    */
-  public abstract Collections fetchBasicCollectionData(Collections putCollections);
+  public abstract void fetchBasicCollectionData(Collections putCollections);
 
   /**
    * Send aggregated collection information to the Directory.
@@ -219,7 +198,7 @@ public abstract class DirectoryApi {
    * <p>
    * 1. If the full code is not correct, remove the number after the period and try again. If the new truncated code is OK, use it to replace the existing diagnosis.
    * 2. If that doesn't work, replace the existing diagnosis with null.
-   *
+   * <p>
    * The supplied Map object, {@code diagnoses}, is modified in-place.
    *
    * @param diagnoses A string map containing diagnoses to be corrected.
@@ -234,7 +213,7 @@ public abstract class DirectoryApi {
       return;
     }
 
-    if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
+    if (diagnoses.keySet().size() < 5) {
       logger.debug("collectDiagnosisCorrections: uncorrected diagnoses: ");
       for (String diagnosis : diagnoses.keySet())
         logger.debug("collectDiagnosisCorrections: diagnosis: " + diagnosis);
@@ -281,9 +260,8 @@ public abstract class DirectoryApi {
     BbmriEricId bbmriEricCollectionId = BbmriEricId
             .valueOf(id)
             .orElse(null);
-    String countryCode = bbmriEricCollectionId.getCountryCode();
 
-    return countryCode;
+    return bbmriEricCollectionId.getCountryCode();
   }
 
   /**
@@ -394,7 +372,7 @@ public abstract class DirectoryApi {
         if (attributeList.size() > 0) {
           for (Object attributeElementValue : attributeList) {
             if (attributeElementValue instanceof String || attributeElementValue instanceof Integer) {
-              Map<String, String> newAttributeValue = new HashMap();
+              Map<String, String> newAttributeValue = new HashMap<>();
               newAttributeValue.put(attributeElementName, attributeElementValue.toString());
               newAttributeList.add(newAttributeValue);
             } else if (attributeElementValue instanceof Map) {
@@ -408,7 +386,7 @@ public abstract class DirectoryApi {
           entity.put(attributeName, newAttributeList);
         }
       } else if (attribute instanceof String || attribute instanceof Integer) {
-        Map<String,String> newAttributeValue = new HashMap();
+        Map<String,String> newAttributeValue = new HashMap<>();
         newAttributeValue.put(attributeElementName, attribute.toString());
         entity.remove(attributeName); // Remove old attribute
         entity.put(attributeName, newAttributeValue);

@@ -256,7 +256,7 @@ public class Util {
             String header = headers.get(i);
             int width = colWidths.get(header);
             // Format header left-justified.
-            System.out.print(String.format("%-" + width + "s", header));
+            System.out.printf("%-" + width + "s", header);
             if (i < headers.size() - 1) {
                 System.out.print(";");
             }
@@ -269,7 +269,7 @@ public class Util {
                 String header = headers.get(i);
                 int width = colWidths.get(header);
                 String value = record.getOrDefault(header, "");
-                System.out.print(String.format("%-" + width + "s", value));
+                System.out.printf("%-" + width + "s", value);
                 if (i < headers.size() - 1) {
                     System.out.print(";");
                 }
@@ -290,7 +290,6 @@ public class Util {
      *
      * @param object   the object to serialize to JSON and save to the file. Should not be {@code null}.
      * @param filePath the path to the file where the serialized object will be saved. Should be a valid file path.
-     * @throws IOException if an I/O error occurs while writing to the file. Logged internally in the method.
      */
     public static void serializeToFile(Object object, String filePath) {
         if (object == null) {

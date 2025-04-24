@@ -70,8 +70,7 @@ public class DirectoryEndpointsRest extends DirectoryEndpoints {
     String countryCodeInsert = "";
     if (countryCode != null && !countryCode.isEmpty())
       countryCodeInsert = countryCode + "_";
-    String collectionApiUrl = ENDPOINT_FUNCTION + countryCodeInsert + function;
 
-    return collectionApiUrl;
+    return ENDPOINT_FUNCTION + countryCodeInsert + function;
   }
 }
