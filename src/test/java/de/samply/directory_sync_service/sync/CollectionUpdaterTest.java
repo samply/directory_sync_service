@@ -1,13 +1,10 @@
 package de.samply.directory_sync_service.sync;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
-import de.samply.directory_sync_service.directory.model.Collection;
-import de.samply.directory_sync_service.directory.model.Collections;
+import de.samply.directory_sync_service.model.Collections;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
