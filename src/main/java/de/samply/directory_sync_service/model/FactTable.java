@@ -185,10 +185,17 @@ public class FactTable {
      */
     public void diseaseSanityCheck() {
         int factTablesWithoutDiseaseCount = 0;
+        boolean diseaseMissing = false;
         for (Map<String, String> factTable: getFactTables())
-            if (!factTable.containsKey("disease"))
+            if (!factTable.containsKey("disease")) {
+                if (!diseaseMissing) {
+                    // Only show the first fact with a missing disease
+                    logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! disease is missing in fact: " + Util.jsonStringFomObject(factTable));
+                    diseaseMissing = true;
+                }
                 factTablesWithoutDiseaseCount++;
+            }
         if (factTablesWithoutDiseaseCount > 0)
-            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! " + factTablesWithoutDiseaseCount + " fact tables have no \"disease\" key");
+            logger.warn("diseaseSanityCheck: !!!!!!!!!!!!!!!!!!!!! " + factTablesWithoutDiseaseCount + " of " + getFactCount() + " fact tables have no \"disease\" key");
     }
 }
