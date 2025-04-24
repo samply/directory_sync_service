@@ -1,8 +1,8 @@
 package de.samply.directory_sync_service.converter;
 
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.directory.model.Collection;
-import de.samply.directory_sync_service.directory.model.Collections;
+import de.samply.directory_sync_service.model.Collection;
+import de.samply.directory_sync_service.model.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

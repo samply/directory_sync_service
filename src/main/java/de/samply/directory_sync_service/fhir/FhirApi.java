@@ -1,6 +1,6 @@
 package de.samply.directory_sync_service.fhir;
 
-import de.samply.directory_sync_service.directory.model.Collections;
+import de.samply.directory_sync_service.model.Collections;
 
 import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
@@ -13,7 +13,7 @@ import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.directory.model.Collection;
+import de.samply.directory_sync_service.model.Collection;
 import de.samply.directory_sync_service.model.BbmriEricId;
 
 import java.time.LocalDate;

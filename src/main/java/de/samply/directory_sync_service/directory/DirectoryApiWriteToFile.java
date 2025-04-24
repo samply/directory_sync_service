@@ -2,7 +2,7 @@ package de.samply.directory_sync_service.directory;
 
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.model.Biobank;
-import de.samply.directory_sync_service.directory.model.Collections;
+import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.converter.ConvertCollectionsToDirectoryCollectionPut;
