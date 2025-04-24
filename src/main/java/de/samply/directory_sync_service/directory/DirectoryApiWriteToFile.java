@@ -37,6 +37,14 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
     this.directoryOutputDirectory = directoryOutputDirectory;
   }
 
+  public String getFactTableString() {
+    return factTableString;
+  }
+
+  public String getEntityTableString() {
+    return entityTableString;
+  }
+
   /**
    * Log in to the Directory. You can log in as many times as you like.
    * <p>
