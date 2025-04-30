@@ -61,6 +61,8 @@ First, you will need to set up the environment variables for this:
 | DS_TIMER_CRON                      | Execution interval for Directory sync, cron format                                                                                                                   |                                        |
 | DS_RETRY_MAX                       | Maximum number of retries when sync fails                                                                                                                            | 10                                     |
 | DS_RETRY_INTERVAL                  | Interval between retries (seconds)                                                                                                                                   | 20 seconds                             |
+| DS_IMPORT_BIOBANKS                 | Set to 'True' to import biobank metadata from Directory                                                                                                              | False                                  |
+| DS_IMPORT_COLLECTIONS              | Set to 'True' to import collection metadata from Directory                                                                                                           | False                                  |
 
 DS_DIRECTORY_USER_NAME and DS_DIRECTORY_USER_PASS are mandatory. If you do not specify these,
 Directory sync will not run. Contact [Directory admin](directory@helpdesk.bbmri-eric.eu) to get login credentials.
@@ -81,6 +83,8 @@ for a FHIR store to start, whereas Directory sync starts immediately, so
 Directory sync needs to have a way to poll the store until is ready.
 
 If DS_DIRECTORY_MOCK is set to 'True', the Directory will not be contacted, but you will still need to specify login credentials (which will then be ignored).
+
+By default, the synchronization with the Directory is one-way, i.e. from your site to the Directory. If you would also like to import metadata from the biobank and collections at the Directory, then you should set the environment variables DS_IMPORT_BIOBANKS and DS_IMPORT_COLLECTIONS to true.
 
 For your convenience, we recommend that you store these variables in a .env file.
 The file could look like this:
