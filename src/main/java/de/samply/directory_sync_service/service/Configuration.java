@@ -52,4 +52,10 @@ public class Configuration {
 
     @Value("${ds.directory.output_directory}")
     private String directoryOutputDirectory;
+
+    @Value("${ds.import.biobanks}")
+    private String importBiobanks;
+
+    @Value("${ds.import.collections}")
+    private String importCollections;
 }

@@ -202,15 +202,12 @@ public class CollectionsUpdater extends AbstractUpdater {
         CollectionTuple collectionTuple = new CollectionTuple(fhirCollection, directoryCollection);
 
         logger.debug("updateCollectionInFhirStore: Update the collection if necessary");
-        logger.debug("updateCollectionInFhirStore: initial directoryCollection: " + Util.jsonStringFomObject(directoryCollection));
 
         collectionTuple = UPDATE_COLLECTION_NAME.apply(collectionTuple);
         collectionTuple = UPDATE_COLLECTION_DESCRIPTION.apply(collectionTuple);
         collectionTuple = UPDATE_COLLECTION_CONTACT.apply(collectionTuple);
         collectionTuple = UPDATE_COLLECTION_ADDRESS.apply(collectionTuple);
         collectionTuple = UPDATE_COLLECTION_TELECOM.apply(collectionTuple);
-
-        logger.debug("updateCollectionInFhirStore: final directoryCollection: " + Util.jsonStringFomObject(directoryCollection));
 
        // Check if any changes have been made; if not, return true (because this outcome is OK)
         if (collectionTuple.hasChanged())

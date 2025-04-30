@@ -20,6 +20,9 @@ ds:
     only_login: "False"
     write_to_file: "False"
     output_directory: "/tmp"
+  import:
+    biobanks: "False"
+    collections: "False"
 # HAPI FHIR floods the logs at the INFO level, so cut off at WARN
 logging:
   level:
