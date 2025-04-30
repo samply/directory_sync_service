@@ -8,7 +8,6 @@ import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
-import java.io.IOException;
 import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
@@ -150,8 +149,13 @@ public class Sync {
             return false;
         }
 
+        // Pull metadata from the Directory and insert it into the FHIR store.
         if (!BiobanksUpdater.updateBiobanksInFhirStore(fhirApi, directoryApi)) {
-            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
+            logger.warn("syncWithDirectory: there was a problem when updating biobanks in FHIR store");
+            return false;
+        }
+        if (!CollectionsUpdater.updateCollectionsInFhirStore(fhirApi, collections)) {
+            logger.warn("syncWithDirectory: there was a problem when updating collections in FHIR store");
             return false;
         }
 

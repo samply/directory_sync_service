@@ -41,25 +41,28 @@ public class ConvertCollectionsToDirectoryCollectionPut {
     private static DirectoryCollectionPut convert(Collection collection, DirectoryCollectionPut directoryCollectionPut) {
         try {
 
-            // Code copied from the merge method
-            directoryCollectionPut.setName(collection.getId(), collection.getName());
-            directoryCollectionPut.setDescription(collection.getId(), collection.getDescription());
+            // Attributes pulled from the Directory
+            directoryCollectionPut.setBiobank(collection.getId(), collection.getBiobank());
             directoryCollectionPut.setContact(collection.getId(), collection.getContact());
             directoryCollectionPut.setCountry(collection.getId(), collection.getCountry());
-            directoryCollectionPut.setBiobank(collection.getId(), collection.getBiobank());
-            directoryCollectionPut.setType(collection.getId(), collection.getType());
             directoryCollectionPut.setDataCategories(collection.getId(), collection.getDataCategories());
+            directoryCollectionPut.setDescription(collection.getId(), collection.getDescription());
+            directoryCollectionPut.setHead(collection.getId(), collection.getHead());
+            directoryCollectionPut.setLocation(collection.getId(), collection.getLocation());
+            directoryCollectionPut.setName(collection.getId(), collection.getName());
             directoryCollectionPut.setNetworks(collection.getId(), collection.getNetwork());
+            directoryCollectionPut.setType(collection.getId(), collection.getType());
+            directoryCollectionPut.setUrl(collection.getId(), collection.getUrl());
 
-            // Original code
-            convertSize(directoryCollectionPut, collection);
-            convertNumberOfDonors(directoryCollectionPut, collection);
-            convertSex(directoryCollectionPut, collection);
+            // Attributes calculated based on FHIR store content
             convertAgeLow(directoryCollectionPut, collection);
             convertAgeHigh(directoryCollectionPut, collection);
-            convertMaterials(directoryCollectionPut, collection);
-            convertStorageTemperatures(directoryCollectionPut, collection);
             convertDiagnosisAvailable(directoryCollectionPut, collection);
+            convertMaterials(directoryCollectionPut, collection);
+            convertNumberOfDonors(directoryCollectionPut, collection);
+            convertSex(directoryCollectionPut, collection);
+            convertSize(directoryCollectionPut, collection);
+            convertStorageTemperatures(directoryCollectionPut, collection);
         } catch(Exception e) {
             logger.error("Problem converting FHIR attributes to Directory attributes. " + Util.traceFromException(e));
             return null;

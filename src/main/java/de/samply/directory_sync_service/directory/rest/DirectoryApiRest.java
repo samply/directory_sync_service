@@ -95,8 +95,7 @@ public class DirectoryApiRest extends DirectoryApi {
 
   /**
    * Make API calls to the Directory to fill a Collections object containing attributes
-   * for all of the collections listed in collectionIds. The countryCode is used solely for
-   * constructing the URL for the API call.
+   * for all of the collections listed in collectionIds.
    *
    * @param collections
    */
@@ -109,6 +108,7 @@ public class DirectoryApiRest extends DirectoryApi {
     login();
 
     List<String> collectionIds = collections.getCollectionIds();
+    //  The countryCode is used solely for constructing the URL for the API call.
     String countryCode = collections.getCountryCode();
 
     boolean warnFlag = false;

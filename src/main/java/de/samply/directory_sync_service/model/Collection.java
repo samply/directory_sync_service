@@ -21,7 +21,9 @@ public class Collection {
   private List<String> dataCategories;
   private String description;
   private List<String> diagnosisAvailable;
+  private String head;
   private String id;
+  private String location;
   private List<String> materials;
   private String name;
   private List<String> network;
@@ -30,6 +32,7 @@ public class Collection {
   private Integer size;
   private List<String> storageTemperatures;
   private List<String> type;
+  private String url;
 
   public Integer getAgeHigh() {
     return ageHigh;
@@ -95,12 +98,28 @@ public class Collection {
     this.diagnosisAvailable = diagnosisAvailable;
   }
 
+  public String getHead() {
+    return head;
+  }
+
+  public void setHead(String head) {
+    this.head = head;
+  }
+
   public String getId() {
     return id;
   }
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
   }
 
   public List<String> getMaterials() {
@@ -157,6 +176,14 @@ public class Collection {
 
   public void setStorageTemperatures(List<String> storageTemperatures) {
     this.storageTemperatures = storageTemperatures;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
   }
 
   public List<String> getType() {
@@ -235,7 +262,9 @@ public class Collection {
     if (collection.getDataCategories() != null && !collection.getDataCategories().isEmpty()) setDataCategories(collection.getDataCategories());
     if (collection.getDescription() != null) setDescription(collection.getDescription());
     if (collection.getDiagnosisAvailable() != null && !collection.getDiagnosisAvailable().isEmpty()) setDiagnosisAvailable(collection.getDiagnosisAvailable());
+    if (collection.getHead() != null) setHead(collection.getHead());
     if (collection.getId() != null) setId(collection.getId());
+    if (collection.getLocation() != null) setLocation(collection.getLocation());
     if (collection.getMaterials() != null && !collection.getMaterials().isEmpty()) setMaterials(collection.getMaterials());
     if (collection.getName() != null) setName(collection.getName());
     if (collection.getNetwork() != null && !collection.getNetwork().isEmpty()) setNetwork(collection.getNetwork());
@@ -244,6 +273,7 @@ public class Collection {
     if (collection.getSize() != null) setSize(collection.getSize());
     if (collection.getStorageTemperatures() != null && !collection.getStorageTemperatures().isEmpty()) setStorageTemperatures(collection.getStorageTemperatures());
     if (collection.getType() != null && !collection.getType().isEmpty()) setType(collection.getType());
+    if (collection.getUrl() != null) setUrl(collection.getUrl());
 
   }
 }
