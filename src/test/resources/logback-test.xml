@@ -1,0 +1,6 @@
+<configuration>
+    <logger name="de.samply.directory_sync_service.directory.model.DirectoryCollectionPut" level="ERROR"/>
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
