@@ -223,18 +223,24 @@ public abstract class DirectoryApi {
     int invalidIcdValueCounter = 0;
     int correctedIcdValueCounter = 0;
     int discardedIcdValueCounter = 0;
+    // Apply corrections to all diagnoses if necessary
     for (String diagnosis: diagnoses.keySet()) {
       if (diagnosisCounter%500 == 0)
         logger.debug("collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
       if (!isValidIcdValue(diagnosis)) {
+        // The current disgnosis is not valid, try to correct it by removing
+        // any numbers after the period.
         invalidIcdValueCounter++;
         String diagnosisCategory = diagnosis.split("\\.")[0];
         if (isValidIcdValue(diagnosisCategory)) {
+          // Diagnosis successfully corrected.
           correctedIcdValueCounter++;
           diagnoses.put(diagnosis, diagnosisCategory);
         } else {
-          discardedIcdValueCounter++;}
+          // Diagnosis still invalid, replace with null.
+          discardedIcdValueCounter++;
           diagnoses.put(diagnosis, null);
+        }
       }
       diagnosisCounter++;
     }

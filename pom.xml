@@ -10,7 +10,7 @@
     </parent>
     <groupId>de.samply</groupId>
     <artifactId>directory_sync_service</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
     <name>directory_sync_service</name>
     <description>Directory sync</description>
     <url>https://github.com/samply/directory_sync_service</url>
