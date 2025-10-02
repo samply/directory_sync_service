@@ -123,10 +123,6 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    */
   @Override
   protected boolean updateFactTablesBlock(String countryCode, List<Map<String, String>> factTablesBlock) {
-    if (factTablesBlock.size() == 0)
-      // Nothing to insert
-      return true;
-
     List<Map<String, String>> factTables = new ArrayList<>();
     for (Map<String, String> factTable : factTablesBlock)
       try {
