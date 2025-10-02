@@ -226,11 +226,12 @@ public class Collection {
         String correctedDiagnosis = correctedDiagnoses.get(miriamDiagnosis);
         logger.debug("applyDiagnosisCorrections: corrected diagnosis: " + correctedDiagnosis);
 
+        // Strip MIRIAM part of diagnosis before adding to list
+        String plainCorrectedDiagnosis = correctedDiagnosis.substring(15);
         // Add to list only if it's not already present
-        if (!directoryDiagnoses.contains(correctedDiagnosis)) {
-          logger.debug("applyDiagnosisCorrections: adding diagnosis: " + correctedDiagnosis.substring(15));
-          // Strip MIRIAM part of diagnosis before adding to list
-          directoryDiagnoses.add(correctedDiagnosis.substring(15));
+        if (!directoryDiagnoses.contains(plainCorrectedDiagnosis)) {
+          logger.debug("applyDiagnosisCorrections: adding diagnosis: " + plainCorrectedDiagnosis);
+          directoryDiagnoses.add(plainCorrectedDiagnosis);
         }
       }
     }

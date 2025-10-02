@@ -163,29 +163,28 @@ class CollectionsTest {
             assertEquals(List.of("A00"), c1.getDiagnosisAvailable());
         }
 
-        // TODO: find out why this test fails
-//        @Test
-//        @DisplayName("Delegates to each collection: applies corrections and deduplicates")
-//        void appliesToAllCollections() {
-//            Collections cs = new Collections();
-//
-//            Collection c1 = new Collection();
-//            c1.setDiagnosisAvailable(new ArrayList<>(List.of("A00", "urn:miriam:icd:A00")));
-//            cs.addCollection("K1", c1);
-//
-//            Collection c2 = new Collection();
-//            c2.setDiagnosisAvailable(new ArrayList<>(List.of("B01")));
-//            cs.addCollection("K2", c2);
-//
-//            Map<String, String> corrections = new HashMap<>();
-//            corrections.put("urn:miriam:icd:A00", "urn:miriam:icd:C10");
-//            corrections.put("urn:miriam:icd:B01", "urn:miriam:icd:D20");
-//
-//            cs.applyDiagnosisCorrections(corrections);
-//
-//            // After corrections, each collection list should contain stripped corrected codes
-//            assertEquals(List.of("C10"), c1.getDiagnosisAvailable());
-//            assertEquals(List.of("D20"), c2.getDiagnosisAvailable());
-//        }
+        @Test
+        @DisplayName("Delegates to each collection: applies corrections and deduplicates")
+        void appliesToAllCollections() {
+            Collections cs = new Collections();
+
+            Collection c1 = new Collection();
+            c1.setDiagnosisAvailable(new ArrayList<>(List.of("A00", "urn:miriam:icd:A00")));
+            cs.addCollection("K1", c1);
+
+            Collection c2 = new Collection();
+            c2.setDiagnosisAvailable(new ArrayList<>(List.of("B01")));
+            cs.addCollection("K2", c2);
+
+            Map<String, String> corrections = new HashMap<>();
+            corrections.put("urn:miriam:icd:A00", "urn:miriam:icd:C10");
+            corrections.put("urn:miriam:icd:B01", "urn:miriam:icd:D20");
+
+            cs.applyDiagnosisCorrections(corrections);
+
+            // After corrections, each collection list should contain stripped corrected codes
+            assertEquals(List.of("C10"), c1.getDiagnosisAvailable());
+            assertEquals(List.of("D20"), c2.getDiagnosisAvailable());
+        }
     }
 }

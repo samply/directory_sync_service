@@ -62,23 +62,22 @@ class CollectionTest {
             assertTrue(c.getDiagnosisAvailable().isEmpty());
         }
 
-        // TODO: find out why this test fails
-//        @Test
-//        @DisplayName("Corrects with/without 'urn:miriam:icd:' prefix and deduplicates corrected codes")
-//        void correctsAndDeduplicates() {
-//            Collection c = new Collection();
-//            // Mixed inputs: some with prefix, some without, plus a null entry (should be skipped)
-//            c.setDiagnosisAvailable(new ArrayList<>(Arrays.asList("A00", "urn:miriam:icd:A00", null, "A00")));
-//
-//            Map<String, String> corrections = new HashMap<>();
-//            // Map expects keys WITH miriam prefix; code adds it for bare codes
-//            corrections.put("urn:miriam:icd:A00", "urn:miriam:icd:B00");
-//
-//            c.applyDiagnosisCorrections(corrections);
-//
-//            // Should contain exactly one corrected code ("B00"), deduped and with prefix stripped
-//            assertEquals(List.of("B00"), c.getDiagnosisAvailable());
-//        }
+        @Test
+        @DisplayName("Corrects with/without 'urn:miriam:icd:' prefix and deduplicates corrected codes")
+        void correctsAndDeduplicates() {
+            Collection c = new Collection();
+            // Mixed inputs: some with prefix, some without, plus a null entry (should be skipped)
+            c.setDiagnosisAvailable(new ArrayList<>(Arrays.asList("A00", "urn:miriam:icd:A00", null, "A00")));
+
+            Map<String, String> corrections = new HashMap<>();
+            // Map expects keys WITH miriam prefix; code adds it for bare codes
+            corrections.put("urn:miriam:icd:A00", "urn:miriam:icd:B00");
+
+            c.applyDiagnosisCorrections(corrections);
+
+            // Should contain exactly one corrected code ("B00"), deduped and with prefix stripped
+            assertEquals(List.of("B00"), c.getDiagnosisAvailable());
+        }
 
         @Test
         @DisplayName("Ignores corrections whose value is null")
