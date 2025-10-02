@@ -50,6 +50,10 @@ public class Collections {
         return collections.keySet().stream().collect(Collectors.toList());
     }
 
+    public Collection getCollection(String collectionId) {
+        return collections.get(collectionId);
+    }
+
     /**
      * Gets the country code for the collections, e.g. "DE".
      * <p>

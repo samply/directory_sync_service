@@ -140,10 +140,20 @@ public class DirectoryApiGraphql extends DirectoryApi {
         return null;
       }
 
-      String name = (String) item.get("name");
-
+      biobank.setAcronym((String) item.get("acronym"));
+      biobank.setCapabilities((List<Map>) item.get("capabilities"));
+      biobank.setContact((Map) item.get("contact"));
+      biobank.setCountry((Map) item.get("country"));
+      biobank.setDescription((String) item.get("description"));
+      biobank.setHead((Map) item.get("head"));
       biobank.setId(biobankId);
-      biobank.setName(name);
+      biobank.setJuridicalPerson((String) item.get("juridical_person"));
+      biobank.setLatitude((String) item.get("latitude"));
+      biobank.setLocation((String) item.get("location"));
+      biobank.setLongitude((String) item.get("longitude"));
+      biobank.setName((String) item.get("name"));
+      biobank.setNetwork((List<Map>) item.get("network"));
+      biobank.setUrl((String) item.get("url"));
     } catch (Exception e) {
       logger.warn("fetchBiobank: Exception during biobank import: " + Util.traceFromException(e));
       return null;

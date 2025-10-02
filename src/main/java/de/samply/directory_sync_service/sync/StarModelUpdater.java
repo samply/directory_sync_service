@@ -45,15 +45,14 @@ public class StarModelUpdater {
             // use them to generate the star model fact tables.
             FactTable factTable = CreateFactTablesFromStarModelInputData.createFactTables(starModelInput, maxFacts);
             logger.debug("sendStarModelUpdatesToDirectory: 1 starModelInputData.getFactCount(): " + factTable.getFactCount());
-            if (factTable.getFactCount() == 0) {
+            if (factTable.getFactCount() == 0)
                 logger.warn("sendStarModelUpdatesToDirectory: no starModelInputData has been generated, FHIR store might be empty");
-                return factTable;
-            }
+            logger.info("sendStarModelUpdatesToDirectory: after creation, fact count: " + factTable.getFactCount());
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
             factTable.applyDiagnosisCorrections(correctedDiagnoses);
-            logger.info("sendStarModelUpdatesToDirectory: 2 starModelInputData.getFactCount(): " + factTable.getFactCount());
+            logger.info("sendStarModelUpdatesToDirectory: after diagnosis corrections, fact count: " + factTable.getFactCount());
 
             // Send fact tables to Direcory.
             directoryApi.login();

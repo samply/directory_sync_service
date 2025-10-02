@@ -8,7 +8,6 @@ import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
-import java.io.IOException;
 import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
@@ -44,13 +43,13 @@ public class Sync {
      * succeeds, or the number of attempts exceeds a threshold.
      *
      */
-    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory) {
+    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections) {
         logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting");
         boolean success = false;
         int retryNum;
         for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
             logger.info("syncWithDirectoryFailover: +++++++++++++++++++ trying sync, attempt " + retryNum + " of " + retryMax);
-            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory)) {
+            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections)) {
                 success = true;
                 break;
             }
@@ -70,7 +69,7 @@ public class Sync {
         return success;
     }
 
-    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory) {
+    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections) {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
@@ -150,9 +149,18 @@ public class Sync {
             return false;
         }
 
-        if (!BiobanksUpdater.updateBiobanksInFhirStore(fhirApi, directoryApi)) {
-            logger.warn("syncWithDirectory: there was a problem during sync from Directory");
-            return false;
+        // Pull metadata from the Directory and insert it into the FHIR store.
+        if (importBiobanks) {
+            if (!BiobanksUpdater.updateBiobanksInFhirStore(fhirApi, directoryApi)) {
+                logger.warn("syncWithDirectory: there was a problem when updating biobanks in FHIR store");
+                return false;
+            }
+        }
+        if (importCollections) {
+            if (!CollectionsUpdater.updateCollectionsInFhirStore(fhirApi, collections)) {
+                logger.warn("syncWithDirectory: there was a problem when updating collections in FHIR store");
+                return false;
+            }
         }
 
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: all synchronization tasks finished");

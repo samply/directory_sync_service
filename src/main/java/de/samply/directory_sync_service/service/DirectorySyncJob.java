@@ -58,8 +58,10 @@ public class DirectorySyncJob implements StatefulJob  {
         boolean directoryOnlyLogin = Boolean.parseBoolean(configuration.getDirectoryOnlyLogin());
         boolean directoryWriteToFile = Boolean.parseBoolean(configuration.getDirectoryWriteToFile());
         String directoryOutputDirectory = configuration.getDirectoryOutputDirectory();
+        boolean importBiobanks = Boolean.parseBoolean(configuration.getImportBiobanks());
+        boolean importCollections = Boolean.parseBoolean(configuration.getImportCollections());
 
-        boolean success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory);
+        boolean success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections);
 
         if (success) {
             logger.info("execute: Directory sync succeeded");

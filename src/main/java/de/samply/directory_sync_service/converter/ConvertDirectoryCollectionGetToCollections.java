@@ -50,32 +50,41 @@ public class ConvertDirectoryCollectionGetToCollections {
             return collection;
         }
 
-        if (collectionMap.containsKey("id"))
-            collection.setId(getStringFromAttributeMap(collectionMap.get("id")));
-
-        if (collectionMap.containsKey("country"))
-            collection.setCountry(getStringFromAttributeMap(collectionMap.get("country")));
+        if (collectionMap.containsKey("biobank"))
+            collection.setBiobank(getStringFromAttributeMap(collectionMap.get("biobank")));
 
         if (collectionMap.containsKey("contact"))
             collection.setContact(getStringFromAttributeMap(collectionMap.get("contact")));
 
-        if (collectionMap.containsKey("biobank"))
-            collection.setBiobank(getStringFromAttributeMap(collectionMap.get("biobank")));
-
-        if (collectionMap.containsKey("type"))
-            collection.setType(getListOfStringsFromAttribute(collectionMap.get("type")));
+        if (collectionMap.containsKey("country"))
+            collection.setCountry(getStringFromAttributeMap(collectionMap.get("country")));
 
         if (collectionMap.containsKey("data_categories"))
             collection.setDataCategories(getListOfStringsFromAttribute(collectionMap.get("data_categories")));
 
-        if (collectionMap.containsKey("network"))
-            collection.setNetwork(getListOfStringsFromAttribute(collectionMap.get("network")));
+        if (collectionMap.containsKey("description"))
+            collection.setDescription(getStringFromAttributeMap(collectionMap.get("description")));
+
+        if (collectionMap.containsKey("head"))
+            collection.setHead(getStringFromAttributeMap(collectionMap.get("head")));
+
+        if (collectionMap.containsKey("id"))
+            collection.setId(getStringFromAttributeMap(collectionMap.get("id")));
+
+        if (collectionMap.containsKey("location"))
+            collection.setLocation(getStringFromAttributeMap(collectionMap.get("location")));
 
         if (collectionMap.containsKey("name"))
             collection.setName(getStringFromAttributeMap(collectionMap.get("name")));
 
-        if (collectionMap.containsKey("description"))
-            collection.setDescription(getStringFromAttributeMap(collectionMap.get("description")));
+        if (collectionMap.containsKey("network"))
+            collection.setNetwork(getListOfStringsFromAttribute(collectionMap.get("network")));
+
+        if (collectionMap.containsKey("type"))
+            collection.setType(getListOfStringsFromAttribute(collectionMap.get("type")));
+
+        if (collectionMap.containsKey("url"))
+            collection.setUrl(getStringFromAttributeMap(collectionMap.get("url")));
 
         return collection;
     }

@@ -103,13 +103,18 @@ public abstract class DirectoryApi {
 
     // Break the fact table into blocks of 1000 before sending to the Directory.
     // This is the maximum number of facts allowed per Directory API call.
-    for (int i = 0; i < factTables.size(); i += blockSize) {
-      List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
+    if (factTables.size() == 0) {
+      logger.debug("updateStarModel: zero length star model");
+      updateFactTablesBlock(countryCode, new ArrayList<Map<String, String>>());
+    } else {
+      for (int i = 0; i < factTables.size(); i += blockSize) {
+        List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
 
-      logger.debug("updateStarModel: sending block: " + i + " of " + factTables.size());
-      if (!updateFactTablesBlock(countryCode, factTablesBlock)) {
-        logger.warn("updateStarModel: failed, block: " + i + " of " + factTables.size());
-        return false;
+        logger.debug("updateStarModel: sending block: " + i + " of " + factTables.size());
+        if (!updateFactTablesBlock(countryCode, factTablesBlock)) {
+          logger.warn("updateStarModel: failed, block: " + i + " of " + factTables.size());
+          return false;
+        }
       }
     }
 
@@ -223,18 +228,24 @@ public abstract class DirectoryApi {
     int invalidIcdValueCounter = 0;
     int correctedIcdValueCounter = 0;
     int discardedIcdValueCounter = 0;
+    // Apply corrections to all diagnoses if necessary
     for (String diagnosis: diagnoses.keySet()) {
       if (diagnosisCounter%500 == 0)
         logger.debug("collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
       if (!isValidIcdValue(diagnosis)) {
+        // The current disgnosis is not valid, try to correct it by removing
+        // any numbers after the period.
         invalidIcdValueCounter++;
         String diagnosisCategory = diagnosis.split("\\.")[0];
         if (isValidIcdValue(diagnosisCategory)) {
+          // Diagnosis successfully corrected.
           correctedIcdValueCounter++;
           diagnoses.put(diagnosis, diagnosisCategory);
         } else {
-          discardedIcdValueCounter++;}
+          // Diagnosis still invalid, replace with null.
+          discardedIcdValueCounter++;
           diagnoses.put(diagnosis, null);
+        }
       }
       diagnosisCounter++;
     }

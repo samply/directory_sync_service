@@ -88,6 +88,10 @@ public class FhirApi {
         .findFirst().map(Identifier::getValue).flatMap(BbmriEricId::valueOf);
   }
 
+  public String resourceToJsonString(IBaseResource resource) {
+    return ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resource);
+  }
+
   /**
    * Updates the provided resource on the FHIR server.
    * <p>
@@ -165,14 +169,34 @@ public class FhirApi {
   }
 
   /**
-   * Retrieves all organizations that conform to a given FHIR profile URI.
+   * Retrieves a list of all collections that match the given list of collection IDs.
    *
-   * <p>This method performs a FHIR search query to find organizations matching the provided profile URI.
-   * If an exception occurs during the search, it logs the error and returns {@code null}.
-   *
-   * @param profileUri The URI of the FHIR profile used to filter the organizations.
-   * @return A {@link Bundle} containing the matching organizations, or {@code null} if an error occurs.
+   * @param collectionIds A list of collection IDs.
+   * @return A list of {@link Organization} objects representing biobank collections,
+   *         or {@code null} if an error occurs.
    */
+  public List<Organization> listAllCollections(List<String> collectionIds) {
+    List<Organization> collections = listAllCollections();
+    if (collections == null) {
+      logger.warn("listAllCollections: collections is null");
+      return null;
+    }
+
+    return collections.stream()
+            .filter(c -> c.getIdentifier().stream()
+                    .anyMatch(identifier -> collectionIds.contains(identifier.getValue())))
+            .collect(Collectors.toList());
+  }
+
+    /**
+     * Retrieves all organizations that conform to a given FHIR profile URI.
+     *
+     * <p>This method performs a FHIR search query to find organizations matching the provided profile URI.
+     * If an exception occurs during the search, it logs the error and returns {@code null}.
+     *
+     * @param profileUri The URI of the FHIR profile used to filter the organizations.
+     * @return A {@link Bundle} containing the matching organizations, or {@code null} if an error occurs.
+     */
   private Bundle listAllOrganizations(String profileUri) {
     try {
       return (Bundle) fhirClient.search().forResource(Organization.class)

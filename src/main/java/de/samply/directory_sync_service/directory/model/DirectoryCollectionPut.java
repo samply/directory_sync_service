@@ -3,13 +3,11 @@ package de.samply.directory_sync_service.directory.model;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import org.slf4j.Logger;
@@ -45,6 +43,18 @@ public class DirectoryCollectionPut extends HashMap {
 
     public void setDescription(String collectionId, String description) {
         getEntity(collectionId).setDescription(description);
+    }
+
+    public void setHead(String collectionId, String head) {
+        getEntity(collectionId).setHead(head);
+    }
+
+    public void setLocation(String collectionId, String location) {
+        getEntity(collectionId).setLocation(location);
+    }
+
+    public void setUrl(String collectionId, String url) {
+        getEntity(collectionId).setUrl(url);
     }
 
     public void setContact(String collectionId, String contact) {
@@ -327,6 +337,28 @@ public class DirectoryCollectionPut extends HashMap {
 
             put("sex", sex);
         }
+
+        public void setHead(String head) {
+            if (head == null || head.isEmpty())
+                return;
+
+            put("head", head);
+        }
+
+        public void setLocation(String location) {
+            if (location == null || location.isEmpty())
+                return;
+
+            put("location", location);
+        }
+
+        public void setUrl(String url) {
+            if (url == null || url.isEmpty())
+                return;
+
+            put("url", url);
+        }
+
 
         public void setAgeLow(Integer value) {
             put("age_low", value);

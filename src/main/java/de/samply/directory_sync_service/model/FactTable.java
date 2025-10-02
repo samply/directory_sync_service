@@ -69,15 +69,24 @@ public class FactTable {
     public void applyDiagnosisCorrections(Map<String,String> diagnoses) {
         if (diagnoses == null)
             return;
-         for (Map<String, String> fact: factTables) {
-            if (!fact.containsKey("disease"))
+        int diseaseMissingCount = 0;
+        int diseaseRemovedCount = 0;
+        for (Map<String, String> fact: factTables) {
+            if (!fact.containsKey("disease")) {
+                diseaseMissingCount++;
                 continue;
+            }
             String disease = fact.get("disease");
             if (disease != null && diagnoses.containsKey(disease))
                 fact.put("disease", diagnoses.get(disease));
-            if (fact.get("disease") == null)
+            if (fact.get("disease") == null) {
+                diseaseRemovedCount++;
                 fact.remove("disease");
+            }
         }
+
+        if (diseaseMissingCount > 0 || diseaseRemovedCount > 0)
+            logger.info("applyDiagnosisCorrections: diseaseMissingCount = " + diseaseMissingCount + ", diseaseRemovedCount = " + diseaseRemovedCount);
     }
 
     /**
