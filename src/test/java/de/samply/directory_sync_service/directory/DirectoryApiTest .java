@@ -1,6 +1,5 @@
 package de.samply.directory_sync_service.directory;
 
-import de.samply.directory_sync_service.directory.model.DirectoryCollectionPut;
 import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.FactTable;
 import org.junit.jupiter.api.*;

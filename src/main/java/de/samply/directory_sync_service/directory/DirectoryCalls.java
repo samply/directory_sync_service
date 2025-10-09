@@ -32,7 +32,7 @@ public abstract class DirectoryCalls {
   protected final Gson gson = new Gson();
   protected final CloseableHttpClient httpClient = HttpClients.createDefault();
   protected final String baseUrl;
-  protected DirectoryCredentials directoryCredentials;
+  public DirectoryCredentials directoryCredentials;
 
   /**
    * Constructs a DirectoryCallsRest object.
@@ -51,35 +51,6 @@ public abstract class DirectoryCalls {
 
   public void setToken(String token) {
     this.directoryCredentials.setToken(token);
-  }
-
-  /**
-   * Checks if a given REST endpoint exists by sending an OPTIONS request.
-   *
-   * @param endpoint the URL of the REST endpoint to check
-   * @return true if the endpoint exists, false otherwise
-   */
-  public boolean endpointExists(String endpoint) {
-    String url = urlCombine(baseUrl, endpoint);
-    logger.debug("endpointExists: checking if endpoint exists, URL: " + url);
-    HttpHead request = new HttpHead(url);
-
-    try {
-      HttpClientContext context = HttpClientContext.create();
-      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
-      CloseableHttpResponse response = httpClient.execute(request, context);
-      int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode != 200 && statusCode != 204) {
-        // The endpoint neither exists nor has the server responded with allowed methods.
-        logger.debug("endpointExists: failure, statusCode: " + statusCode + ", expected 200 or 204");
-        return false;
-      }
-    } catch (Exception e) {
-      logger.debug("endpointExists: exception while checking if endpoint exists, URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));
-      return false;
-    }
-
-    return true;
   }
 
   /**
@@ -124,7 +95,7 @@ public abstract class DirectoryCalls {
    * @param url2 the second part of the URL
    * @return the combined URL as a {@code String}
    */
-  protected static String urlCombine(String url1, String url2) {
+  public static String urlCombine(String url1, String url2) {
     if (url1.endsWith("/") && url2.startsWith("/")) {
       return url1 + url2.substring(1);
     } else if (url1.endsWith("/") || url2.startsWith("/")) {

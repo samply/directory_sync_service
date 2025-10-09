@@ -22,18 +22,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * <p>
  * Additionally, you will need to specify a URL for the FHIR store that supplies the
  * information for the synchronization at the Bridgehead end.
- * <p>
- * These parameters are supplied to the program via a file:
- * <p>
- * /etc/bridgehead/directory_sync.conf
- * <p>
- * The contents of the file should look something like this:
- * <p>
- * directory_sync.directory.url=https://bbmritestnn.gcc.rug.nl
- * directory_sync.directory.user_name=testuser@gmail.com
- * directory_sync.directory.pass_code=KJNJFZTIUZBUZbzubzubzbfdeswsqaq
- * directory_sync.fhir_store_url=http://store:8080/fhir
- * directory_sync.timer_cron=0/20 * * * *
  */
 @SpringBootApplication
 public class DirectorySyncService implements CommandLineRunner {

@@ -268,6 +268,7 @@ public abstract class DirectoryApi {
    * @return The country code extracted from the BBMRI ID string.
    */
   protected String extractCountryCodeFromBbmriEricId(String id) {
+    if (id == null) return null;
     BbmriEricId bbmriEricCollectionId = BbmriEricId
             .valueOf(id)
             .orElse(null);

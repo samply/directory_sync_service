@@ -2,7 +2,6 @@ package de.samply.directory_sync_service.fhir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import de.samply.directory_sync_service.model.BbmriEricId;
 import org.hl7.fhir.r4.model.*;
 
 import org.junit.jupiter.api.DisplayName;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

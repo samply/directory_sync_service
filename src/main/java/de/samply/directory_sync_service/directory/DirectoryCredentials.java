@@ -84,7 +84,7 @@ public class DirectoryCredentials {
   public static class LoginResponse {
     public String username, token;
 
-    LoginResponse() {
+    public LoginResponse() {
     }
   }
 }

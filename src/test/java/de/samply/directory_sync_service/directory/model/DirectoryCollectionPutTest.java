@@ -2,7 +2,6 @@ package de.samply.directory_sync_service.directory.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
