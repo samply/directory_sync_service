@@ -20,7 +20,7 @@ public class FactTable {
     // *** Miscellaneous data
 
     // Minimum number of donors per fact
-    private int minDonors = 10; // default value
+    private final int minDonors = 10; // default value
 
     // One big fact table for everything. Every fact contains a mandatory collection ID.
     // A single "fact" is a simple String map, with medically relevant keys.

@@ -146,12 +146,11 @@ public class ConvertDirectoryCollectionGetToCollections {
         }
         if (attribute instanceof String)
             return (String) attribute;
-        if (!(attribute instanceof Map)) {
+        if (!(attribute instanceof Map attributeMap)) {
             logger.warn("getStringFromMapAttribute: attribute is not a Map: " + Util.jsonStringFomObject(attribute));
             return null;
         }
 
-        Map attributeMap = (Map) attribute;
         if (!attributeMap.containsKey("id") && !attributeMap.containsKey("name")) {
             logger.warn("getStringFromMapAttribute: attribute has no id or name: " + Util.jsonStringFomObject(attribute));
             return null;

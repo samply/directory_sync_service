@@ -21,7 +21,7 @@ import java.io.IOException;
  * instead of sending it to a Directory instance. This is mainly useful for testing purposes.
  */
 public class DirectoryApiWriteToFile extends DirectoryApi {
-  private String directoryOutputDirectory;
+  private final String directoryOutputDirectory;
   private String factTableString = null;
   private String entityTableString = null;
 

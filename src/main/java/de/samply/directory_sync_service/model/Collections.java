@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class Collections {
     private static final Logger logger = LoggerFactory.getLogger(Collections.class);
     // A Map of Collections, keyed by collection ID.
-    private TreeMap <String, Collection> collections = new TreeMap<>();
+    private final TreeMap <String, Collection> collections = new TreeMap<>();
 
     public void addCollection(String collectionId, Collection collection) {
         if (collection == null) {

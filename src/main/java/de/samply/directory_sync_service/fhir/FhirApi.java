@@ -842,10 +842,9 @@ public class FhirApi {
 
       // Process conditions
       for (Bundle.BundleEntryComponent entry : conditionBundle.getEntry()) {
-        if (entry.getResource() instanceof Condition) {
-          Condition condition = (Condition) entry.getResource();
+        if (entry.getResource() instanceof Condition condition) {
 
-          // Extract diagnosis code
+            // Extract diagnosis code
           if (condition.hasCode() && condition.getCode().hasCoding()) {
             for (Coding coding : condition.getCode().getCoding()) {
               if (coding.hasCode()) {

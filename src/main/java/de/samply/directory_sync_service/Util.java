@@ -131,15 +131,13 @@ public class Util {
         if (value == null) return "";
         if (value instanceof String) return (String) value;
         if (value instanceof Integer) return value.toString();
-        if (value instanceof Map) {
-            Map map = (Map) value;
+        if (value instanceof Map map) {
             if (map.containsKey("name"))
                 return map.get("name").toString();
             if (map.containsKey("id"))
                 return map.get("id").toString();
         }
-        if (value instanceof List<?>) {
-            List<?> list = (List<?>) value;
+        if (value instanceof List<?> list) {
             return list.stream()
                     .filter(item -> item instanceof Map)
                     .map(item -> ((Map<?, ?>) item).get("name"))
