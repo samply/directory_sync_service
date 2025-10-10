@@ -19,9 +19,9 @@ RUN apt-get -y autoremove
 RUN mkdir -p /app
 RUN echo ##########################################
 RUN pwd
-RUN ls -la
+RUN ls -la run.sh
 RUN echo ##########################################
-COPY run.sh /app/run.sh
+COPY ./run.sh /app/run.sh
 RUN chmod a+rx /app/run.sh
 
 CMD /app/run.sh
