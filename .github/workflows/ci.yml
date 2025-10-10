@@ -39,7 +39,7 @@ jobs:
 
     - name: Build local Directory sync service image.
       run: |
-        docker build --no-cache -progress=plain -t samply/directory_sync_service .
+        docker build --no-cache --progress=plain -t samply/directory_sync_service .
 
     - name: Show files that will be in data loader build context
       working-directory: ci/data_loader
@@ -51,7 +51,7 @@ jobs:
     - name: Build local image that will load data from files to FHIR store (Blaze).
       working-directory: ci/data_loader
       run: |
-        docker build --no-cache -progress=plain -t samply/data_loader .
+        docker build --no-cache --progress=plain -t samply/data_loader .
 
     - name: Run integration stack (docker compose)
       working-directory: ci
