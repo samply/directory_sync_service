@@ -1,0 +1,199 @@
+id;sex;disease;age_range;sample_type;number_of_donors;number_of_samples;last_update;collection;national_node
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1006043553;FEMALE;urn:miriam:icd:C18.5;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;15;33;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1026663444;MALE;urn:miriam:icd:C19;Aged (>80 years);TISSUE_FROZEN;37;82;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1028985861;FEMALE;urn:miriam:icd:C18.6;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;76;160;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1033688114;FEMALE;urn:miriam:icd:C18.6;Adult;OTHER;10;23;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1039019614;MALE;urn:miriam:icd:C19;Aged (>80 years);OTHER;43;98;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1047254200;MALE;urn:miriam:icd:C20;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;874;1904;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1053299766;FEMALE;urn:miriam:icd:C18.6;Aged (65-79 years);TISSUE_FROZEN;90;216;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1053838388;MALE;urn:miriam:icd:C18.0;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;120;243;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1058657069;MALE;urn:miriam:icd:C18.2;Adult;TISSUE_PARAFFIN_EMBEDDED;13;27;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1068766737;FEMALE;urn:miriam:icd:C20;Aged (65-79 years);OTHER;480;1075;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1079113848;FEMALE;urn:miriam:icd:C18.2;Adult;TISSUE_FROZEN;13;38;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1082912270;MALE;urn:miriam:icd:C18.3;Adult;OTHER;11;39;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:108650275;FEMALE;urn:miriam:icd:C18.3;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;64;133;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1100338651;MALE;urn:miriam:icd:C18.3;Middle-aged;TISSUE_FROZEN;80;168;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1124440651;FEMALE;urn:miriam:icd:C18.6;Middle-aged;OTHER;69;160;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1168010668;MALE;urn:miriam:icd:C19;Adult;TISSUE_FROZEN;10;20;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1182410312;MALE;urn:miriam:icd:C18.4;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;80;161;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1190683532;FEMALE;urn:miriam:icd:C18.4;Aged (65-79 years);TISSUE_FROZEN;95;216;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1191759467;MALE;urn:miriam:icd:C18.7;Middle-aged;OTHER;368;819;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1193980739;MALE;urn:miriam:icd:C18.4;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;28;57;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1197048592;FEMALE;urn:miriam:icd:C18.1;Middle-aged;OTHER;15;43;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1207262839;FEMALE;urn:miriam:icd:C18.2;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;119;281;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1235367883;MALE;urn:miriam:icd:C18.0;Aged (>80 years);TISSUE_FROZEN;89;206;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1237439642;FEMALE;urn:miriam:icd:C18.0;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;138;319;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1260525903;FEMALE;urn:miriam:icd:C19;Aged (65-79 years);TISSUE_FROZEN;70;147;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1262102354;MALE;urn:miriam:icd:C20;Aged (65-79 years);OTHER;875;2030;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1264367408;MALE;urn:miriam:icd:C18.2;Middle-aged;OTHER;167;396;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1271400611;MALE;urn:miriam:icd:C18.5;Middle-aged;TISSUE_FROZEN;55;120;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1272840604;MALE;urn:miriam:icd:C20;Aged (65-79 years);TISSUE_FROZEN;872;1966;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1324972543;FEMALE;urn:miriam:icd:C20;Adult;OTHER;52;118;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1341656146;MALE;urn:miriam:icd:C18.4;Middle-aged;OTHER;82;173;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1352127321;FEMALE;urn:miriam:icd:C18.7;Aged (>80 years);OTHER;121;278;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1376315277;MALE;urn:miriam:icd:C18.2;Adult;OTHER;12;30;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1381622722;FEMALE;urn:miriam:icd:C18.5;Middle-aged;TISSUE_FROZEN;25;65;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1383682832;FEMALE;urn:miriam:icd:C18.0;Aged (65-79 years);TISSUE_FROZEN;256;567;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:138724634;MALE;urn:miriam:icd:C18.2;Middle-aged;TISSUE_FROZEN;168;368;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:139492059;FEMALE;urn:miriam:icd:C18.7;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;315;695;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1397836125;FEMALE;urn:miriam:icd:C18.7;Aged (>80 years);TISSUE_FROZEN;120;278;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1408974962;FEMALE;urn:miriam:icd:C18.3;Middle-aged;OTHER;40;101;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1419134074;FEMALE;urn:miriam:icd:C18.6;Aged (>80 years);OTHER;32;76;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1454740192;FEMALE;urn:miriam:icd:C18.6;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;27;62;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1454900458;FEMALE;urn:miriam:icd:C18.1;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;13;29;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1478133872;MALE;urn:miriam:icd:C19;Adult;TISSUE_PARAFFIN_EMBEDDED;12;23;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1479752985;MALE;urn:miriam:icd:C18.5;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;51;126;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1486140827;FEMALE;urn:miriam:icd:C18.5;Aged (>80 years);OTHER;18;44;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1498476721;MALE;urn:miriam:icd:C18.2;Aged (65-79 years);TISSUE_FROZEN;310;693;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1507507348;FEMALE;urn:miriam:icd:C19;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;64;148;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1510127497;MALE;urn:miriam:icd:C18.2;Aged (>80 years);TISSUE_FROZEN;118;263;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:153051014;MALE;urn:miriam:icd:C18.6;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;77;189;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1534991027;MALE;urn:miriam:icd:C18.0;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;279;642;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1544221882;MALE;urn:miriam:icd:C20;Adult;TISSUE_PARAFFIN_EMBEDDED;54;125;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1545462938;MALE;urn:miriam:icd:C18.7;Aged (>80 years);OTHER;162;359;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1553147580;FEMALE;urn:miriam:icd:C18.4;Aged (>80 years);OTHER;56;134;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1559163335;MALE;urn:miriam:icd:C18.0;Aged (65-79 years);OTHER;251;598;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1577999276;MALE;urn:miriam:icd:C18.5;Aged (65-79 years);TISSUE_FROZEN;50;105;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1590410933;FEMALE;urn:miriam:icd:C20;Adult;TISSUE_FROZEN;47;107;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:160797288;FEMALE;urn:miriam:icd:C18.6;Adult;TISSUE_PARAFFIN_EMBEDDED;11;28;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1612469691;MALE;urn:miriam:icd:C18.6;Aged (>80 years);OTHER;42;105;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1620154333;FEMALE;urn:miriam:icd:C18.3;Aged (>80 years);OTHER;62;140;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1621202949;MALE;urn:miriam:icd:C18.2;Aged (65-79 years);OTHER;317;740;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1621223224;MALE;urn:miriam:icd:C18.5;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;58;129;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1633177436;FEMALE;urn:miriam:icd:C18.7;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;248;541;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1642677378;MALE;urn:miriam:icd:C18.5;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;17;33;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1647480617;FEMALE;urn:miriam:icd:C18.3;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;95;242;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1649035501;FEMALE;urn:miriam:icd:C19;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;74;167;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:165191533;FEMALE;urn:miriam:icd:C18.3;Aged (65-79 years);TISSUE_FROZEN;93;227;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1652222756;MALE;urn:miriam:icd:C18.3;Aged (65-79 years);OTHER;159;342;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1655644764;MALE;urn:miriam:icd:C18.7;Adult;TISSUE_FROZEN;26;59;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:165749452;MALE;urn:miriam:icd:C18.1;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;10;26;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1672595739;FEMALE;urn:miriam:icd:C18.5;Aged (>80 years);TISSUE_FROZEN;19;44;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1679476444;MALE;urn:miriam:icd:C18.5;Aged (>80 years);OTHER;19;39;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1683242563;MALE;urn:miriam:icd:C18.4;Aged (65-79 years);OTHER;130;333;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1687161086;FEMALE;urn:miriam:icd:C18.2;Aged (>80 years);OTHER;160;359;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1691476021;MALE;urn:miriam:icd:C18.6;Aged (65-79 years);TISSUE_FROZEN;129;283;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1714262370;MALE;urn:miriam:icd:C18.5;Aged (65-79 years);OTHER;51;108;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1745282177;MALE;urn:miriam:icd:C18.6;Aged (65-79 years);OTHER;125;307;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:174538405;FEMALE;urn:miriam:icd:C20;Aged (65-79 years);TISSUE_FROZEN;485;1049;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1746483197;MALE;urn:miriam:icd:C18.4;Aged (>80 years);OTHER;30;58;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1754896640;MALE;urn:miriam:icd:C18.7;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;160;354;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:176188373;MALE;urn:miriam:icd:C18.0;Adult;TISSUE_FROZEN;14;38;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1770998576;MALE;urn:miriam:icd:C18.1;Aged (65-79 years);TISSUE_FROZEN;10;24;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1776301984;MALE;urn:miriam:icd:C18.7;Aged (65-79 years);OTHER;563;1266;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:177903541;FEMALE;urn:miriam:icd:C18.0;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;118;273;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1780257734;MALE;urn:miriam:icd:C18.7;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;565;1241;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1781799116;MALE;urn:miriam:icd:C20;Aged (>80 years);OTHER;170;369;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1784503400;MALE;urn:miriam:icd:C18.0;Middle-aged;TISSUE_FROZEN;119;271;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1784887111;MALE;urn:miriam:icd:C18.4;Aged (>80 years);TISSUE_FROZEN;28;58;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1785855013;MALE;urn:miriam:icd:C18.7;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;349;775;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1813489950;MALE;urn:miriam:icd:C18.3;Aged (>80 years);OTHER;69;157;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1821174592;FEMALE;urn:miriam:icd:C18.0;Aged (>80 years);OTHER;144;310;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1840232538;FEMALE;urn:miriam:icd:C18.6;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;93;201;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1849306553;FEMALE;urn:miriam:icd:C18.7;Adult;TISSUE_PARAFFIN_EMBEDDED;38;70;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1866489931;MALE;urn:miriam:icd:C18.2;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;326;720;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:186853106;MALE;urn:miriam:icd:C19;Aged (65-79 years);TISSUE_FROZEN;151;391;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1880496703;MALE;urn:miriam:icd:C18.2;Aged (>80 years);OTHER;111;239;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1883979512;MALE;urn:miriam:icd:C19;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;36;83;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1891508077;MALE;urn:miriam:icd:C20;Middle-aged;TISSUE_FROZEN;697;1570;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1894725511;FEMALE;urn:miriam:icd:C18.0;Middle-aged;TISSUE_FROZEN;114;267;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1903436831;FEMALE;urn:miriam:icd:C18.7;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;126;286;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1924517500;FEMALE;urn:miriam:icd:C18.6;Adult;TISSUE_FROZEN;10;26;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:193071246;FEMALE;urn:miriam:icd:C20;Middle-aged;TISSUE_FROZEN;401;879;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1947355353;FEMALE;urn:miriam:icd:C18.3;Aged (>80 years);TISSUE_FROZEN;62;158;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1951730557;FEMALE;urn:miriam:icd:C18.4;Middle-aged;TISSUE_FROZEN;63;144;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1963121291;MALE;urn:miriam:icd:C18.0;Adult;OTHER;15;37;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1968912522;FEMALE;urn:miriam:icd:C18.7;Middle-aged;OTHER;261;551;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:1995692310;MALE;urn:miriam:icd:C20;Aged (>80 years);TISSUE_FROZEN;165;379;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2009297970;MALE;urn:miriam:icd:C19;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;156;390;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2014510209;MALE;urn:miriam:icd:C18.0;Aged (>80 years);OTHER;93;204;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2041520463;FEMALE;urn:miriam:icd:C18.2;Middle-aged;OTHER;128;296;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2044667474;FEMALE;urn:miriam:icd:C19;Middle-aged;OTHER;61;147;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2058345159;FEMALE;urn:miriam:icd:C18.4;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;61;137;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2059646725;MALE;urn:miriam:icd:C18.6;Aged (>80 years);TISSUE_FROZEN;38;86;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2061952668;MALE;urn:miriam:icd:C18.4;Middle-aged;TISSUE_FROZEN;83;202;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2070305245;MALE;urn:miriam:icd:C20;Middle-aged;OTHER;716;1663;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2078791765;FEMALE;urn:miriam:icd:C18.5;Aged (65-79 years);TISSUE_FROZEN;25;58;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2083197686;MALE;urn:miriam:icd:C18.2;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;150;352;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2084131113;MALE;urn:miriam:icd:C19;Middle-aged;TISSUE_FROZEN;78;169;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2087667154;FEMALE;urn:miriam:icd:C18.2;Adult;OTHER;13;23;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2091374017;MALE;urn:miriam:icd:C18.6;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;38;77;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2094395402;MALE;urn:miriam:icd:C19;Adult;OTHER;10;27;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2108839279;MALE;urn:miriam:icd:C18.3;Middle-aged;OTHER;77;180;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:212011126;FEMALE;urn:miriam:icd:C18.0;Aged (>80 years);TISSUE_FROZEN;136;302;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:2135868413;FEMALE;urn:miriam:icd:C18.7;Adult;TISSUE_FROZEN;40;86;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:225216730;MALE;urn:miriam:icd:C18.5;Aged (>80 years);TISSUE_FROZEN;20;36;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:276202347;FEMALE;urn:miriam:icd:C20;Aged (>80 years);TISSUE_FROZEN;171;399;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:27807767;FEMALE;urn:miriam:icd:C18.7;Aged (65-79 years);TISSUE_FROZEN;317;678;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:279968780;FEMALE;urn:miriam:icd:C18.5;Middle-aged;OTHER;26;57;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:28502523;FEMALE;urn:miriam:icd:C18.2;Middle-aged;TISSUE_FROZEN;127;268;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:296587461;MALE;urn:miriam:icd:C18.2;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;112;272;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:309786594;MALE;urn:miriam:icd:C18.6;Middle-aged;TISSUE_FROZEN;84;180;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:337508102;FEMALE;urn:miriam:icd:C18.4;Aged (>80 years);TISSUE_FROZEN;51;117;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:340046364;FEMALE;urn:miriam:icd:C18.2;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;156;362;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:347287596;MALE;urn:miriam:icd:C18.6;Middle-aged;OTHER;78;172;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:352576721;FEMALE;urn:miriam:icd:C18.0;Middle-aged;OTHER;120;255;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:386330983;FEMALE;urn:miriam:icd:C19;Aged (65-79 years);OTHER;71;197;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:388721940;FEMALE;urn:miriam:icd:C18.2;Adult;TISSUE_PARAFFIN_EMBEDDED;15;26;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:401927544;MALE;urn:miriam:icd:C18.7;Adult;TISSUE_PARAFFIN_EMBEDDED;25;61;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:410620375;FEMALE;urn:miriam:icd:C20;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;482;1073;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:420008705;FEMALE;urn:miriam:icd:C18.6;Middle-aged;TISSUE_FROZEN;75;163;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:424576334;MALE;urn:miriam:icd:C18.0;Middle-aged;OTHER;126;286;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:425541160;FEMALE;urn:miriam:icd:C18.3;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;44;102;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:447229126;FEMALE;urn:miriam:icd:C18.0;Aged (65-79 years);OTHER;242;538;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:450393687;MALE;urn:miriam:icd:C18.3;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;79;173;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:472984722;MALE;urn:miriam:icd:C18.3;Aged (65-79 years);TISSUE_FROZEN;149;340;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:478248933;FEMALE;urn:miriam:icd:C18.1;Aged (65-79 years);OTHER;10;18;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:49542884;MALE;urn:miriam:icd:C18.7;Aged (>80 years);TISSUE_FROZEN;166;374;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:497184275;MALE;urn:miriam:icd:C18.5;Middle-aged;OTHER;49;113;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:499976344;MALE;urn:miriam:icd:C18.3;Aged (>80 years);TISSUE_FROZEN;66;162;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:509268740;FEMALE;urn:miriam:icd:C18.2;Aged (65-79 years);OTHER;351;813;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:511136949;FEMALE;urn:miriam:icd:C20;Aged (>80 years);OTHER;175;398;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:512399352;FEMALE;urn:miriam:icd:C19;Middle-aged;TISSUE_FROZEN;64;147;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:53259862;FEMALE;urn:miriam:icd:C18.2;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;352;807;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:540288547;FEMALE;urn:miriam:icd:C18.3;Aged (65-79 years);OTHER;99;211;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:541605312;FEMALE;urn:miriam:icd:C18.7;Middle-aged;TISSUE_FROZEN;258;592;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:54442262;FEMALE;urn:miriam:icd:C20;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;387;872;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:552507277;MALE;urn:miriam:icd:C18.4;Aged (65-79 years);TISSUE_FROZEN;130;322;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:557346914;FEMALE;urn:miriam:icd:C18.4;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;50;122;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:564503091;FEMALE;urn:miriam:icd:C18.4;Middle-aged;OTHER;53;121;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:571308354;FEMALE;urn:miriam:icd:C18.4;Aged (65-79 years);OTHER;99;214;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:579666600;MALE;urn:miriam:icd:C19;Aged (65-79 years);OTHER;158;368;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:598890199;MALE;urn:miriam:icd:C18.2;Adult;TISSUE_FROZEN;15;33;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:600805817;MALE;urn:miriam:icd:C18.0;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;90;197;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:602328161;FEMALE;urn:miriam:icd:C18.5;Aged (65-79 years);OTHER;28;70;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:602588046;MALE;urn:miriam:icd:C20;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;164;345;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:603818138;FEMALE;urn:miriam:icd:C18.5;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;27;66;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:612267716;FEMALE;urn:miriam:icd:C18.6;Aged (>80 years);TISSUE_FROZEN;32;78;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:614565075;MALE;urn:miriam:icd:C19;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;83;182;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:62748488;FEMALE;urn:miriam:icd:C18.2;Aged (>80 years);TISSUE_FROZEN;160;340;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:633347968;FEMALE;urn:miriam:icd:C18.6;Aged (65-79 years);OTHER;95;204;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:637715993;FEMALE;urn:miriam:icd:C19;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;17;31;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:643675473;FEMALE;urn:miriam:icd:C20;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;175;397;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:651827423;MALE;urn:miriam:icd:C18.7;Middle-aged;TISSUE_FROZEN;347;795;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:65503456;MALE;urn:miriam:icd:C20;Adult;OTHER;57;123;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:656412022;FEMALE;urn:miriam:icd:C18.0;Adult;TISSUE_FROZEN;14;23;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:663481554;FEMALE;urn:miriam:icd:C18.0;Adult;TISSUE_PARAFFIN_EMBEDDED;11;31;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:664367775;FEMALE;urn:miriam:icd:C18.7;Aged (65-79 years);OTHER;317;760;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:665984022;MALE;urn:miriam:icd:C18.7;Aged (65-79 years);TISSUE_FROZEN;573;1298;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:671793267;MALE;urn:miriam:icd:C19;Middle-aged;OTHER;77;168;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:727672775;FEMALE;urn:miriam:icd:C20;Adult;TISSUE_PARAFFIN_EMBEDDED;44;114;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:727736886;MALE;urn:miriam:icd:C18.3;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;148;348;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:740285107;FEMALE;urn:miriam:icd:C18.7;Adult;OTHER;42;100;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:745284100;MALE;urn:miriam:icd:C18.3;Aged (>80 years);TISSUE_PARAFFIN_EMBEDDED;61;151;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:745506577;MALE;urn:miriam:icd:C18.0;Aged (65-79 years);TISSUE_FROZEN;266;572;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:753994279;FEMALE;urn:miriam:icd:C18.5;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;33;79;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:783897455;MALE;urn:miriam:icd:C18.0;Adult;TISSUE_PARAFFIN_EMBEDDED;11;36;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:79517255;MALE;urn:miriam:icd:C18.6;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;128;266;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:813257878;MALE;urn:miriam:icd:C20;Adult;TISSUE_FROZEN;52;116;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:840226476;FEMALE;urn:miriam:icd:C18.0;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;243;560;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:851787844;FEMALE;urn:miriam:icd:C20;Middle-aged;OTHER;408;896;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:860300466;FEMALE;urn:miriam:icd:C18.2;Aged (65-79 years);TISSUE_FROZEN;354;798;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:90699758;MALE;urn:miriam:icd:C18.7;Adult;OTHER;25;65;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:933111494;FEMALE;urn:miriam:icd:C18.1;Middle-aged;TISSUE_FROZEN;13;33;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:946746200;FEMALE;urn:miriam:icd:C18.4;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;100;224;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:947384535;MALE;urn:miriam:icd:C20;Middle-aged;TISSUE_PARAFFIN_EMBEDDED;675;1546;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:963011617;FEMALE;urn:miriam:icd:C19;Aged (>80 years);OTHER;15;34;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:973003593;MALE;urn:miriam:icd:C18.4;Aged (65-79 years);TISSUE_PARAFFIN_EMBEDDED;144;323;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:990116540;FEMALE;urn:miriam:icd:C18.3;Middle-aged;TISSUE_FROZEN;45;103;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU
+bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:996409195;FEMALE;urn:miriam:icd:C19;Aged (>80 years);TISSUE_FROZEN;14;35;2025-10-02;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU

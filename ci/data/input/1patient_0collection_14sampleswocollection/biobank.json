@@ -1,0 +1,155 @@
+{
+  "entry": [
+    {
+      "fullUrl": "http://example.com/Organization/biobank-0",
+      "request": {
+        "method": "PUT",
+        "url": "Organization/biobank-0"
+      },
+      "resource": {
+        "address": [
+          {
+            "city": "Neustadt",
+            "country": "DE",
+            "line": [
+              "Krankenhausstr. 12"
+            ],
+            "postalCode": "12345"
+          }
+        ],
+        "alias": [
+          "ZBBN"
+        ],
+        "contact": [
+          {
+            "name": {
+              "family": "Chef",
+              "given": [
+                "Claudia",
+                "Celine"
+              ],
+              "prefix": [
+                "Prof.",
+                "Dr.",
+                "Dr."
+              ]
+            },
+            "purpose": {
+              "coding": [
+                {
+                  "code": "ADMIN",
+                  "display": "Administrative",
+                  "system": "http://terminology.hl7.org/CodeSystem/contactentity-type"
+                }
+              ]
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "0452 4624-24"
+              }
+            ]
+          },
+          {
+            "address": {
+              "city": "Neustadt",
+              "country": "DE",
+              "line": [
+                "Gebäude 24a",
+                "Krankenhausstr. 12"
+              ],
+              "postalCode": "12345"
+            },
+            "name": {
+              "family": "Forschungsbeauftragter",
+              "given": [
+                "Friedrich"
+              ],
+              "prefix": [
+                "Freiherr",
+                "Dr."
+              ],
+              "suffix": [
+                "M.Sc."
+              ]
+            },
+            "purpose": {
+              "coding": [
+                {
+                  "code": "RESEARCH",
+                  "display": "Research",
+                  "system": "https://fhir.bbmri.de/CodeSystem/ContactType"
+                }
+              ]
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "0452 4624-28"
+              },
+              {
+                "system": "email",
+                "value": "forschungsanfragen@biobank.klinikum-neustadt.de"
+              }
+            ]
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/OrganizationDescription",
+            "valueString": "The Zentrale Biobank neustadt collects samples from patients at the Klinikum Neustadt."
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/JuridicalPerson",
+            "valueString": "Klinikum Neustadt vertreten durch den Vorstand"
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/QualityStandard",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "oecd-guidelines",
+                  "system": "https://fhir.bbmri.de/CodeSystem/QualityStandard"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/QualityStandard",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "iso-15189",
+                  "system": "https://fhir.bbmri.de/CodeSystem/QualityStandard"
+                }
+              ]
+            }
+          }
+        ],
+        "id": "biobank-0",
+        "identifier": [
+          {
+            "system": "http://www.bbmri-eric.eu/",
+            "value": "bbmri-eric:ID:DE_DKFZ_TEST"
+          }
+        ],
+        "meta": {
+          "profile": [
+            "https://fhir.bbmri.de/StructureDefinition/Biobank"
+          ]
+        },
+        "name": "Zentrale Biobank Neustadt",
+        "resourceType": "Organization",
+        "telecom": [
+          {
+            "system": "url",
+            "value": "http://biobank.klinikum-neustadt.de"
+          }
+        ]
+      }
+    }
+  ],
+  "id": "bd3abd6f-11af-431f-bd7e-0eb8d0fee69f",
+  "resourceType": "Bundle",
+  "type": "transaction"
+}

@@ -1,0 +1,251 @@
+{
+  "entry": [
+    {
+      "fullUrl": "http://example.com/Organization/biobank-0",
+      "request": {
+        "method": "PUT",
+        "url": "Organization/biobank-0"
+      },
+      "resource": {
+        "address": [
+          {
+            "city": "Neustadt",
+            "country": "DE",
+            "line": [
+              "Krankenhausstr. 12"
+            ],
+            "postalCode": "12345"
+          }
+        ],
+        "alias": [
+          "ZBBN"
+        ],
+        "contact": [
+          {
+            "name": {
+              "family": "Chef",
+              "given": [
+                "Claudia",
+                "Celine"
+              ],
+              "prefix": [
+                "Prof.",
+                "Dr.",
+                "Dr."
+              ]
+            },
+            "purpose": {
+              "coding": [
+                {
+                  "code": "ADMIN",
+                  "display": "Administrative",
+                  "system": "http://terminology.hl7.org/CodeSystem/contactentity-type"
+                }
+              ]
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "0452 4624-24"
+              }
+            ]
+          },
+          {
+            "address": {
+              "city": "Neustadt",
+              "country": "DE",
+              "line": [
+                "Gebäude 24a",
+                "Krankenhausstr. 12"
+              ],
+              "postalCode": "12345"
+            },
+            "name": {
+              "family": "Forschungsbeauftragter",
+              "given": [
+                "Friedrich"
+              ],
+              "prefix": [
+                "Freiherr",
+                "Dr."
+              ],
+              "suffix": [
+                "M.Sc."
+              ]
+            },
+            "purpose": {
+              "coding": [
+                {
+                  "code": "RESEARCH",
+                  "display": "Research",
+                  "system": "https://fhir.bbmri.de/CodeSystem/ContactType"
+                }
+              ]
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "0452 4624-28"
+              },
+              {
+                "system": "email",
+                "value": "forschungsanfragen@biobank.klinikum-neustadt.de"
+              }
+            ]
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/OrganizationDescription",
+            "valueString": "The Zentrale Biobank neustadt collects samples from patients at the Klinikum Neustadt."
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/JuridicalPerson",
+            "valueString": "Klinikum Neustadt vertreten durch den Vorstand"
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/QualityStandard",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "oecd-guidelines",
+                  "system": "https://fhir.bbmri.de/CodeSystem/QualityStandard"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/QualityStandard",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "iso-15189",
+                  "system": "https://fhir.bbmri.de/CodeSystem/QualityStandard"
+                }
+              ]
+            }
+          }
+        ],
+        "id": "biobank-0",
+        "identifier": [
+          {
+            "system": "http://www.bbmri-eric.eu/",
+            "value": "bbmri-eric:ID:DE_DKFZ_TEST"
+          }
+        ],
+        "meta": {
+          "profile": [
+            "https://fhir.bbmri.de/StructureDefinition/Biobank"
+          ]
+        },
+        "name": "Zentrale Biobank Neustadt",
+        "resourceType": "Organization",
+        "telecom": [
+          {
+            "system": "url",
+            "value": "http://biobank.klinikum-neustadt.de"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://example.com/Organization/collection-0",
+      "request": {
+        "method": "PUT",
+        "url": "Organization/collection-0"
+      },
+      "resource": {
+        "alias": [
+          "VAMPIR"
+        ],
+        "contact": [
+          {
+            "name": {
+              "family": "Dracula",
+              "given": [
+                "Vladimir"
+              ],
+              "prefix": [
+                "Graf"
+              ]
+            },
+            "purpose": {
+              "coding": [
+                {
+                  "code": "ADMIN",
+                  "display": "Administrative",
+                  "system": "http://terminology.hl7.org/CodeSystem/contactentity-type"
+                }
+              ]
+            },
+            "telecom": [
+              {
+                "system": "fax",
+                "value": "0452 4624-66"
+              }
+            ]
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/OrganizationDescription",
+            "valueString": "The Collection consists of blood from patients at the Klinikum Neustadt."
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/CollectionType",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "HOSPITAL",
+                  "system": "https://fhir.bbmri.de/CodeSystem/CollectionType"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/CollectionType",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "SAMPLE",
+                  "system": "https://fhir.bbmri.de/CodeSystem/CollectionType"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.bbmri.de/StructureDefinition/DataCategory",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "code": "BIOLOGICAL_SAMPLES",
+                  "system": "https://fhir.bbmri.de/CodeSystem/DataCategory"
+                }
+              ]
+            }
+          }
+        ],
+        "id": "collection-0",
+        "identifier": [
+          {
+            "system": "http://www.bbmri-eric.eu/",
+            "value": "bbmri-eric:ID:DE_DKFZ_TEST:collection:Test1"
+          }
+        ],
+        "meta": {
+          "profile": [
+            "https://fhir.bbmri.de/StructureDefinition/Collection"
+          ]
+        },
+        "name": "Venous and arterial blood from misc patients internal reserve",
+        "partOf": {
+          "reference": "Organization/biobank-0"
+        },
+        "resourceType": "Organization"
+      }
+    }
+  ],
+  "id": "cdd20149-6f83-41f2-8f43-02d6ec20e1fb",
+  "resourceType": "Bundle",
+  "type": "transaction"
+}

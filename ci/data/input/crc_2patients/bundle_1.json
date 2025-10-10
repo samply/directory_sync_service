@@ -1,0 +1,560 @@
+{
+  "resourceType" : "Bundle",
+  "id" : "1e4ad24e-160a-4bcb-aa91-98435baa6bc1",
+  "type" : "transaction",
+  "entry" : [ {
+    "fullUrl" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0",
+    "resource" : {
+      "resourceType" : "Patient",
+      "id" : "2c0f632e-4910-4b03-bd49-dfa8e2a16ea0",
+      "extension" : [ {
+        "url" : "https://bbmri.crc/fhir/StructureDefinition/PatientAge",
+        "valueString" : "72"
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "patient-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:88-114"
+      } ],
+      "gender" : "female",
+      "birthDate" : "1941-01-01"
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+    }
+  }, {
+    "fullUrl" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859",
+    "resource" : {
+      "resourceType" : "Patient",
+      "id" : "5a1e5e25-3d32-4b52-b9bd-1b0cad172859",
+      "extension" : [ {
+        "url" : "https://bbmri.crc/fhir/StructureDefinition/PatientAge",
+        "valueString" : "72"
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "patient-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:226-57"
+      } ],
+      "gender" : "male",
+      "birthDate" : "1940-01-01"
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+    }
+  }, {
+    "fullUrl" : "Specimen/8bcdf8c7-be36-4b97-8642-b047f93b8dce",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "8bcdf8c7-be36-4b97-8642-b047f93b8dce",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "11"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2024"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/8bcdf8c7-be36-4b97-8642-b047f93b8dce"
+    }
+  }, {
+    "fullUrl" : "Specimen/fa3d4dac-fd6c-4020-a864-0167eef71c44",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "fa3d4dac-fd6c-4020-a864-0167eef71c44",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "12"
+      } ],
+      "type" : {
+        "text" : "OTHER"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2013"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/fa3d4dac-fd6c-4020-a864-0167eef71c44"
+    }
+  }, {
+    "fullUrl" : "Specimen/9b80e80b-a64c-49d8-8173-0961e80cb242",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "9b80e80b-a64c-49d8-8173-0961e80cb242",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "13"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2022"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/9b80e80b-a64c-49d8-8173-0961e80cb242"
+    }
+  }, {
+    "fullUrl" : "Specimen/5a3f4a1c-0c1e-4b6c-87b9-e122982c5fed",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "5a3f4a1c-0c1e-4b6c-87b9-e122982c5fed",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "14"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2017"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/5a3f4a1c-0c1e-4b6c-87b9-e122982c5fed"
+    }
+  }, {
+    "fullUrl" : "Specimen/aac43a66-a0c8-4a1e-bab5-21f372660d25",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "aac43a66-a0c8-4a1e-bab5-21f372660d25",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "1"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      },
+      "collection" : {
+        "collectedDateTime" : "2012"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/aac43a66-a0c8-4a1e-bab5-21f372660d25"
+    }
+  }, {
+    "fullUrl" : "Specimen/7a666c9b-e4e6-4041-9423-0ab89e1c4ccc",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "7a666c9b-e4e6-4041-9423-0ab89e1c4ccc",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "2"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      },
+      "collection" : {
+        "collectedDateTime" : "2013"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/7a666c9b-e4e6-4041-9423-0ab89e1c4ccc"
+    }
+  }, {
+    "fullUrl" : "Specimen/ae457a09-3362-4a63-b31f-b58f39650000",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "ae457a09-3362-4a63-b31f-b58f39650000",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "3"
+      } ],
+      "type" : {
+        "text" : "OTHER"
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      },
+      "collection" : {
+        "collectedDateTime" : "2014"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/ae457a09-3362-4a63-b31f-b58f39650000"
+    }
+  }, {
+    "fullUrl" : "Specimen/ef5d163a-f608-4949-a6e1-5ec3c322f018",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "ef5d163a-f608-4949-a6e1-5ec3c322f018",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "4"
+      } ],
+      "type" : {
+        "text" : "TISSUE_PARAFFIN_EMBEDDED"
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      },
+      "collection" : {
+        "collectedDateTime" : "2013"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/ef5d163a-f608-4949-a6e1-5ec3c322f018"
+    }
+  }, {
+    "fullUrl" : "Specimen/8c7de611-a1c1-4f55-a11f-0ba5ad6be980",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "8c7de611-a1c1-4f55-a11f-0ba5ad6be980",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "5"
+      } ],
+      "type" : {
+        "text" : "OTHER"
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      },
+      "collection" : {
+        "collectedDateTime" : "2017"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/8c7de611-a1c1-4f55-a11f-0ba5ad6be980"
+    }
+  }, {
+    "fullUrl" : "Specimen/59ee18cb-1b85-405b-b8c2-e9931559f5a5",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "59ee18cb-1b85-405b-b8c2-e9931559f5a5",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "6"
+      } ],
+      "type" : {
+        "text" : "TISSUE_PARAFFIN_EMBEDDED"
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      },
+      "collection" : {
+        "collectedDateTime" : "2023"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/59ee18cb-1b85-405b-b8c2-e9931559f5a5"
+    }
+  }, {
+    "fullUrl" : "Specimen/12facbfb-287f-4e94-a695-909361562d18",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "12facbfb-287f-4e94-a695-909361562d18",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "7"
+      } ],
+      "type" : {
+        "text" : "OTHER"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2018"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/12facbfb-287f-4e94-a695-909361562d18"
+    }
+  }, {
+    "fullUrl" : "Specimen/cf43d9e6-62b1-48ba-950e-f3c0e976df24",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "cf43d9e6-62b1-48ba-950e-f3c0e976df24",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "8"
+      } ],
+      "type" : {
+        "text" : "TISSUE_PARAFFIN_EMBEDDED"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2022"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/cf43d9e6-62b1-48ba-950e-f3c0e976df24"
+    }
+  }, {
+    "fullUrl" : "Specimen/997d5122-5536-4164-bfcf-774d773bfc0f",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "997d5122-5536-4164-bfcf-774d773bfc0f",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "9"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2018"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/997d5122-5536-4164-bfcf-774d773bfc0f"
+    }
+  }, {
+    "fullUrl" : "Specimen/bc0c42bf-4805-4e40-93b4-87c1015afa51",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "bc0c42bf-4805-4e40-93b4-87c1015afa51",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "10"
+      } ],
+      "type" : {
+        "text" : "TISSUE_FROZEN"
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      },
+      "collection" : {
+        "collectedDateTime" : "2014"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/bc0c42bf-4805-4e40-93b4-87c1015afa51"
+    }
+  }, {
+    "fullUrl" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8",
+    "resource" : {
+      "resourceType" : "Organization",
+      "id" : "fd7e3762-bb8a-47a7-8845-b3fe844eaae8",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Collection" ]
+      },
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/CollectionType",
+        "valueCodeableConcept" : {
+          "coding" : [ {
+            "system" : "https://fhir.bbmri.de/CodeSystem/CollectionType",
+            "code" : "SAMPLE"
+          } ]
+        }
+      }, {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/DataCategory",
+        "valueCodeableConcept" : {
+          "coding" : [ {
+            "system" : "https://fhir.bbmri.de/CodeSystem/DataCategory",
+            "code" : "BIOLOGICAL_SAMPLES"
+          } ]
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort"
+      } ],
+      "partOf" : {
+        "reference" : "Organization/c2d4f36e-2561-4556-8d44-c0fcca9aac4c"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Organization/fd7e3762-bb8a-47a7-8845-b3fe844eaae8"
+    }
+  }, {
+    "fullUrl" : "Organization/c2d4f36e-2561-4556-8d44-c0fcca9aac4c",
+    "resource" : {
+      "resourceType" : "Organization",
+      "id" : "c2d4f36e-2561-4556-8d44-c0fcca9aac4c",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Biobank" ]
+      },
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "bbmri-eric:ID:EU_BBMRI-ERIC"
+      } ]
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Organization/c2d4f36e-2561-4556-8d44-c0fcca9aac4c"
+    }
+  }, {
+    "fullUrl" : "Condition/0a70998c-8240-4068-a795-ed9c94de2039",
+    "resource" : {
+      "resourceType" : "Condition",
+      "id" : "0a70998c-8240-4068-a795-ed9c94de2039",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Condition" ]
+      },
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "patient-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:88-114"
+      } ],
+      "code" : {
+        "coding" : [ {
+          "system" : "http://hl7.org/fhir/sid/icd-10",
+          "version" : "2016",
+          "code" : "C18.7"
+        } ]
+      },
+      "subject" : {
+        "reference" : "Patient/2c0f632e-4910-4b03-bd49-dfa8e2a16ea0"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Condition/0a70998c-8240-4068-a795-ed9c94de2039"
+    }
+  }, {
+    "fullUrl" : "Condition/6cf3b2f5-bc51-4fe1-ba72-b9ac6a018217",
+    "resource" : {
+      "resourceType" : "Condition",
+      "id" : "6cf3b2f5-bc51-4fe1-ba72-b9ac6a018217",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Condition" ]
+      },
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "patient-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:226-57"
+      } ],
+      "code" : {
+        "coding" : [ {
+          "system" : "http://hl7.org/fhir/sid/icd-10",
+          "version" : "2016",
+          "code" : "C20"
+        } ]
+      },
+      "subject" : {
+        "reference" : "Patient/5a1e5e25-3d32-4b52-b9bd-1b0cad172859"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Condition/6cf3b2f5-bc51-4fe1-ba72-b9ac6a018217"
+    }
+  } ]
+}

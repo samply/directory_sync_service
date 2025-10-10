@@ -1,0 +1,135 @@
+{
+  "resourceType" : "Bundle",
+  "id" : "5323809b-11f7-49a0-b300-705d52fbc642",
+  "type" : "transaction",
+  "entry" : [ {
+    "fullUrl" : "Patient/160345c5-8659-4da4-9b6c-b0545a751313",
+    "resource" : {
+      "resourceType" : "Patient",
+      "id" : "160345c5-8659-4da4-9b6c-b0545a751313",
+      "extension" : [ {
+        "url" : "https://bbmri.crc/fhir/StructureDefinition/PatientAge",
+        "valueString" : "35"
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "patient-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:3-1"
+      } ],
+      "gender" : "female"
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Patient/160345c5-8659-4da4-9b6c-b0545a751313"
+    }
+  }, {
+    "fullUrl" : "Specimen/48fe507d-ba33-4de7-b2b9-a7d33ad3f872",
+    "resource" : {
+      "resourceType" : "Specimen",
+      "id" : "48fe507d-ba33-4de7-b2b9-a7d33ad3f872",
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/Custodian",
+        "valueReference" : {
+          "reference" : "Organization/49be558f-5fa8-46d2-bdea-cbd5b101d21c"
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "2"
+      } ],
+      "type" : {
+        "text" : "TISSUE_PARAFFIN_EMBEDDED"
+      },
+      "subject" : {
+        "reference" : "Patient/160345c5-8659-4da4-9b6c-b0545a751313"
+      },
+      "collection" : {
+        "collectedDateTime" : "2014"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Specimen/48fe507d-ba33-4de7-b2b9-a7d33ad3f872"
+    }
+  }, {
+    "fullUrl" : "Organization/49be558f-5fa8-46d2-bdea-cbd5b101d21c",
+    "resource" : {
+      "resourceType" : "Organization",
+      "id" : "49be558f-5fa8-46d2-bdea-cbd5b101d21c",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Collection" ]
+      },
+      "extension" : [ {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/CollectionType",
+        "valueCodeableConcept" : {
+          "coding" : [ {
+            "system" : "https://fhir.bbmri.de/CodeSystem/CollectionType",
+            "code" : "SAMPLE"
+          } ]
+        }
+      }, {
+        "url" : "https://fhir.bbmri.de/StructureDefinition/DataCategory",
+        "valueCodeableConcept" : {
+          "coding" : [ {
+            "system" : "https://fhir.bbmri.de/CodeSystem/DataCategory",
+            "code" : "BIOLOGICAL_SAMPLES"
+          } ]
+        }
+      } ],
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort"
+      } ],
+      "partOf" : {
+        "reference" : "Organization/08163f1a-98e7-4202-b5ae-3dfb3dc22544"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Organization/49be558f-5fa8-46d2-bdea-cbd5b101d21c"
+    }
+  }, {
+    "fullUrl" : "Organization/08163f1a-98e7-4202-b5ae-3dfb3dc22544",
+    "resource" : {
+      "resourceType" : "Organization",
+      "id" : "08163f1a-98e7-4202-b5ae-3dfb3dc22544",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Biobank" ]
+      },
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "bbmri-eric:ID:EU_BBMRI-ERIC"
+      } ]
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Organization/08163f1a-98e7-4202-b5ae-3dfb3dc22544"
+    }
+  }, {
+    "fullUrl" : "Condition/ab7e3507-0c1b-4cf3-b4b8-cfe982febf6a",
+    "resource" : {
+      "resourceType" : "Condition",
+      "id" : "ab7e3507-0c1b-4cf3-b4b8-cfe982febf6a",
+      "meta" : {
+        "profile" : [ "https://fhir.bbmri.de/StructureDefinition/Condition" ]
+      },
+      "identifier" : [ {
+        "system" : "http://www.bbmri-eric.eu/",
+        "value" : "patient-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:3-1"
+      } ],
+      "code" : {
+        "coding" : [ {
+          "system" : "http://hl7.org/fhir/sid/icd-10",
+          "version" : "2016",
+          "code" : "C18.0"
+        } ]
+      },
+      "subject" : {
+        "reference" : "Patient/160345c5-8659-4da4-9b6c-b0545a751313"
+      }
+    },
+    "request" : {
+      "method" : "PUT",
+      "url" : "Condition/ab7e3507-0c1b-4cf3-b4b8-cfe982febf6a"
+    }
+  } ]
+}

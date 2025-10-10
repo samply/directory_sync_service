@@ -1,0 +1,2 @@
+id;country;type;data_categories;order_of_magnitude;size;timestamp;number_of_donors;order_of_magnitude_donors;sex;diagnosis_available;age_low;age_high;materials;storage_temperatures;national_node
+bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort;EU;SAMPLE;BIOLOGICAL_SAMPLES;0;6;2025-10-02T11:37:27;4;0;FEMALE;urn:miriam:icd:C18.0;-1;-1;TISSUE_PARAFFIN_EMBEDDED;;EU
