@@ -12,6 +12,10 @@ on:
     - master
     - develop
 
+env:
+  #DATASET: crc_full   # Dataset for integration testing
+  DATASET: crc_1patient   # Dataset for integration testing
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,13 +45,6 @@ jobs:
       run: |
         docker build --no-cache --progress=plain -t samply/directory_sync_service .
 
-    - name: Show files that will be in data loader build context
-      working-directory: ci/data_loader
-      run: |
-        pwd
-        ls -la
-        test -f run.sh && echo "✅ run.sh present" || (echo "❌ run.sh missing" && exit 1)
-
     - name: Build local image that will load data from files to FHIR store (Blaze).
       working-directory: ci/data_loader
       run: |
@@ -70,7 +67,7 @@ jobs:
       working-directory: ci
       run: |
         set -euo pipefail
-        bash compare_test_results_with_reference.sh crc_full
+        bash compare_test_results_with_reference.sh "$DATASET"
 
     - name: Tear down stack
       if: always()
