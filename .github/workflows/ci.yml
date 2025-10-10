@@ -35,6 +35,46 @@ jobs:
     - name: Build with Maven
       run: mvn -B install
 
+    # BEGIN: integration testing
+
+    - name: Build local Directory sync service image.
+      run: |
+        docker build -t samply/directory_sync_service .
+
+    - name: Build local image that will load data from files to FHIR store (Blaze).
+      working-directory: ci/data_loader
+      run: |
+        docker build -t samply/data_loader .
+
+    - name: Run integration stack (docker compose)
+      working-directory: ci
+      run: |
+        set -euo pipefail
+        # Bring the stack up, fail fast if a container exits non-zero.
+        docker compose up --abort-on-container-exit --quiet-pull
+
+    - name: Show compose logs on failure
+      if: failure()
+      working-directory: ci
+      run: |
+        docker compose logs --no-color || true
+
+    - name: Compare output of integration run with reference data
+      working-directory: ci
+      run: |
+        set -euo pipefail
+        bash compare_test_results_with_reference.sh crc_full
+
+    - name: Tear down stack
+      if: always()
+      working-directory: ci
+      run: |
+        docker compose down -v || true
+        rm -rf output/*
+        docker volume rm store-db-data
+
+      # END: integration testing
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
 
