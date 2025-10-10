@@ -13,8 +13,7 @@ on:
     - develop
 
 env:
-  #DATASET: crc_full   # Dataset for integration testing
-  DATASET: crc_1patient   # Dataset for integration testing
+  DATASET: crc_full   # Dataset for integration testing
 
 jobs:
   build:
