@@ -51,7 +51,7 @@ jobs:
     - name: Build local image that will load data from files to FHIR store (Blaze).
       working-directory: ci/data_loader
       run: |
-        docker build --no-cache --progress=plain -t samply/data_loader .
+        docker build --no-cache --progress=plain -t samply/data-loader .
 
     - name: Run integration stack (docker compose)
       working-directory: ci
