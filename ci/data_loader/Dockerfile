@@ -17,6 +17,10 @@ RUN apt-get -y autoremove
 
 # Set up run environment
 RUN mkdir -p /app
+RUN echo ##########################################
+RUN pwd
+RUN ls -la
+RUN echo ##########################################
 COPY run.sh /app/run.sh
 RUN chmod a+rx /app/run.sh
 
