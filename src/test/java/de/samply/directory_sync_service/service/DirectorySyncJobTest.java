@@ -30,6 +30,7 @@ class DirectorySyncJobTest {
         when(cfg.getFhirStoreUrl()).thenReturn("https://fhir.example");
         when(cfg.getDirectoryUserName()).thenReturn("user");
         when(cfg.getDirectoryUserPass()).thenReturn("pass");
+        when(cfg.getDirectoryUserToken()).thenReturn("token");
         when(cfg.getDirectoryDefaultCollectionId()).thenReturn("bbmri-eric:ID:DE_COLL1");
         when(cfg.getDirectoryAllowStarModel()).thenReturn("true");
         when(cfg.getDirectoryMinDonors()).thenReturn("5");
@@ -59,7 +60,7 @@ class DirectorySyncJobTest {
                         anyString(), anyString(),
                         anyString(), anyString(),
                         anyString(), anyString(),
-                        anyString(),
+                        anyString(), anyString(),
                         anyBoolean(), anyInt(), anyInt(),
                         anyBoolean(), anyBoolean(),
                         anyBoolean(), anyString(),
@@ -76,6 +77,7 @@ class DirectorySyncJobTest {
                         eq("https://dir.example"),
                         eq("user"),
                         eq("pass"),
+                        eq("token"),
                         eq("bbmri-eric:ID:DE_COLL1"),
                         eq(true),                      // directoryAllowStarModel
                         eq(5),                         // directoryMinDonors
@@ -98,7 +100,7 @@ class DirectorySyncJobTest {
 
             try (MockedStatic<Sync> sync = Mockito.mockStatic(Sync.class)) {
                 sync.when(() -> Sync.syncWithDirectoryFailover(
-                        anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+                        anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
                         anyBoolean(), anyInt(), anyInt(),
                         anyBoolean(), anyBoolean(), anyBoolean(), anyString(),
                         anyBoolean(), anyBoolean()

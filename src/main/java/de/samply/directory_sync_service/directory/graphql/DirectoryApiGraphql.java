@@ -28,6 +28,7 @@ import java.util.Map;
 public class DirectoryApiGraphql extends DirectoryApi {
   private final String username;
   private final String password;
+  private String token;
   private final DirectoryCallsGraphql directoryCallsGraphql;
   private final DirectoryEndpointsGraphql directoryEndpointsGraphql;
   private final Map<String,String> databaseEricEndpointMap = new HashMap<>();
@@ -43,13 +44,14 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @param username The username for authenticating with the Directory.
    * @param password The password for authenticating with the Directory.
    */
-  public DirectoryApiGraphql(String baseUrl, boolean mockDirectory, String username, String password) {
+  public DirectoryApiGraphql(String baseUrl, boolean mockDirectory, String username, String password, String token) {
     super(mockDirectory);
     this.directoryCallsGraphql = new DirectoryCallsGraphql(baseUrl, username, password);
     this.directoryEndpointsGraphql = new DirectoryEndpointsGraphql();
     directoryEndpoints = new DirectoryEndpointsGraphql();
     this.username = username;
     this.password = password;
+    this.token = token;
 
     logger.debug("DirectoryApiGraphql: constructed");
   }
@@ -63,37 +65,46 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return true;
 
     try {
-      String graphqlCommand = "mutation {\n" +
-              "  signin(password: \"" + password + "\", email: \"" + username + "\") {\n" +
-              "    message\n" +
-              "    token\n" +
-              "  }\n" +
-              "}";
+      if (token == null || token.isEmpty()) {
+        // Use username/password combination to log in, if no token is available.
+        String graphqlCommand = "mutation {\n" +
+                "  signin(password: \"" + password + "\", email: \"" + username + "\") {\n" +
+                "    message\n" +
+                "    token\n" +
+                "  }\n" +
+                "}";
 
-      String endpoint = directoryEndpointsGraphql.getLoginEndpoint();
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(endpoint, graphqlCommand);
-      if (result == null) {
-        logger.warn("login: result is null");
-        return false;
+        String endpoint = directoryEndpointsGraphql.getLoginEndpoint();
+        JsonObject result = directoryCallsGraphql.runGraphqlCommand(endpoint, graphqlCommand);
+        if (result == null) {
+          logger.warn("login: result is null");
+          return false;
+        }
+
+        JsonElement signin = result.get("signin");
+        if (signin == null) {
+          logger.warn("login: signin is null");
+          logger.warn("login: result: " + Util.jsonStringFomObject(result));
+          return false;
+        }
+
+        JsonElement tokenObject = signin.getAsJsonObject().get("token");
+        if (tokenObject == null) {
+          logger.warn("login: tokenObject is null");
+          logger.warn("login: signin: " + Util.jsonStringFomObject(signin));
+          return false;
+        }
+
+        token = tokenObject.getAsString();
       }
 
-      JsonElement signin = result.get("signin");
-      if (signin == null) {
-        logger.warn("login: signin is null");
-        logger.warn("login: result: " + Util.jsonStringFomObject(result));
-        return false;
-      }
-
-      JsonElement tokenObject = signin.getAsJsonObject().get("token");
-      if (tokenObject == null) {
-        logger.warn("login: tokenObject is null");
-        logger.warn("login: signin: " + Util.jsonStringFomObject(signin));
-        return false;
-      }
-
-      String token = tokenObject.getAsString();
       if (token == null) {
         logger.warn("login: token is null");
+        return false;
+      }
+
+      if (token.isEmpty()) {
+        logger.warn("login: token is empty");
         return false;
       }
 

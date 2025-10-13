@@ -50,6 +50,7 @@ public class DirectorySyncJob implements StatefulJob  {
         String fhirStoreUrl = configuration.getFhirStoreUrl();
         String directoryUserName = configuration.getDirectoryUserName();
         String directoryUserPass = configuration.getDirectoryUserPass();
+        String directoryUserToken = configuration.getDirectoryUserToken();
         String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
         boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
         int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
@@ -61,7 +62,7 @@ public class DirectorySyncJob implements StatefulJob  {
         boolean importBiobanks = Boolean.parseBoolean(configuration.getImportBiobanks());
         boolean importCollections = Boolean.parseBoolean(configuration.getImportCollections());
 
-        boolean success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections);
+        boolean success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections);
 
         if (success) {
             logger.info("execute: Directory sync succeeded");
@@ -84,7 +85,12 @@ public class DirectorySyncJob implements StatefulJob  {
     public boolean isExecutable(Configuration configuration) {
         String directoryUserName = configuration.getDirectoryUserName();
         String directoryUserPass = configuration.getDirectoryUserPass();
-        if (directoryUserName == null || directoryUserName.isEmpty() || directoryUserPass == null || directoryUserPass.isEmpty()) {
+        String directoryUserToken = configuration.getDirectoryUserToken();
+        boolean noName = directoryUserName == null || directoryUserName.isEmpty();
+        boolean noPass = directoryUserPass == null || directoryUserPass.isEmpty();
+        boolean noToken = directoryUserToken == null || directoryUserToken.isEmpty();
+
+        if (noToken && (noName || noPass)) {
             logger.warn("Directory user name or pass code is empty, will *not* perform Directory sync");
             return false;
         }

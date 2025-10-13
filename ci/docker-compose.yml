@@ -46,12 +46,13 @@ services:
       DS_RETRY_MAX: 10
       DS_FHIR_STORE_URL: "http://store:8080/fhir"
       DS_DIRECTORY_URL: https://directory.bbmri-eric.eu # dummy value
-      DS_DIRECTORY_USER_NAME: foo # dummy value
-      DS_DIRECTORY_USER_PASS: foo # dummy value
+      #DS_DIRECTORY_USER_NAME: foo # dummy value
+      #DS_DIRECTORY_USER_PASS: foo # dummy value
+      DS_DIRECTORY_USER_TOKEN: foo # dummy value
       DS_DIRECTORY_ALLOW_STAR_MODEL: "true"
       DS_DIRECTORY_WRITE_TO_FILE: "true"
       DS_DIRECTORY_OUTPUT_DIRECTORY: "/output/"
-      #DS_DIRECTORY_MIN_DONORS: 1 # for small datasets
+      DS_DIRECTORY_MIN_DONORS: 1 # for small datasets
       DS_IMPORT_BIOBANKS: "true"
       DS_IMPORT_COLLECTIONS: "true"
       #SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
