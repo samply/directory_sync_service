@@ -141,6 +141,48 @@ Once you have done this, you can start the service directly from the command lin
 java -jar target/directory_sync_service\*.jar
 ```
 
+## Testing
+
+### Unit tests
+
+The pom.xml file has been set up so that you can use the [JaCoCo](https://www.eclemma.org/jacoco/) tool for measuring unit test coverage. On the command line, run:
+
+```
+mvn clean verify
+```
+
+Once this has completed successfully, you can find the results in:
+
+```
+target/site/jacoco/index.html
+```
+
+The best way to view this file it to open it in a browser.
+
+Column 5 shows coverage in lines, which is more or less the standard measure for coverage. The first number of column 5 in the last row of
+the table shows the number of lines *not* covered (missed). The second number shows the total number of lines. Percentage coverage is (total-missed)*100/total.
+
+### Integration tests
+
+The directory "ci" contains everything needed for integration tests. It is used by a GitHub CI pipeline whenever a new version of Directory sync is released.
+
+You can run integration tests by hand, if you wish. You will need to set an environment variable to tell the system which data source to use.
+You can find a full list of data sources in ci/data/input.
+Let's say you would like to run an integration test with a small dataset, so that it completes quickly. Try this:
+
+```
+cd ci
+export DATASET=1patient_1collection
+docker volume rm -f store-db-data # start with empty Blaze store
+docker-compose up --abort-on-container-exit
+docker-compose down
+bash compare_test_results_with_reference.sh $DATASET
+```
+
+The test uses docker-compose to start up a FHIR store (Blaze), load it with data, and then run Directory sync. Rather than pushing the results to
+a running Directory instance, it dumps them into files. The contents of the generated files are then compared with reference data (located
+in ci/data/output).
+
 ## License
         
 Copyright 2024 The Samply Community
