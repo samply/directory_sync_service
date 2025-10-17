@@ -666,6 +666,7 @@ public class FhirApi {
         logger.warn("extractCollectionIdFromSpecimen: known Organizations in FHIR store:");
         orgPairs.forEach(pair -> logger.warn("       {}", pair));
       }
+      logger.warn("extractCollectionIdFromSpecimen: returning default collection ID: " + DEFAULT_COLLECTION_ID);
     }
 
     return directoryIdentifier;
