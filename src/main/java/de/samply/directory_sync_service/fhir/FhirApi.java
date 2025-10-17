@@ -645,16 +645,67 @@ public class FhirApi {
     if (extension == null)
       return DEFAULT_COLLECTION_ID;
 
+    String directoryIdentifier = DEFAULT_COLLECTION_ID; // return value
     // Pull the locally-used collection ID from the specimen extension.
     String reference = ((Reference) extension.getValue()).getReference();
     String localCollectionId = reference.replaceFirst("Organization/", "");
 
-    return extractValidDirectoryIdentifierFromCollection(
-            fhirClient
-                    .read()
-                    .resource(Organization.class)
-                    .withId(localCollectionId)
-                    .execute());
+    try {
+      Organization collection = fhirClient
+              .read()
+              .resource(Organization.class)
+              .withId(localCollectionId)
+              .execute();
+      directoryIdentifier = extractValidDirectoryIdentifierFromCollection(collection);
+    } catch (Exception e) {
+      logger.warn("extractCollectionIdFromSpecimen: could not get collection with reference \" + reference + \" and with localCollectionId " + localCollectionId + " from FHIR store, stack trace:\n" + Util.traceFromException(e));
+      List<String> orgPairs = listOrganizations();
+      if (orgPairs.size() == 0) {
+        logger.warn("extractCollectionIdFromSpecimen: no Organizations found in FHIR store");
+      } else {
+        logger.warn("extractCollectionIdFromSpecimen: known Organizations in FHIR store:");
+        orgPairs.forEach(pair -> logger.warn("       {}", pair));
+      }
+    }
+
+    return directoryIdentifier;
+  }
+
+  /**
+   * Fetches and returns a list of Organization ID/Name pairs as strings.
+   */
+  private List<String> listOrganizations() {
+    List<String> results = new ArrayList<>();
+
+    try {
+      Bundle bundle = fhirClient
+              .search()
+              .forResource(Organization.class)
+              .returnBundle(Bundle.class)
+              .count(50) // page size
+              .execute();
+
+      while (bundle != null && !bundle.getEntry().isEmpty()) {
+        for (BundleEntryComponent entry : bundle.getEntry()) {
+          if (entry.getResource() instanceof Organization org) {
+            String id = org.getIdElement().getIdPart();
+            String name = org.getName() != null ? org.getName() : "<No Name>";
+            results.add(String.format("%s (ID: %s)", name, id));
+          }
+        }
+
+        // Handle pagination if more results exist
+        if (bundle.getLink(Bundle.LINK_NEXT) != null) {
+          bundle = fhirClient.loadPage().next(bundle).execute();
+        } else {
+          break;
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("listOrganizations: could not get list of Organizations from FHIR store, stack trace:\n" + Util.traceFromException(e));
+    }
+
+    return results;
   }
 
   /**
