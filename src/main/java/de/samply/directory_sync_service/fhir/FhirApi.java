@@ -658,7 +658,7 @@ public class FhirApi {
               .execute();
       directoryIdentifier = extractValidDirectoryIdentifierFromCollection(collection);
     } catch (Exception e) {
-      logger.warn("extractCollectionIdFromSpecimen: could not get collection with reference \" + reference + \" and with localCollectionId " + localCollectionId + " from FHIR store, stack trace:\n" + Util.traceFromException(e));
+      logger.warn("extractCollectionIdFromSpecimen: could not get collection with reference " + reference + " and with localCollectionId " + localCollectionId + " from FHIR store, stack trace:\n" + Util.traceFromException(e));
       List<String> orgPairs = listOrganizations();
       if (orgPairs.size() == 0) {
         logger.warn("extractCollectionIdFromSpecimen: no Organizations found in FHIR store");
