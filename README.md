@@ -73,7 +73,7 @@ If you set DS_DIRECTORY_ALLOW_STAR_MODEL to 'True', then the star model summary 
 for your data will be generated and sent to the Directory. You are advised to talk to
 your local data protection group before doing this.
 
-If DS_TIMER_CRON is not specified, Directory sync will be executed once, and then the
+If DS_TIMER_CRON is not specified at all, or if it has the value ```-```, then Directory sync will be executed just once, after which the
 process will terminate.
 
 The DS_RETRY\_ variables specify how Directory sync reacts to failure. RETRY_MAX should

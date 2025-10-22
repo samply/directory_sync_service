@@ -47,8 +47,10 @@ public class DirectorySyncLauncher {
 
     String timerCron = configuration.getTimerCron();
 
+    logger.debug("run: timerCron = |" + timerCron + "|");
+
     // If there is no cron timer defined, just run the job once and then quit.
-    if (timerCron == null || timerCron.isEmpty()) {
+    if (timerCron == null || timerCron.isEmpty() || timerCron.equals("-")) {
       logger.info("run: ********************** Running job just once");
       directorySyncJob.execute(configuration);
       logger.info("run: ********************** Finished running job just once\n\n\n\n\n");

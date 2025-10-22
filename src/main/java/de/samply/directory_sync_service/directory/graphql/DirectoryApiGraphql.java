@@ -616,10 +616,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
         logger.warn("isValidIcdValue: diseaseTypeList is null for diagnosis: " + diagnosis + ", there may be a problem");
         return false;
       }
-      if (diseaseTypeList.size() == 0) {
-        logger.debug("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
+      if (diseaseTypeList.size() == 0)
+        // diseaseTypeList is empty for diagnosis, which is presumably unknown");
         return false;
-      }
 
       Map<String, Object> item = diseaseTypeList.get(0);
 

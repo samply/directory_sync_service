@@ -113,16 +113,16 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     JsonObject result = runGraphqlCommand(endpoint, graphqlCommand);
 
     if (result == null) {
-      logger.warn("runGraphqlQueryReturnList: result is null");
+      logger.warn("runGraphqlQueryReturnList: result is null, graphqlCommand: " + graphqlCommand);
       return null;
     }
 
     Map<String, Object> resultMap = convertJsonObjectToMap(result);
 
-    if (resultMap.isEmpty()) {
-      logger.debug("runGraphqlQueryReturnList: no matching data found");
+    if (resultMap.isEmpty())
+      // Query didn't find a result
       return new ArrayList<>();
-    }
+
     if (resultMap.keySet().size() > 1) {
       // This shouldn't happen
       logger.warn("runGraphqlQueryReturnList: more than one data table name found");

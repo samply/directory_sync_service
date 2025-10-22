@@ -209,8 +209,6 @@ public class Collection {
 
     if (correctedDiagnoses.isEmpty())
       logger.debug("applyDiagnosisCorrections: correctedDiagnoses is empty");
-    else
-      logger.debug("applyDiagnosisCorrections: correctedDiagnoses: " + Util.jsonStringFomObject(correctedDiagnoses));
 
     // Retrieve available diagnoses
     for (String diagnosis : getDiagnosisAvailable()) {
@@ -221,16 +219,15 @@ public class Collection {
       String miriamDiagnosis = diagnosis;
       if (!miriamDiagnosis.startsWith("urn:miriam:icd:"))
         miriamDiagnosis = "urn:miriam:icd:" + diagnosis;
-      logger.debug("applyDiagnosisCorrections: diagnosis: " + diagnosis);
       if (correctedDiagnoses.containsKey(miriamDiagnosis) && correctedDiagnoses.get(miriamDiagnosis) != null) {
         String correctedDiagnosis = correctedDiagnoses.get(miriamDiagnosis);
-        logger.debug("applyDiagnosisCorrections: corrected diagnosis: " + correctedDiagnosis);
+        logger.debug("applyDiagnosisCorrections: original diagnosis: " + miriamDiagnosis + ", corrected diagnosis: " + correctedDiagnosis);
 
         // Strip MIRIAM part of diagnosis before adding to list
         String plainCorrectedDiagnosis = correctedDiagnosis.substring(15);
         // Add to list only if it's not already present
         if (!directoryDiagnoses.contains(plainCorrectedDiagnosis)) {
-          logger.debug("applyDiagnosisCorrections: adding diagnosis: " + plainCorrectedDiagnosis);
+          logger.debug("applyDiagnosisCorrections: adding new diagnosis: " + plainCorrectedDiagnosis);
           directoryDiagnoses.add(plainCorrectedDiagnosis);
         }
       }

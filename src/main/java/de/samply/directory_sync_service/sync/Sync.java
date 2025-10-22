@@ -48,12 +48,12 @@ public class Sync {
         boolean success = false;
         int retryNum;
         for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
-            logger.info("syncWithDirectoryFailover: +++++++++++++++++++ trying sync, attempt " + retryNum + " of " + retryMax);
+            logger.info("+++++++++++++++++++ syncWithDirectoryFailover: trying sync, attempt " + retryNum + " of " + retryMax);
             if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections)) {
                 success = true;
                 break;
             }
-            logger.info("syncWithDirectoryFailover: +++++++++++++++++++ attempt " + retryNum + " of " + retryMax + " failed");
+            logger.info("+++++++++++++++++++ syncWithDirectoryFailover: attempt " + retryNum + " of " + retryMax + " failed");
             try {
                 // Sleep for retryInterval seconds before trying again
                 Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
