@@ -119,31 +119,7 @@ class DirectorySyncLauncherTest {
 
                 // Cron expression got the trailing " ?"
                 assertTrue(tr instanceof CronTrigger);
-                assertEquals("0 0/5 * * * ?", ((CronTrigger) tr).getCronExpression());
-            }
-        }
-
-        @Test
-        void schedulesWithCron_whenCronAlreadyHasQuestionMark() throws Exception {
-            cfg.setTimerCron("0 0 12 * * ?"); // already valid Quartz cron
-
-            Scheduler scheduler = mock(Scheduler.class);
-
-            try (MockedConstruction<StdSchedulerFactory> factoryCtor =
-                         mockConstruction(StdSchedulerFactory.class,
-                                 (factory, ctx) -> when(factory.getScheduler()).thenReturn(scheduler));
-                 MockedConstruction<DirectorySyncJob> jobCtor =
-                         mockConstruction(DirectorySyncJob.class,
-                                 (mock, ctx) -> {
-                                     when(mock.isExecutable(cfg)).thenReturn(true);
-                                     when(mock.getJobType()).thenReturn("X");
-                                 })) {
-
-                launcher.run();
-
-                ArgumentCaptor<Trigger> trCap = ArgumentCaptor.forClass(Trigger.class);
-                verify(scheduler).scheduleJob(any(JobDetail.class), trCap.capture());
-                assertEquals("0 0 12 * * ?", ((CronTrigger) trCap.getValue()).getCronExpression());
+                assertEquals("0 0 0/5 ? * *", ((CronTrigger) tr).getCronExpression());
             }
         }
 

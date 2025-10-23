@@ -44,7 +44,7 @@ public class Sync {
      *
      */
     public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections) {
-        logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting");
+        logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting at: " + java.time.LocalDateTime.now().getHour() + ":" + java.time.LocalDateTime.now().getMinute());
         boolean success = false;
         int retryNum;
         for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {

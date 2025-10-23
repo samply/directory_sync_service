@@ -57,9 +57,7 @@ public class DirectorySyncLauncher {
       return;
     }
 
-    // Quartz likes to have a " ?" at the end of its cron definition.
-    if (!timerCron.endsWith(" ?"))
-      timerCron = timerCron + " ?";
+    timerCron = CronConverter.unixToQuartz(timerCron);
 
     String jobType = directorySyncJob.getJobType();
 
@@ -81,7 +79,7 @@ public class DirectorySyncLauncher {
     try {
       Scheduler scheduler = new StdSchedulerFactory().getScheduler();
 
-      logger.info("run: ********************** starting scheduler");
+      logger.info("run: ********************** starting scheduler at: " + java.time.LocalDateTime.now().getHour() + ":" + java.time.LocalDateTime.now().getMinute());
       scheduler.start();
       scheduler.scheduleJob(quartzJob, quartzTrigger);
     } catch (SchedulerException e) {
