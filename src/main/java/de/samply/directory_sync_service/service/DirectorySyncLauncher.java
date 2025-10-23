@@ -49,6 +49,11 @@ public class DirectorySyncLauncher {
 
     logger.debug("run: timerCron = |" + timerCron + "|");
 
+    logger.debug("user.timezone=" + System.getProperty("user.timezone"));
+    logger.debug("Default TZ   =" + java.util.TimeZone.getDefault().getID());
+    logger.debug("Date()       =" + new java.util.Date());
+    logger.debug("Zoned now    =" + java.time.ZonedDateTime.now());
+
     // If there is no cron timer defined, just run the job once and then quit.
     if (timerCron == null || timerCron.isEmpty() || timerCron.equals("-")) {
       logger.info("run: ********************** Running job just once");
