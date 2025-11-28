@@ -509,6 +509,10 @@ public class FhirApi {
         logger.warn("extractPatientFromSpecimen: specimen subject reference is null for specimen ID: " + specimen.getIdElement().getIdPart());
         return null;
       }
+      if (specimenSubjectReference.isEmpty()) {
+        logger.warn("extractPatientFromSpecimen: specimen subject reference is empty for specimen ID: " + specimen.getIdElement().getIdPart());
+        return null;
+      }
       if (!specimenSubjectReference.startsWith("Patient/"))
         logger.warn("extractPatientFromSpecimen: specimen id does not start with 'Patient/' for specimen ID: " + specimen.getIdElement().getIdPart());
       else
