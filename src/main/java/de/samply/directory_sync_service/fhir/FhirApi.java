@@ -485,19 +485,41 @@ public class FhirApi {
 
   /**
    * Extracts a Patient resource from a Specimen resource.
+   *
+   * This works because every Specimen resource contains a reference to a Patient resource.
    * 
    * @param specimen a Specimen resource that contains a reference to a Patient resource
    * @return a Patient resource that matches the reference in the Specimen resource, or null if not found
    */
   public Patient extractPatientFromSpecimen(Specimen specimen) {
+    if (specimen == null) {
+      logger.warn("extractPatientFromSpecimen: specimen is null");
+      return null;
+    }
     Patient patient =  null;
     try {
+      // Make sure that there is a patient (subject) reference and that it is valid.
+      Reference specimenSubject = specimen.getSubject();
+      if (specimenSubject == null) {
+        logger.warn("extractPatientFromSpecimen: specimen subject is null for specimen ID: " + specimen.getIdElement().getIdPart());
+        return null;
+      }
+      String specimenSubjectReference = specimenSubject.getReference();
+      if (specimenSubjectReference == null) {
+        logger.warn("extractPatientFromSpecimen: specimen subject reference is null for specimen ID: " + specimen.getIdElement().getIdPart());
+        return null;
+      }
+      if (!specimenSubjectReference.startsWith("Patient/"))
+        logger.warn("extractPatientFromSpecimen: specimen id does not start with 'Patient/' for specimen ID: " + specimen.getIdElement().getIdPart());
+      else
+        specimenSubjectReference = specimenSubjectReference.replaceFirst("Patient/", "");
+      logger.debug("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
+
+      // Find the Patient with the ID found from the reference in the Specimen.
       patient =  fhirClient
                 .read()
                 .resource(Patient.class)
-                .withId(specimen.getSubject()
-                        .getReference()
-                        .replaceFirst("Patient/", ""))
+                .withId(specimenSubjectReference)
                 .execute();
     } catch (Exception e) {
       logger.warn("extractPatientFromSpecimen: exception message: " + e.getMessage());
