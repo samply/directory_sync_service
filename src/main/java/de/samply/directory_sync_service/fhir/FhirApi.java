@@ -517,7 +517,7 @@ public class FhirApi {
         logger.warn("extractPatientFromSpecimen: specimen id does not start with 'Patient/' for specimen ID: " + specimen.getIdElement().getIdPart());
       else
         specimenSubjectReference = specimenSubjectReference.replaceFirst("Patient/", "");
-      logger.debug("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
+      logger.info("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
 
       // Find the Patient with the ID found from the reference in the Specimen.
       patient =  fhirClient
