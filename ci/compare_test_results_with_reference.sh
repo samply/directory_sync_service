@@ -51,8 +51,6 @@ sort > $TMP/crc-cohort_facts.processed.csv
 
 # Preprocess generated output fact table data
 cat output/DirectoryFactTables.csv | \
-# Remove column 10 (national_node), which is not in Petr's fact tables.
-#awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=10) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
 # Remove the left-over semicolon at the end of each line
 sed 's/;$//' | \
 # Remove column 8 (last_update), since this is is never the same.
@@ -73,6 +71,9 @@ fi
 
 # Preprocess reference collection data
 cat data/output/$REFERENCE/DirectoryCollections.csv | \
+# Remove columns 12 and 13 (lower and upper age), since they change with date.
+awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=13) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
+awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=12) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
 # Remove column 7 (last_update), since this is is never the same.
 awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=7) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
 # Remove header row
@@ -81,6 +82,9 @@ sort > $TMP/crc-cohort_collections.processed.csv
 
 # Preprocess generated output collection data
 cat output/DirectoryCollections.csv | \
+# Remove columns 12 and 13 (lower and upper age), since they change with date.
+awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=13) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
+awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=12) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
 # Remove column 7 (last_update), since this is is never the same.
 awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=7) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
 # Remove header row
