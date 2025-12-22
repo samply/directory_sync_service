@@ -67,9 +67,11 @@ public class FhirApi {
   private Map<String, List<Patient>> patientsByCollection = null;
   private final IGenericClient fhirClient;
   private final FhirContext ctx;
+  String fhirStoreUrl;
 
   public FhirApi(String fhirStoreUrl) {
     ctx = FhirContext.forR4();
+    this.fhirStoreUrl = fhirStoreUrl;
     IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
     client.registerInterceptor(new LoggingInterceptor(true));
 
@@ -323,46 +325,52 @@ public class FhirApi {
    * Retrieves all Specimens from the FHIR server and organizes them into a Map based on their Collection ID.
    *
    * @return A Map where keys are Collection IDs and values are Lists of Specimens associated with each Collection ID.
-   * @throws FhirClientConnectionException If there is an issue connecting to the FHIR server.
    */
   private Map<String, List<Specimen>> getAllSpecimensAsMap() {
-    logger.debug("getAllSpecimensAsMap: entered");
+    logger.info("getAllSpecimensAsMap: entered");
 
     Map<String, List<Specimen>> result = new HashMap<String, List<Specimen>>();
 
-    // Use ITransactionTyped instead of returnBundle(Bundle.class)
-    IQuery<IBaseBundle> bundleTransaction = fhirClient.search().forResource(Specimen.class);
-    Bundle bundle = (Bundle) bundleTransaction.execute();
+    try {
+      // Use ITransactionTyped instead of returnBundle(Bundle.class)
+      IQuery<IBaseBundle> bundleTransaction = fhirClient.search().forResource(Specimen.class);
+      Bundle bundle = (Bundle) bundleTransaction.execute();
 
-    logger.debug("getAllSpecimensAsMap: gather specimens");
+      logger.info("getAllSpecimensAsMap: gather specimens");
 
-    // Keep looping until the store has no more specimens.
-    // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
-    int pageNum = 0;
-    do {
-      if (pageNum % 10 == 0)
-        logger.debug("getAllSpecimensAsMap: pageNum: " + pageNum);
+      // Keep looping until the store has no more specimens.
+      // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
+      int pageNum = 0;
+      do {
+        if (pageNum % 10 == 0)
+          logger.info("getAllSpecimensAsMap: pageNum: " + pageNum);
 
-      // Add entries to the result map
-      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-          Specimen specimen = (Specimen) entry.getResource();
-          String collectionId = extractCollectionIdFromSpecimen(specimen);
-          if (!result.containsKey(collectionId))
-              result.put(collectionId, new ArrayList<>());
-          result.get(collectionId).add(specimen);
-      }
+        // Add entries to the result map
+        for (BundleEntryComponent entry : bundle.getEntry()) {
+            Specimen specimen = (Specimen) entry.getResource();
+            String collectionId = extractCollectionIdFromSpecimen(specimen);
+            if (!result.containsKey(collectionId))
+                result.put(collectionId, new ArrayList<>());
+            result.get(collectionId).add(specimen);
+        }
 
-      // Check if there are more pages
-      if (bundle.getLink(Bundle.LINK_NEXT) != null)
-          // Use ITransactionTyped to load the next page
-          bundle = fhirClient.loadPage().next(bundle).execute();
-      else
-          bundle = null;
+        // Check if there are more pages
+        if (bundle.getLink(Bundle.LINK_NEXT) != null)
+            // Use ITransactionTyped to load the next page
+            bundle = fhirClient.loadPage().next(bundle).execute();
+        else
+            bundle = null;
 
-      pageNum++;
-    } while (bundle != null);
+        pageNum++;
+      } while (bundle != null);
+    } catch (Exception e) {
+      logger.warn("getAllSpecimensAsMap: could not retrieve data from FHIR store");
+      logger.warn("getAllSpecimensAsMap: fhirStoreUrl: " + fhirStoreUrl);
+      logger.warn("getAllSpecimensAsMap: httpClient: " + fhirClient.getHttpClient().toString());
+      logger.warn("getAllSpecimensAsMap: exception" + Util.traceFromException(e));
+    }
 
-    logger.debug("getAllSpecimensAsMap: done, result.size(): " + result.size());
+    logger.info("getAllSpecimensAsMap: done, result.size(): " + result.size());
 
     return result;
   }
