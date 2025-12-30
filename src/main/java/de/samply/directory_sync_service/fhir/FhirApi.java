@@ -6,6 +6,7 @@ import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
@@ -71,6 +72,12 @@ public class FhirApi {
 
   public FhirApi(String fhirStoreUrl) {
     ctx = FhirContext.forR4();
+    // Allow invalid values in resource attributes
+    ctx.setParserErrorHandler(
+            new LenientErrorHandler()
+                    .setErrorOnInvalidValue(false)  // <-- key line
+    );
+
     this.fhirStoreUrl = fhirStoreUrl;
     IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
     client.registerInterceptor(new LoggingInterceptor(true));

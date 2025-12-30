@@ -112,7 +112,9 @@ public class PopulateStarModelInputData {
 
     String material = extractMaterialFromSpecimen(specimen);
     String patientId = patient.getIdElement().getIdPart();
-    String sex = patient.getGender().getDisplay();
+    String sex = "unknown";
+    if (patient.hasGender())
+        sex = patient.getGender().getDisplay();
     String age = determinePatientAgeAtCollection(patient);
 
     // Create a new Row object to hold data extracted from patient and specimen
