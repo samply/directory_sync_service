@@ -669,6 +669,33 @@ public class FhirApi {
   }
 
   /**
+   * Extracts the collection id from a reference to a collection ID obtained from an extension to Specimen.
+   *
+   * @param reference
+   * @return The collection id.
+   */
+  private String extractCollectionIdFromReference(String reference) {
+    if (reference == null) return null;
+
+    String collectionId = reference;
+    if (reference.matches("^http[^/:]*://.*/.[^/]*$")) {
+      logger.info("extractCollectionIdFromReference: reference is a URL (" + reference + "), using last part of URL as collection ID");
+      // The reference has been written like a URL. Assume that the collection ID
+      // is the last part of the URL
+      String[] collectionIdParts = reference.split("/");
+      collectionId = collectionIdParts[collectionIdParts.length - 1];
+      if (collectionId.isEmpty() && collectionIdParts.length > 1)
+        // The URL ended with a slash, so the collection id is the second to last part
+        collectionId = collectionIdParts[collectionIdParts.length - 2];
+    } else if (reference.startsWith("Organization/")) {
+      // This is the expected case: the reference starts with "Organization/".
+      collectionId = reference.replaceFirst("Organization/", "");
+    }
+
+    return collectionId;
+  }
+
+  /**
    * Extracts the collection id from a Specimen object that has a Custodian extension.
    * The collection id is either a valid Directory collection id or the default value DEFAULT_COLLECTION_ID.
    * If the Specimen object does not have a Custodian extension, the default value is returned.
@@ -691,7 +718,9 @@ public class FhirApi {
     String directoryIdentifier = DEFAULT_COLLECTION_ID; // return value
     // Pull the locally-used collection ID from the specimen extension.
     String reference = ((Reference) extension.getValue()).getReference();
-    String localCollectionId = reference.replaceFirst("Organization/", "");
+    String localCollectionId = extractCollectionIdFromReference(reference);
+
+    logger.debug("extractCollectionIdFromSpecimen: localCollectionId: " + localCollectionId);
 
     try {
       Organization collection = fhirClient
