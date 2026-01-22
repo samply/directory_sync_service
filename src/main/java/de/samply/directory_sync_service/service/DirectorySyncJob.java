@@ -1,5 +1,6 @@
 package de.samply.directory_sync_service.service;
 
+import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.sync.Sync;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,13 +30,18 @@ public class DirectorySyncJob implements StatefulJob  {
      */
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        // Get parameters
-        JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
-        Configuration configuration = (Configuration) data.get("configuration");
+        try {
+            // Get parameters
+            JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
+            Configuration configuration = (Configuration) data.get("configuration");
 
-        logger.info("execute: ------------------ executing as part of a repeated run");
-        execute(configuration);
-        logger.info("execute: ------------------ finished executing as part of a repeated run\n\n\n\n");
+            logger.info("execute: ------------------ executing as part of a repeated run");
+            execute(configuration);
+            logger.info("execute: ------------------ finished executing as part of a repeated run\n\n\n\n");
+        } catch (Exception e) {
+            logger.warn("execute: stack trace:\n" + Util.traceFromException(e));
+            logger.warn("execute: exception" + e);
+        }
     }
 
     /**
@@ -44,24 +50,30 @@ public class DirectorySyncJob implements StatefulJob  {
      * @param configuration Spring Boot configuration to be used for parameters.
      */
     public void execute(Configuration configuration) {
-        String retryMax = configuration.getRetryMax();
-        String retryInterval = configuration.getRetryInterval();
-        String directoryUrl = configuration.getDirectoryUrl();
-        String fhirStoreUrl = configuration.getFhirStoreUrl();
-        String directoryUserName = configuration.getDirectoryUserName();
-        String directoryUserPass = configuration.getDirectoryUserPass();
-        String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
-        boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
-        int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
-        int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
-        boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
-        boolean directoryOnlyLogin = Boolean.parseBoolean(configuration.getDirectoryOnlyLogin());
-        boolean directoryWriteToFile = Boolean.parseBoolean(configuration.getDirectoryWriteToFile());
-        String directoryOutputDirectory = configuration.getDirectoryOutputDirectory();
-        boolean importBiobanks = Boolean.parseBoolean(configuration.getImportBiobanks());
-        boolean importCollections = Boolean.parseBoolean(configuration.getImportCollections());
+        boolean success = false;
+        try {
+            String retryMax = configuration.getRetryMax();
+            String retryInterval = configuration.getRetryInterval();
+            String directoryUrl = configuration.getDirectoryUrl();
+            String fhirStoreUrl = configuration.getFhirStoreUrl();
+            String directoryUserName = configuration.getDirectoryUserName();
+            String directoryUserPass = configuration.getDirectoryUserPass();
+            String directoryDefaultCollectionId = configuration.getDirectoryDefaultCollectionId();
+            boolean directoryAllowStarModel = Boolean.parseBoolean(configuration.getDirectoryAllowStarModel());
+            int directoryMinDonors = Integer.parseInt(configuration.getDirectoryMinDonors());
+            int directoryMaxFacts = Integer.parseInt(configuration.getDirectoryMaxFacts());
+            boolean directoryMock = Boolean.parseBoolean(configuration.getDirectoryMock());
+            boolean directoryOnlyLogin = Boolean.parseBoolean(configuration.getDirectoryOnlyLogin());
+            boolean directoryWriteToFile = Boolean.parseBoolean(configuration.getDirectoryWriteToFile());
+            String directoryOutputDirectory = configuration.getDirectoryOutputDirectory();
+            boolean importBiobanks = Boolean.parseBoolean(configuration.getImportBiobanks());
+            boolean importCollections = Boolean.parseBoolean(configuration.getImportCollections());
 
-        boolean success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections);
+            success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections);
+        } catch (Exception e) {
+            logger.warn("execute: single-job, problem with synchronization, stack trace:\n" + Util.traceFromException(e));
+            logger.warn("execute: single-job, exception:\n" + e);
+        }
 
         if (success) {
             logger.info("execute: Directory sync succeeded");

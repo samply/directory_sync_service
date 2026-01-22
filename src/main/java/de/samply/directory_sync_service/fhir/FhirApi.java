@@ -540,6 +540,7 @@ public class FhirApi {
                 .resource(Patient.class)
                 .withId(specimenSubjectReference)
                 .execute();
+      logger.info("extractPatientFromSpecimen: done");
     } catch (Exception e) {
       logger.warn("extractPatientFromSpecimen: exception message: " + e.getMessage());
       logger.warn("extractPatientFromSpecimen: exception: " + e);
