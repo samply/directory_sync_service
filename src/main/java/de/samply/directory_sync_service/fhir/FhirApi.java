@@ -530,8 +530,13 @@ public class FhirApi {
       }
       if (!specimenSubjectReference.startsWith("Patient/"))
         logger.warn("extractPatientFromSpecimen: specimen id does not start with 'Patient/' for specimen ID: " + specimen.getIdElement().getIdPart());
-      else
+      else {
         specimenSubjectReference = specimenSubjectReference.replaceFirst("Patient/", "");
+        if (specimenSubjectReference.isEmpty()) {
+          logger.warn("extractPatientFromSpecimen: after removing 'Patient/', specimen subject reference has become empty for specimen ID: " + specimen.getIdElement().getIdPart());
+          return null;
+        }
+      }
       logger.info("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
 
       // Find the Patient with the ID found from the reference in the Specimen.
