@@ -113,27 +113,32 @@ public class DirectoryApiRest extends DirectoryApi {
 
     boolean warnFlag = false;
     for (String collectionId: collectionIds) {
-      logger.debug("generateCollections(Rest): collectionId: " + collectionId);
-      String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
-      logger.debug("generateCollections(Rest): commandUrl: " + commandUrl);
-      Map singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
-      if (singleDirectoryCollectionGet == null) {
-        logger.info("generateCollections(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
-        commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
-        singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
+      try {
+        logger.debug("generateCollections(Rest): collectionId: " + collectionId);
+        String commandUrl = directoryEndpointsRest.getCollectionEndpoint(countryCode) + "?q=id==%22" + collectionId  + "%22";
+        logger.debug("generateCollections(Rest): commandUrl: " + commandUrl);
+        Map singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
         if (singleDirectoryCollectionGet == null) {
-          logger.warn("generateCollections(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+          logger.info("generateCollections(Rest): singleDirectoryCollectionGet is null, trying URL without country code");
+          commandUrl = directoryEndpointsRest.getCollectionEndpoint(null) + "?q=id==%22" + collectionId + "%22";
+          singleDirectoryCollectionGet = (Map) directoryCallsRest.get(commandUrl, Map.class);
+          if (singleDirectoryCollectionGet == null) {
+            logger.warn("generateCollections(Rest): singleDirectoryCollectionGet is null, does the collection exist in the Directory: " + collectionId);
+            warnFlag = true;
+            continue;
+          }
+        }
+        Map collectionMap = getItemZero(singleDirectoryCollectionGet); // assume that only one collection matches collectionId
+        if (collectionMap == null) {
+          logger.warn("generateCollections(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
           warnFlag = true;
           continue;
         }
-      }
-      Map collectionMap = getItemZero(singleDirectoryCollectionGet); // assume that only one collection matches collectionId
-      if (collectionMap == null) {
-        logger.warn("generateCollections(Rest): entity get item is null, does the collection exist in the Directory: " + collectionId);
+        ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
+      } catch (Exception e) {
+        logger.warn("generateCollections(Rest): Exception during collection import: " + Util.traceFromException(e));
         warnFlag = true;
-        continue;
       }
-      ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
     }
 
     if (warnFlag && collections.isEmpty()) {
@@ -183,25 +188,30 @@ public class DirectoryApiRest extends DirectoryApi {
       return true;
     }
 
-    // Munge the Collection data into a form that can be turned into JSON and
-    // sent to the Directory.
-    DirectoryCollectionPut directoryCollectionPut = ConvertCollectionsToDirectoryCollectionPut.convert(collections);
-    if (directoryCollectionPut == null) {
-      logger.warn("sendUpdatedCollections: Problem converting FHIR attributes to Directory attributes");
-      return false;
-    }
-    logger.debug("sendUpdatedCollections: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
-
-    login();
-
-    String response = updateEntities(directoryCollectionPut.getCountryCode(), directoryCollectionPut);
-    if (response == null) {
-      logger.info("sendUpdatedCollections: PUT problem, trying URL without country code");
-      response = updateEntities(null, directoryCollectionPut);
-      if (response == null) {
-        logger.warn("sendUpdatedCollections: PUT problem even without country code, aborting");
+    try {
+      // Munge the Collection data into a form that can be turned into JSON and
+      // sent to the Directory.
+      DirectoryCollectionPut directoryCollectionPut = ConvertCollectionsToDirectoryCollectionPut.convert(collections);
+      if (directoryCollectionPut == null) {
+        logger.warn("sendUpdatedCollections: Problem converting FHIR attributes to Directory attributes");
         return false;
       }
+      logger.debug("sendUpdatedCollections: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+
+      login();
+
+      String response = updateEntities(directoryCollectionPut.getCountryCode(), directoryCollectionPut);
+      if (response == null) {
+        logger.info("sendUpdatedCollections: PUT problem, trying URL without country code");
+        response = updateEntities(null, directoryCollectionPut);
+        if (response == null) {
+          logger.warn("sendUpdatedCollections: PUT problem even without country code, aborting");
+          return false;
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("sendUpdatedCollections: Exception during collection update: " + Util.traceFromException(e));
+      return false;
     }
 
     return true;

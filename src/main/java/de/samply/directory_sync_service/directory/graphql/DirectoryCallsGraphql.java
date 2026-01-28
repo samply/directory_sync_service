@@ -110,37 +110,49 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    * @return A list of maps containing the retrieved data, or null if there are issues with the query.
    */
   public List<Map<String, Object>> runGraphqlQueryReturnList(String endpoint, String graphqlCommand) {
-    JsonObject result = runGraphqlCommand(endpoint, graphqlCommand);
-
-    if (result == null) {
-      logger.warn("runGraphqlQueryReturnList: result is null, graphqlCommand: " + graphqlCommand);
+    if (graphqlCommand == null) {
+      logger.warn("runGraphqlQueryReturnList: graphqlCommand is null");
       return null;
     }
 
-    Map<String, Object> resultMap = convertJsonObjectToMap(result);
+    List<Map<String, Object>> listResult = null;
+    try {
+      JsonObject result = runGraphqlCommand(endpoint, graphqlCommand);
 
-    if (resultMap.isEmpty())
-      // Query didn't find a result
-      return new ArrayList<>();
+      if (result == null) {
+        logger.warn("runGraphqlQueryReturnList: result is null, graphqlCommand: " + graphqlCommand);
+        return null;
+      }
 
-    if (resultMap.keySet().size() > 1) {
-      // This shouldn't happen
-      logger.warn("runGraphqlQueryReturnList: more than one data table name found");
-      return null;
+      Map<String, Object> resultMap = convertJsonObjectToMap(result);
+
+      if (resultMap.isEmpty())
+        // Query didn't find a result
+        return new ArrayList<>();
+
+      if (resultMap.keySet().size() > 1) {
+        // This shouldn't happen
+        logger.warn("runGraphqlQueryReturnList: more than one data table name found");
+        return null;
+      }
+
+      String dataTableName = resultMap.keySet().iterator().next();
+
+      if (!resultMap.containsKey(dataTableName)) {
+        logger.warn("runGraphqlQueryReturnList: " + dataTableName + " is not not present in resultMap");
+        return null;
+      }
+      if (!(resultMap.get(dataTableName) instanceof List<?>)) {
+        logger.warn("runGraphqlQueryReturnList: " + dataTableName + " is not a List: " + Util.jsonStringFomObject(resultMap.get(dataTableName)));
+        return null;
+      }
+
+      listResult = (List<Map<String, Object>>) resultMap.get(dataTableName);
+    } catch (Exception e) {
+      logger.warn("runGraphqlQueryReturnList: Exception during query: " + Util.traceFromException(e));
     }
 
-    String dataTableName = resultMap.keySet().iterator().next();
-
-    if (!resultMap.containsKey(dataTableName)) {
-      logger.warn("runGraphqlQueryReturnList: " + dataTableName + " is not not present in resultMap");
-      return null;
-    }
-    if (!(resultMap.get(dataTableName) instanceof List<?>)) {
-      logger.warn("runGraphqlQueryReturnList: " + dataTableName + " is not a List: " + Util.jsonStringFomObject(resultMap.get(dataTableName)));
-      return null;
-    }
-
-    return (List<Map<String, Object>>) resultMap.get(dataTableName);
+    return listResult;
   }
 
   /**
@@ -183,31 +195,36 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
    * @return The result of the GraphQL command as a JsonObject.
    */
   public JsonObject runGraphqlCommand(String endpoint, String graphqlCommand) {
-    String url = urlCombine(baseUrl, endpoint);
-    HttpPost request = new HttpPost(url);
-    if (directoryCredentials.getToken() != null && !directoryCredentials.getToken().isEmpty())
-      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+    JsonObject data = null;
+    try {
+      String url = urlCombine(baseUrl, endpoint);
+      HttpPost request = new HttpPost(url);
+      if (directoryCredentials.getToken() != null && !directoryCredentials.getToken().isEmpty())
+        request.setHeader("x-molgenis-token", directoryCredentials.getToken());
 
-    // Create the GraphQL body
-    String cleanedCommand = escapeQuotes(removeNewlines(graphqlCommand));
-    String wrappedCommand = wrapCommandInQuery(cleanedCommand);
-    StringEntity entity = new StringEntity(wrappedCommand, UTF_8);
-    request.setEntity(entity);
+      // Create the GraphQL body
+      String cleanedCommand = escapeQuotes(removeNewlines(graphqlCommand));
+      String wrappedCommand = wrapCommandInQuery(cleanedCommand);
+      StringEntity entity = new StringEntity(wrappedCommand, UTF_8);
+      request.setEntity(entity);
 
-    String response = executeRequest(request);
+      String response = executeRequest(request);
 
-    if (response == null) {
-      logger.warn("runGraphqlCommand: HTTP response is null");
-      return null;
-    }
+      if (response == null) {
+        logger.warn("runGraphqlCommand: HTTP response is null");
+        return null;
+      }
 
-    // Parse the response (GraphQL responses typically have a "data" field)
-    JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
-    JsonObject data = jsonResponse.getAsJsonObject("data");
+      // Parse the response (GraphQL responses typically have a "data" field)
+      JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
+      data = jsonResponse.getAsJsonObject("data");
 
-    if (data == null) {
-      logger.warn("graphql: Error in GraphQL response: " + jsonResponse);
-      return null;
+      if (data == null) {
+        logger.warn("graphql: Error in GraphQL response: " + jsonResponse);
+        return null;
+      }
+    } catch (Exception e) {
+      logger.warn("runGraphqlCommand: Exception running GraphQL for endpoint " + endpoint + ", exception: " + Util.traceFromException(e));
     }
 
     return data;

@@ -94,7 +94,6 @@ public abstract class DirectoryApi {
     if (!deleteStarModel(inputCollectionIds)) {
       logger.warn("updateStarModel: Problem deleting star models");
       logger.warn("updateStarModel: carrying on regardless");
-//      return false;
     }
 
     String countryCode = factTable.getCountryCode();
