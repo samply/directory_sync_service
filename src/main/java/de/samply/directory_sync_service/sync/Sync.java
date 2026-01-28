@@ -44,25 +44,31 @@ public class Sync {
      *
      */
     public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections) {
-        logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting");
+        logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting at: " + java.time.LocalDateTime.now().getHour() + ":" + java.time.LocalDateTime.now().getMinute());
         boolean success = false;
-        int retryNum;
-        for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
-            logger.info("syncWithDirectoryFailover: +++++++++++++++++++ trying sync, attempt " + retryNum + " of " + retryMax);
-            if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections)) {
-                success = true;
-                break;
+        try {
+            success = false;
+            int retryNum;
+            for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
+                logger.info("+++++++++++++++++++ syncWithDirectoryFailover: trying sync, attempt " + retryNum + " of " + retryMax);
+                if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections)) {
+                    success = true;
+                    break;
+                }
+                logger.info("+++++++++++++++++++ syncWithDirectoryFailover: attempt " + retryNum + " of " + retryMax + " failed");
+                try {
+                    // Sleep for retryInterval seconds before trying again
+                    Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
+                } catch (InterruptedException e) {
+                    logger.warn("syncWithDirectoryFailover: problem during Thread.sleep, stack trace:\n" + Util.traceFromException(e));
+                }
             }
-            logger.info("syncWithDirectoryFailover: +++++++++++++++++++ attempt " + retryNum + " of " + retryMax + " failed");
-            try {
-                // Sleep for retryInterval seconds before trying again
-                Thread.sleep(Integer.parseInt(retryInterval) * 1000L);
-            } catch (InterruptedException e) {
-                logger.warn("syncWithDirectoryFailover: problem during Thread.sleep, stack trace:\n" + Util.traceFromException(e));
-            }
+            if (retryNum == Integer.parseInt(retryMax))
+                logger.warn("syncWithDirectoryFailover: reached maximum number of retires(" + Integer.parseInt(retryMax) + "), giving up");
+        } catch (NumberFormatException e) {
+            logger.warn("syncWithDirectoryFailover: stack trace:\n" + Util.traceFromException(e));
+            logger.warn("syncWithDirectoryFailover: exception" + e);
         }
-        if (retryNum == Integer.parseInt(retryMax))
-            logger.warn("syncWithDirectoryFailover: reached maximum number of retires(" + Integer.parseInt(retryMax) + "), giving up");
 
         logger.info("+++++++++++++++++++ syncWithDirectoryFailover: done");
 

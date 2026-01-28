@@ -47,17 +47,22 @@ public class DirectorySyncLauncher {
 
     String timerCron = configuration.getTimerCron();
 
+    logger.debug("run: timerCron = |" + timerCron + "|");
+
+    logger.debug("user.timezone=" + System.getProperty("user.timezone"));
+    logger.debug("Default TZ   =" + java.util.TimeZone.getDefault().getID());
+    logger.debug("Date()       =" + new java.util.Date());
+    logger.debug("Zoned now    =" + java.time.ZonedDateTime.now());
+
     // If there is no cron timer defined, just run the job once and then quit.
-    if (timerCron == null || timerCron.isEmpty()) {
+    if (timerCron == null || timerCron.isEmpty() || timerCron.equals("-")) {
       logger.info("run: ********************** Running job just once");
       directorySyncJob.execute(configuration);
       logger.info("run: ********************** Finished running job just once\n\n\n\n\n");
       return;
     }
 
-    // Quartz likes to have a " ?" at the end of its cron definition.
-    if (!timerCron.endsWith(" ?"))
-      timerCron = timerCron + " ?";
+    timerCron = CronConverter.unixToQuartz(timerCron);
 
     String jobType = directorySyncJob.getJobType();
 
@@ -79,7 +84,7 @@ public class DirectorySyncLauncher {
     try {
       Scheduler scheduler = new StdSchedulerFactory().getScheduler();
 
-      logger.info("run: ********************** starting scheduler");
+      logger.info("run: ********************** starting scheduler at: " + java.time.LocalDateTime.now().getHour() + ":" + java.time.LocalDateTime.now().getMinute());
       scheduler.start();
       scheduler.scheduleJob(quartzJob, quartzTrigger);
     } catch (SchedulerException e) {

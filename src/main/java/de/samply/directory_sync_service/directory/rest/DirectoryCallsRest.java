@@ -71,14 +71,21 @@ public class DirectoryCallsRest extends DirectoryCalls {
    * @return the response body deserialized into an object of type {@code c}, or {@code null} if the response is empty
    */
   public Object get(String commandUrl, Class c) {
-    HttpGet request = buildGetRequest(commandUrl);
-    String response = executeRequest(request);
-    if (response == null) {
-      logger.warn("DirectoryCallsRest.get: failed to get from Directory, response is null");
-      return null;
+    Object responseObject = null;
+    try {
+      HttpGet request = buildGetRequest(commandUrl);
+      String response = executeRequest(request);
+      if (response == null) {
+        logger.warn("DirectoryCallsRest.get: failed to get from Directory, response is null");
+        return null;
+      }
+
+      responseObject = gson.fromJson(response, c);
+    } catch (Exception e) {
+      logger.warn("DirectoryCallsRest.get: problem getting from Directory, error: " + e.getMessage());
     }
 
-    return gson.fromJson(response, c);
+    return responseObject;
   }
 
   /**
@@ -143,9 +150,15 @@ public class DirectoryCallsRest extends DirectoryCalls {
    * @return the response as a {@code String}, or {@code null} if the response is empty
    */
   public String delete(String commandUrl, Object o) {
-    HttpDeleteWithBody request = buildDeleteRequest(commandUrl, o);
+    String result = null;
+    try {
+      HttpDeleteWithBody request = buildDeleteRequest(commandUrl, o);
+      result = executeRequest(request);
+    } catch (Exception e) {
+      logger.warn("DirectoryCallsRest.delete: problem deleting from Directory, error: " + e.getMessage());
+    }
 
-    return executeRequest(request);
+    return result;
   }
 
   /**
@@ -181,13 +194,18 @@ public class DirectoryCallsRest extends DirectoryCalls {
    * @return an {@code HttpPost} object configured with the necessary headers and body
    */
   private HttpPost buildPostRequest(String commandUrl, Object o) {
-    StringEntity entity = objectToStringEntity(o);
-    HttpPost request = new HttpPost(urlCombine(baseUrl, commandUrl));
-    if (directoryCredentials.getToken() != null)
-      request.setHeader("x-molgenis-token", directoryCredentials.getToken());
-    request.setHeader("Accept", "application/json");
-    request.setHeader("Content-type", "application/json");
-    request.setEntity(entity);
+    HttpPost request = null;
+    try {
+      StringEntity entity = objectToStringEntity(o);
+      request = new HttpPost(urlCombine(baseUrl, commandUrl));
+      if (directoryCredentials.getToken() != null)
+        request.setHeader("x-molgenis-token", directoryCredentials.getToken());
+      request.setHeader("Accept", "application/json");
+      request.setHeader("Content-type", "application/json");
+      request.setEntity(entity);
+    } catch (Exception e) {
+      logger.warn("buildPostRequest: exception: " + Util.traceFromException(e));
+    }
     return request;
   }
 

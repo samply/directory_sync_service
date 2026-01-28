@@ -268,29 +268,34 @@ public class DirectoryApiGraphql extends DirectoryApi {
     login();
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      logger.debug("sendUpdatedCollections: about to update collection: " + collectionId);
+      JsonObject result = null;
+      try {
+        logger.debug("sendUpdatedCollections: about to update collection: " + collectionId);
 
-      Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
-      cleanEntity(entity);
-      if (entity.containsKey("timestamp"))
-        entity.put("timestamp", cleanTimestamp(entity.get("timestamp").toString()));
-      insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
-      transformEntityForEmx2(entity);
-      deleteUnknownFieldsFromEntity(extractCountryCodeFromBbmriEricId(collectionId), entity);
-      String entityGraphql = mapToGraphQL(entity);
-      String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
+        Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
+        cleanEntity(entity);
+        if (entity.containsKey("timestamp"))
+          entity.put("timestamp", cleanTimestamp(entity.get("timestamp").toString()));
+        insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
+        transformEntityForEmx2(entity);
+        deleteUnknownFieldsFromEntity(extractCountryCodeFromBbmriEricId(collectionId), entity);
+        String entityGraphql = mapToGraphQL(entity);
+        String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
 
-      String graphqlCommand = "mutation {\n" +
-              "  update (Collections: \n" +
-              entityGraphql +
-              "  ) { message }\n" +
-              "}";
+        String graphqlCommand = "mutation {\n" +
+                "  update (Collections: \n" +
+                entityGraphql +
+                "  ) { message }\n" +
+                "}";
 
-      JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+        result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+      } catch (Exception e) {
+        logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+      }
 
       if (result == null) {
-        logger.warn("sendUpdatedCollections: result is null");
-        return false;
+        logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", skipping");
+        continue;
       }
     }
 
@@ -368,7 +373,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
           return false;
         }
       } catch (Exception e) {
-        logger.warn("updateFactTablesBlock: Exception during fact deletion: " + Util.traceFromException(e));
+        logger.warn("updateFactTablesBlock: Exception during fact updating: " + Util.traceFromException(e));
         return false;
       }
 
@@ -542,11 +547,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
     try {
       List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), "CollectionFacts", null, new ArrayList<>(List.of("id")));
       if (collectionFactsList == null) {
-        logger.warn("getNextPageOfFactIdsForCollection: diseaseTypeList is null for collectionId: " + collectionId + ", there may be a problem");
+        logger.warn("getNextPageOfFactIdsForCollection: collectionFactsList is null for collectionId: " + collectionId + ", there may be a problem");
         return null;
       }
       if (collectionFactsList.size() == 0) {
-        logger.debug("getNextPageOfFactIdsForCollection: diseaseTypeList is empty for collectionId: " + collectionId + ", which is presumably unknown");
+        logger.debug("getNextPageOfFactIdsForCollection: collectionFactsList is empty for collectionId: " + collectionId + ", which is presumably unknown");
         return factIds;
       }
 
@@ -627,10 +632,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
         logger.warn("isValidIcdValue: diseaseTypeList is null for diagnosis: " + diagnosis + ", there may be a problem");
         return false;
       }
-      if (diseaseTypeList.size() == 0) {
-        logger.debug("isValidIcdValue: diseaseTypeList is empty for diagnosis: " + diagnosis + ", which is presumably unknown");
+      if (diseaseTypeList.size() == 0)
+        // diseaseTypeList is empty for diagnosis, which is presumably unknown");
         return false;
-      }
 
       Map<String, Object> item = diseaseTypeList.get(0);
 

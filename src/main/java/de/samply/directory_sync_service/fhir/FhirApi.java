@@ -6,6 +6,7 @@ import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
 import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
@@ -67,9 +68,17 @@ public class FhirApi {
   private Map<String, List<Patient>> patientsByCollection = null;
   private final IGenericClient fhirClient;
   private final FhirContext ctx;
+  String fhirStoreUrl;
 
   public FhirApi(String fhirStoreUrl) {
     ctx = FhirContext.forR4();
+    // Allow invalid values in resource attributes
+    ctx.setParserErrorHandler(
+            new LenientErrorHandler()
+                    .setErrorOnInvalidValue(false)  // <-- key line
+    );
+
+    this.fhirStoreUrl = fhirStoreUrl;
     IGenericClient client = ctx.newRestfulGenericClient(fhirStoreUrl);
     client.registerInterceptor(new LoggingInterceptor(true));
 
@@ -323,46 +332,52 @@ public class FhirApi {
    * Retrieves all Specimens from the FHIR server and organizes them into a Map based on their Collection ID.
    *
    * @return A Map where keys are Collection IDs and values are Lists of Specimens associated with each Collection ID.
-   * @throws FhirClientConnectionException If there is an issue connecting to the FHIR server.
    */
   private Map<String, List<Specimen>> getAllSpecimensAsMap() {
-    logger.debug("getAllSpecimensAsMap: entered");
+    logger.info("getAllSpecimensAsMap: entered");
 
     Map<String, List<Specimen>> result = new HashMap<String, List<Specimen>>();
 
-    // Use ITransactionTyped instead of returnBundle(Bundle.class)
-    IQuery<IBaseBundle> bundleTransaction = fhirClient.search().forResource(Specimen.class);
-    Bundle bundle = (Bundle) bundleTransaction.execute();
+    try {
+      // Use ITransactionTyped instead of returnBundle(Bundle.class)
+      IQuery<IBaseBundle> bundleTransaction = fhirClient.search().forResource(Specimen.class);
+      Bundle bundle = (Bundle) bundleTransaction.execute();
 
-    logger.debug("getAllSpecimensAsMap: gather specimens");
+      logger.info("getAllSpecimensAsMap: gather specimens");
 
-    // Keep looping until the store has no more specimens.
-    // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
-    int pageNum = 0;
-    do {
-      if (pageNum % 10 == 0)
-        logger.debug("getAllSpecimensAsMap: pageNum: " + pageNum);
+      // Keep looping until the store has no more specimens.
+      // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
+      int pageNum = 0;
+      do {
+        if (pageNum % 10 == 0)
+          logger.info("getAllSpecimensAsMap: pageNum: " + pageNum);
 
-      // Add entries to the result map
-      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-          Specimen specimen = (Specimen) entry.getResource();
-          String collectionId = extractCollectionIdFromSpecimen(specimen);
-          if (!result.containsKey(collectionId))
-              result.put(collectionId, new ArrayList<>());
-          result.get(collectionId).add(specimen);
-      }
+        // Add entries to the result map
+        for (BundleEntryComponent entry : bundle.getEntry()) {
+            Specimen specimen = (Specimen) entry.getResource();
+            String collectionId = extractCollectionIdFromSpecimen(specimen);
+            if (!result.containsKey(collectionId))
+                result.put(collectionId, new ArrayList<>());
+            result.get(collectionId).add(specimen);
+        }
 
-      // Check if there are more pages
-      if (bundle.getLink(Bundle.LINK_NEXT) != null)
-          // Use ITransactionTyped to load the next page
-          bundle = fhirClient.loadPage().next(bundle).execute();
-      else
-          bundle = null;
+        // Check if there are more pages
+        if (bundle.getLink(Bundle.LINK_NEXT) != null)
+            // Use ITransactionTyped to load the next page
+            bundle = fhirClient.loadPage().next(bundle).execute();
+        else
+            bundle = null;
 
-      pageNum++;
-    } while (bundle != null);
+        pageNum++;
+      } while (bundle != null);
+    } catch (Exception e) {
+      logger.warn("getAllSpecimensAsMap: could not retrieve data from FHIR store");
+      logger.warn("getAllSpecimensAsMap: fhirStoreUrl: " + fhirStoreUrl);
+      logger.warn("getAllSpecimensAsMap: httpClient: " + fhirClient.getHttpClient().toString());
+      logger.warn("getAllSpecimensAsMap: exception" + Util.traceFromException(e));
+    }
 
-    logger.debug("getAllSpecimensAsMap: done, result.size(): " + result.size());
+    logger.info("getAllSpecimensAsMap: done, result.size(): " + result.size());
 
     return result;
   }
@@ -485,22 +500,56 @@ public class FhirApi {
 
   /**
    * Extracts a Patient resource from a Specimen resource.
+   *
+   * This works because every Specimen resource contains a reference to a Patient resource.
    * 
    * @param specimen a Specimen resource that contains a reference to a Patient resource
    * @return a Patient resource that matches the reference in the Specimen resource, or null if not found
    */
   public Patient extractPatientFromSpecimen(Specimen specimen) {
+    if (specimen == null) {
+      logger.warn("extractPatientFromSpecimen: specimen is null");
+      return null;
+    }
     Patient patient =  null;
     try {
+      // Make sure that there is a patient (subject) reference and that it is valid.
+      Reference specimenSubject = specimen.getSubject();
+      if (specimenSubject == null) {
+        logger.warn("extractPatientFromSpecimen: specimen subject is null for specimen ID: " + specimen.getIdElement().getIdPart());
+        return null;
+      }
+      String specimenSubjectReference = specimenSubject.getReference();
+      if (specimenSubjectReference == null) {
+        logger.warn("extractPatientFromSpecimen: specimen subject reference is null for specimen ID: " + specimen.getIdElement().getIdPart());
+        return null;
+      }
+      if (specimenSubjectReference.isEmpty()) {
+        logger.warn("extractPatientFromSpecimen: specimen subject reference is empty for specimen ID: " + specimen.getIdElement().getIdPart());
+        return null;
+      }
+      if (!specimenSubjectReference.startsWith("Patient/"))
+        logger.warn("extractPatientFromSpecimen: specimen id does not start with 'Patient/' for specimen ID: " + specimen.getIdElement().getIdPart());
+      else {
+        specimenSubjectReference = specimenSubjectReference.replaceFirst("Patient/", "");
+        if (specimenSubjectReference.isEmpty()) {
+          logger.warn("extractPatientFromSpecimen: after removing 'Patient/', specimen subject reference has become empty for specimen ID: " + specimen.getIdElement().getIdPart());
+          return null;
+        }
+      }
+      logger.info("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
+
+      // Find the Patient with the ID found from the reference in the Specimen.
       patient =  fhirClient
                 .read()
                 .resource(Patient.class)
-                .withId(specimen.getSubject()
-                        .getReference()
-                        .replaceFirst("Patient/", ""))
+                .withId(specimenSubjectReference)
                 .execute();
+      logger.info("extractPatientFromSpecimen: done");
     } catch (Exception e) {
-      logger.warn("extractPatientFromSpecimen: caught exception: " + Util.traceFromException(e));
+      logger.warn("extractPatientFromSpecimen: exception message: " + e.getMessage());
+      logger.warn("extractPatientFromSpecimen: exception: " + e);
+      logger.warn("extractPatientFromSpecimen: exception trace: " + Util.traceFromException(e));
     }
 
     return patient;
@@ -626,6 +675,33 @@ public class FhirApi {
   }
 
   /**
+   * Extracts the collection id from a reference to a collection ID obtained from an extension to Specimen.
+   *
+   * @param reference
+   * @return The collection id.
+   */
+  private String extractCollectionIdFromReference(String reference) {
+    if (reference == null) return null;
+
+    String collectionId = reference;
+    if (reference.matches("^http[^/:]*://.*/.[^/]*$")) {
+      logger.info("extractCollectionIdFromReference: reference is a URL (" + reference + "), using last part of URL as collection ID");
+      // The reference has been written like a URL. Assume that the collection ID
+      // is the last part of the URL
+      String[] collectionIdParts = reference.split("/");
+      collectionId = collectionIdParts[collectionIdParts.length - 1];
+      if (collectionId.isEmpty() && collectionIdParts.length > 1)
+        // The URL ended with a slash, so the collection id is the second to last part
+        collectionId = collectionIdParts[collectionIdParts.length - 2];
+    } else if (reference.startsWith("Organization/")) {
+      // This is the expected case: the reference starts with "Organization/".
+      collectionId = reference.replaceFirst("Organization/", "");
+    }
+
+    return collectionId;
+  }
+
+  /**
    * Extracts the collection id from a Specimen object that has a Custodian extension.
    * The collection id is either a valid Directory collection id or the default value DEFAULT_COLLECTION_ID.
    * If the Specimen object does not have a Custodian extension, the default value is returned.
@@ -645,16 +721,70 @@ public class FhirApi {
     if (extension == null)
       return DEFAULT_COLLECTION_ID;
 
+    String directoryIdentifier = DEFAULT_COLLECTION_ID; // return value
     // Pull the locally-used collection ID from the specimen extension.
     String reference = ((Reference) extension.getValue()).getReference();
-    String localCollectionId = reference.replaceFirst("Organization/", "");
+    String localCollectionId = extractCollectionIdFromReference(reference);
 
-    return extractValidDirectoryIdentifierFromCollection(
-            fhirClient
-                    .read()
-                    .resource(Organization.class)
-                    .withId(localCollectionId)
-                    .execute());
+    logger.debug("extractCollectionIdFromSpecimen: localCollectionId: " + localCollectionId);
+
+    try {
+      Organization collection = fhirClient
+              .read()
+              .resource(Organization.class)
+              .withId(localCollectionId)
+              .execute();
+      directoryIdentifier = extractValidDirectoryIdentifierFromCollection(collection);
+    } catch (Exception e) {
+      logger.warn("extractCollectionIdFromSpecimen: could not get collection with reference " + reference + " and with localCollectionId " + localCollectionId + " from FHIR store, stack trace:\n" + Util.traceFromException(e));
+      List<String> orgPairs = listOrganizations();
+      if (orgPairs.size() == 0) {
+        logger.warn("extractCollectionIdFromSpecimen: no Organizations found in FHIR store");
+      } else {
+        logger.warn("extractCollectionIdFromSpecimen: known Organizations in FHIR store:");
+        orgPairs.forEach(pair -> logger.warn("       {}", pair));
+      }
+      logger.warn("extractCollectionIdFromSpecimen: returning default collection ID: " + DEFAULT_COLLECTION_ID);
+    }
+
+    return directoryIdentifier;
+  }
+
+  /**
+   * Fetches and returns a list of Organization ID/Name pairs as strings.
+   */
+  private List<String> listOrganizations() {
+    List<String> results = new ArrayList<>();
+
+    try {
+      Bundle bundle = fhirClient
+              .search()
+              .forResource(Organization.class)
+              .returnBundle(Bundle.class)
+              .count(50) // page size
+              .execute();
+
+      while (bundle != null && !bundle.getEntry().isEmpty()) {
+        for (BundleEntryComponent entry : bundle.getEntry()) {
+          if (entry.getResource() instanceof Organization org) {
+            String id = org.getIdElement().getIdPart();
+            String name = org.getName() != null ? org.getName() : "<No Name>";
+            results.add(String.format("%s (ID: %s)", name, id));
+          }
+        }
+
+        // Handle pagination if more results exist
+        if (bundle.getLink(Bundle.LINK_NEXT) != null) {
+          bundle = fhirClient.loadPage().next(bundle).execute();
+        } else {
+          break;
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("listOrganizations: could not get list of Organizations from FHIR store, stack trace:\n" + Util.traceFromException(e));
+    }
+
+    return results;
   }
 
   /**
