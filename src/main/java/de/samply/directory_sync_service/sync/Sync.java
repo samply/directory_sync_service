@@ -8,6 +8,7 @@ import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
@@ -108,8 +109,12 @@ public class Sync {
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {
             logger.warn("syncWithDirectory: there was a problem during diagnosis corrections");
-            return false;
+            // Carry on without diagnosis corrections. Note: this may cause problems further
+            // down the line, because without these corrections, Directory sync may try to
+            // pass ICD-10 codes to the Directory that it doesn't recognize.
+            correctedDiagnoses = new HashMap<String, String>();
         }
+
         if (directoryAllowStarModel) {
             // Pull data from the FHIR store and save it in a format suitable for generating
             // star model hypercubes.

@@ -568,6 +568,7 @@ public class FhirApi {
     try {
       // If there are no conditions in the FHIR store, then we don't
       // need to bother checking the patient for conditions.
+      // Cache the result, so that we only need to do the check once.
       if (conditionsPresentInFhirStore == null) {
         int conditionCount = fhirClient
           .search()
@@ -577,15 +578,24 @@ public class FhirApi {
           .execute()
           .getTotal();
         conditionsPresentInFhirStore = conditionCount > 0;
+        logger.info("extractConditionCodesFromPatient: total of all conditions in FHIR store, conditionCount: " + conditionCount);
       }
       if (!conditionsPresentInFhirStore)
         return conditionCodes;
 
       // Build the full reference like "Patient/{id}"
       IdType patientIdElement = patient.getIdElement();
+      if (patientIdElement == null) {
+        logger.warn("extractConditionCodesFromPatient: patient has no id element, returning empty list.");
+        return conditionCodes;
+      }
       String idPart = patientIdElement.getIdPart();
       if (idPart == null) {
-        logger.warn("extractConditionCodesFromPatient: patient has no id, returning empty list.");
+        logger.warn("extractConditionCodesFromPatient: patient has no id part, returning empty list.");
+        return conditionCodes;
+      }
+      if (idPart.isEmpty()) {
+        logger.warn("extractConditionCodesFromPatient: patient has an empty id part, returning empty list.");
         return conditionCodes;
       }
       String patientReference = "Patient/" + idPart;
@@ -599,7 +609,7 @@ public class FhirApi {
               .execute();
 
       if (!bundle.hasEntry()) {
-        logger.warn("extractConditionCodesFromPatient: bundle has no entries, returning empty list.");
+        logger.warn("extractConditionCodesFromPatient: Condition bundle has no entries for patientReference " + patientReference + ", returning empty list.");
         return conditionCodes;
       }
 
