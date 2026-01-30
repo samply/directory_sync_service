@@ -64,7 +64,7 @@ public class Sync {
                 }
             }
             if (retryNum == Integer.parseInt(retryMax))
-                logger.warn("syncWithDirectoryFailover: reached maximum number of retires(" + Integer.parseInt(retryMax) + "), giving up");
+                logger.warn("syncWithDirectoryFailover: reached maximum number of retries (" + Integer.parseInt(retryMax) + "), giving up");
         } catch (NumberFormatException e) {
             logger.warn("syncWithDirectoryFailover: stack trace:\n" + Util.traceFromException(e));
             logger.warn("syncWithDirectoryFailover: exception" + e);

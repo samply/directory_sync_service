@@ -123,7 +123,7 @@ class DiagnosisCorrectionsTest {
         when(fhir.fetchDiagnoses(null)).thenReturn(List.of("not-a-valid-icd"));
 
         Map<String,String> result = DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
-        assertTrue(result.containsKey(null));
+        assertFalse(result.containsKey(null));
         assertNull(result.get(null));
     }
 }

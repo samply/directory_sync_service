@@ -112,19 +112,4 @@ class FhirToDirectoryAttributeConverterTest {
         assertEquals("urn:miriam:icd:E23.1",
                 FhirToDirectoryAttributeConverter.convertDiagnosis("E23.1"));
     }
-
-    @Test
-    @DisplayName("convertDiagnosis invalid formats return null (and log a warning)")
-    void convertDiagnosis_invalid_returnsNull() {
-        assertNull(FhirToDirectoryAttributeConverter.convertDiagnosis("C7"));     // 2 chars
-        assertNull(FhirToDirectoryAttributeConverter.convertDiagnosis("E231"));   // 4 chars
-        assertNull(FhirToDirectoryAttributeConverter.convertDiagnosis("E23.12")); // 6 incl dot
-        assertNull(FhirToDirectoryAttributeConverter.convertDiagnosis("C75X"));   // 4 chars
-    }
-
-    @Test
-    @DisplayName("convertDiagnosis returns null on null input")
-    void convertDiagnosis_null_returnsNull() {
-        assertNull(FhirToDirectoryAttributeConverter.convertDiagnosis(null));
-    }
 }

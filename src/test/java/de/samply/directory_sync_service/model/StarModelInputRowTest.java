@@ -84,13 +84,13 @@ class StarModelInputRowTest {
             row.setHistLoc("E23.1"); // valid -> MIRIAM
             assertEquals("urn:miriam:icd:E23.1", row.asMap().get("hist_loc"));
 
-            // Invalid diagnosis returns null from converter; field becomes null
+            // Invalid diagnosis returns R69 from converter
             row.setHistLoc("WXYZ");
-            assertNull(row.asMap().get("hist_loc"));
+            assertEquals("urn:miriam:icd:R69", row.asMap().get("hist_loc"));
 
             // Passing null to setter is ignored (keeps current null)
             row.setHistLoc(null);
-            assertNull(row.asMap().get("hist_loc"));
+            assertEquals("urn:miriam:icd:R69", row.asMap().get("hist_loc"));
         }
 
         @Test

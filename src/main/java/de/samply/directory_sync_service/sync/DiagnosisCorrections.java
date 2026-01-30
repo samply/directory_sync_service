@@ -39,6 +39,8 @@ public class DiagnosisCorrections {
                     .valueOf(defaultCollectionId)
                     .orElse(null);
 
+            logger.info("generateDiagnosisCorrections: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
+
             // Get all diagnoses from the FHIR store for specimens with identifiable
             // collections and their associated patients.
             List<String> fhirDiagnoses = fhirApi.fetchDiagnoses(defaultBbmriEricCollectionId);
@@ -46,7 +48,8 @@ public class DiagnosisCorrections {
                 logger.warn("Problem getting diagnosis information from FHIR store");
                 return null;
             }
-            logger.debug("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
+
+            logger.info("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
             if (fhirDiagnoses.size() == 0) {
                 logger.warn("generateDiagnosisCorrections: No diagnoses found in FHIR store, no need to continue");
@@ -60,16 +63,22 @@ public class DiagnosisCorrections {
                 correctedDiagnoses.put(miriamDiagnosis, miriamDiagnosis);
             });
 
+            logger.info("generateDiagnosisCorrections: correctedDiagnoses.size(): " + correctedDiagnoses.size());
+
             // Get corrected diagnosis codes from the Directory
             directoryApi.collectDiagnosisCorrections(correctedDiagnoses);
-            logger.debug("generateDiagnosisCorrections: correctedDiagnoses.size(): " + correctedDiagnoses.size());
 
             if (correctedDiagnoses.size() == 0)
                 logger.warn("generateDiagnosisCorrections: No diagnosis corrections generated");
 
+            logger.info("generateDiagnosisCorrections: done");
+
             return correctedDiagnoses;
         } catch (Exception e) {
             logger.warn("generateDiagnosisCorrections - unexpected error: " + Util.traceFromException(e));
+            logger.warn("generateDiagnosisCorrections - exception: " + e);
+            logger.warn("generateDiagnosisCorrections - trace: " + e.getStackTrace());
+            logger.warn("generateDiagnosisCorrections - exception message: " + e.getMessage());
         }
 
         return null;

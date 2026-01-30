@@ -75,20 +75,14 @@ public class FhirToDirectoryAttributeConverter {
      * Converts the given diagnosis attribute to a MIRIAM ICD code if not already in MIRIAM format.
      *
      * @param diagnosis The diagnosis attribute to be converted.
-     * @return The converted diagnosis attribute in MIRIAM ICD format or null if the input is null.
+     * @return The converted diagnosis attribute in MIRIAM ICD format.
      */
     public static String convertDiagnosis(String diagnosis) {
-        if (diagnosis == null)
-            return null;
+        if (diagnosis != null)
+            diagnosis = diagnosis.replaceFirst("^urn:miriam:icd:", "");
 
-        String miriamDiagnosis = null;
-        if (diagnosis.startsWith("urn:miriam:icd:"))
-            miriamDiagnosis = diagnosis;
-        else if (diagnosis.length() == 3 || diagnosis.length() == 5)  // E.g. C75 or E23.1
-            miriamDiagnosis = "urn:miriam:icd:" + diagnosis;
-        else
-            logger.warn("Entities.setDiagnosisAvailable: invalid diagnosis code " + diagnosis);
-        
+        String miriamDiagnosis = "urn:miriam:icd:" + Icd10WhoNormalizer.normalize(diagnosis);
+
         return miriamDiagnosis;
     }
 }
