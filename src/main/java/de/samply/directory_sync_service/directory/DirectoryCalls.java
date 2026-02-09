@@ -77,7 +77,7 @@ public abstract class DirectoryCalls {
       } else {
         logger.warn("executeRequest: entity get HTTP error: URI: " + request.getURI().toString() + ", error: " + response.getStatusLine().getStatusCode() + response.getStatusLine().getReasonPhrase());
         for (Header header: request.getAllHeaders())
-          logger.warn("executeRequest: header: " + header.toString());
+          logger.warn("executeRequest: header: |" + header.toString() + "|");
       }
     } catch (IOException e) {
       logger.warn("executeRequest: entity get exception: URI: " + request.getURI().toString() + ", error: " +  Util.traceFromException(e));

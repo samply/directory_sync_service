@@ -200,14 +200,14 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
       String url = urlCombine(baseUrl, endpoint);
       HttpPost request = new HttpPost(url);
       String token = directoryCredentials.getToken();
-//      logger.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      runGraphqlCommand: token: |" + token + "|");
+      logger.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      runGraphqlCommand: token: |" + token + "|");
       if (token != null && !token.isEmpty())
         request.setHeader("x-molgenis-token", token);
 
       // Create the GraphQL body
       String cleanedCommand = escapeQuotes(removeNewlines(graphqlCommand));
       String wrappedCommand = wrapCommandInQuery(cleanedCommand);
-//      logger.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      runGraphqlCommand: wrappedCommand: |" + wrappedCommand + "|");
+      logger.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      runGraphqlCommand: wrappedCommand: |" + wrappedCommand + "|");
       StringEntity entity = new StringEntity(wrappedCommand, UTF_8);
       request.setEntity(entity);
 

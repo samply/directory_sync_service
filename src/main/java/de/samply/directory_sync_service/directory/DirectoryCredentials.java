@@ -43,7 +43,10 @@ public class DirectoryCredentials {
    * @param token the token to be set
    */
   public void setToken(String token) {
-    this.token = token;
+    if (token == null)
+      this.token = null;
+    else
+      this.token = token.strip();
   }
 
   /**

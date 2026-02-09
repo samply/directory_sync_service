@@ -224,6 +224,7 @@ public abstract class DirectoryApi {
     }
 
     int diagnosisCounter = 0; // for diagnostics only
+    int diagnosisNullCounter = 0;
     int invalidIcdValueCounter = 0;
     int correctedIcdValueCounter = 0;
     int discardedIcdValueCounter = 0;
@@ -231,7 +232,9 @@ public abstract class DirectoryApi {
     for (String diagnosis: diagnoses.keySet()) {
       if (diagnosisCounter%500 == 0)
         logger.debug("collectDiagnosisCorrections: diagnosisCounter: " + diagnosisCounter + ", total diagnoses: " + diagnoses.size());
-      if (!isValidIcdValue(diagnosis)) {
+      if (diagnosis == null)
+        diagnosisNullCounter++;
+      else if (!isValidIcdValue(diagnosis)) {
         // The current disgnosis is not valid, try to correct it by removing
         // any numbers after the period.
         invalidIcdValueCounter++;
@@ -249,7 +252,7 @@ public abstract class DirectoryApi {
       diagnosisCounter++;
     }
 
-    logger.debug("collectDiagnosisCorrections: invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
+    logger.debug("collectDiagnosisCorrections: total diagnoses: " + diagnoses.size() + ", diagnosisNullCounter: " + diagnosisNullCounter + ", invalidIcdValueCounter: " + invalidIcdValueCounter + ", correctedIcdValueCounter: " + correctedIcdValueCounter + ", discardedIcdValueCounter: " + discardedIcdValueCounter);
     if (diagnoses.keySet().size() > 0 && diagnoses.keySet().size() < 5) {
       logger.debug("collectDiagnosisCorrections: corrected diagnoses: ");
       for (String diagnosis : diagnoses.keySet())
