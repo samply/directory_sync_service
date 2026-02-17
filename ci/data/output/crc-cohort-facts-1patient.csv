@@ -1,2 +1,0 @@
-id;sex;disease;age_range;sample_type;number_of_donors;number_of_samples;last_update;collection
-bbmri-eric:factID:EU_BBMRI-ERIC:collection:CRC-Cohort:663481554;FEMALE;urn:miriam:icd:C18.0;Adult;TISSUE_PARAFFIN_EMBEDDED;1;1;2025-04-14;bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort
