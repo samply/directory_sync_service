@@ -107,13 +107,8 @@ public class Sync {
         logger.debug("syncWithDirectory: starting synchronization");
 
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
-        if (correctedDiagnoses == null) {
-            logger.warn("syncWithDirectory: there was a problem during diagnosis corrections");
-            // Carry on without diagnosis corrections. Note: this may cause problems further
-            // down the line, because without these corrections, Directory sync may try to
-            // pass ICD-10 codes to the Directory that it doesn't recognize.
-            correctedDiagnoses = new HashMap<String, String>();
-        }
+        if (correctedDiagnoses.size() == 0)
+            logger.warn("syncWithDirectory: no diagnosis corrections were found");
 
         if (directoryAllowStarModel) {
             // Pull data from the FHIR store and save it in a format suitable for generating

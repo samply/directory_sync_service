@@ -625,7 +625,10 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @param diagnosis The diagnosis code to be validated.
    * @return true if the diagnosis code is a valid ICD value, false if not, or if an error condition was encountered.
    */
-  protected boolean isValidIcdValue(String diagnosis) {
+  public boolean isValidIcdValue(String diagnosis) {
+    if (mockDirectory)
+      return true;
+
     try {
       List<Map<String, Object>> diseaseTypeList = directoryCallsGraphql.runGraphqlQueryReturnList(directoryEndpointsGraphql.getDatabaseDirectoryOntologiesEndpoint(), "DiseaseTypes", "filter: { name: { equals: \"" + diagnosis + "\" } }", new ArrayList<>(List.of("name")));
       if (diseaseTypeList == null) {

@@ -338,7 +338,10 @@ public class DirectoryApiRest extends DirectoryApi {
    * @param diagnosis The diagnosis code to be validated.
    * @return true if the diagnosis code is a valid ICD value, false if not, or if an error condition was encountered.
    */
-  protected boolean isValidIcdValue(String diagnosis) {
+  public boolean isValidIcdValue(String diagnosis) {
+    if (mockDirectory)
+      return true;
+
     String url = directoryEndpointsRest.getDiseaseTypeEndpoint() + "?q=id=='" + diagnosis + "'";
     Map body = (Map) directoryCallsRest.get(url, Map.class);
     if (body != null) {

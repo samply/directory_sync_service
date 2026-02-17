@@ -208,9 +208,10 @@ public abstract class DirectoryApi {
    * @param diagnoses A string map containing diagnoses to be corrected.
    */
   public void collectDiagnosisCorrections(Map<String, String> diagnoses) {
-    if (mockDirectory)
-      // Don't do anything if we're in mock mode
+    if (diagnoses == null) {
+      logger.warn("collectDiagnosisCorrections: diagnoses is null");
       return;
+    }
 
     if (diagnoses.size() == 0) {
       logger.warn("collectDiagnosisCorrections: diagnoses is empty");
@@ -260,7 +261,7 @@ public abstract class DirectoryApi {
     }
   }
 
-  protected abstract boolean isValidIcdValue(String diagnosis);
+  public abstract boolean isValidIcdValue(String diagnosis);
 
   /**
    * Extracts the country code from a given BBMRI ID string. Works for both

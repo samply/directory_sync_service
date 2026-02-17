@@ -52,7 +52,7 @@ class DirectoryApiTest {
         }
 
         @Override
-        protected boolean isValidIcdValue(String diagnosis) {
+        public boolean isValidIcdValue(String diagnosis) {
             return validIcd.contains(diagnosis);
         }
     }
@@ -153,15 +153,6 @@ class DirectoryApiTest {
         assertNull(diagnoses.get("XYZ"));
         assertEquals("E23", diagnoses.get("E23.1"));
         assertEquals("C10", diagnoses.get("C10"));
-    }
-
-    @Test
-    void collectDiagnosisCorrections_noop_whenMockDirectoryTrue() {
-        TestDirectoryApi api = new TestDirectoryApi(true); // mock
-        Map<String,String> diagnoses = new HashMap<>();
-        diagnoses.put("BAD", "BAD");
-        api.collectDiagnosisCorrections(diagnoses);
-        assertEquals("BAD", diagnoses.get("BAD")); // unchanged
     }
 
     // ---------- extractCountryCodeFromBbmriEricId ----------

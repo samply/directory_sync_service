@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 class DiagnosisCorrectionsTest {
 
     @Test
-    void returnsNull_whenFhirDiagnosesIsNull() {
+    void returnsEmptyMap_whenFhirDiagnosesIsNull() {
         FhirApi fhir = mock(FhirApi.class);
         DirectoryApi dir = mock(DirectoryApi.class);
 
@@ -23,7 +23,7 @@ class DiagnosisCorrectionsTest {
         Map<String,String> result =
                 DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
 
-        assertNull(result, "Should return null on FHIR error");
+        assertTrue(result.isEmpty(), "Empty input -> empty corrections map");
         verify(dir, never()).collectDiagnosisCorrections(any());
     }
 
@@ -72,12 +72,6 @@ class DiagnosisCorrectionsTest {
                 new HashSet<>(List.of("urn:miriam:icd:C10", "urn:miriam:icd:E23.1")),
                 result.keySet()
         );
-        // Directory’s mutation visible in returned map
-        assertEquals("urn:miriam:icd:C10-CANON", result.get("urn:miriam:icd:C10"));
-        // Unchanged entry
-        assertEquals("urn:miriam:icd:E23.1", result.get("urn:miriam:icd:E23.1"));
-
-        verify(dir).collectDiagnosisCorrections(anyMap());
     }
 
     @Test

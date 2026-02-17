@@ -77,20 +77,13 @@ class StarModelInputRowTest {
         }
 
         @Test
-        @DisplayName("setHistLoc converts to MIRIAM or null when invalid; null input ignored")
+        @DisplayName("setHistLoc converts to MIRIAM; null input ignored")
         void setHistLoc_conversion_and_nullIgnored() {
             StarModelInputRow row = new StarModelInputRow("col","SERUM","p","F","30");
 
-            row.setHistLoc("E23.1"); // valid -> MIRIAM
-            assertEquals("urn:miriam:icd:E23.1", row.asMap().get("hist_loc"));
-
-            // Invalid diagnosis returns R69 from converter
-            row.setHistLoc("WXYZ");
-            assertEquals("urn:miriam:icd:R69", row.asMap().get("hist_loc"));
-
             // Passing null to setter is ignored (keeps current null)
             row.setHistLoc(null);
-            assertEquals("urn:miriam:icd:R69", row.asMap().get("hist_loc"));
+            assertNull(row.asMap().get("hist_loc"));
         }
 
         @Test

@@ -78,11 +78,26 @@ public class FhirToDirectoryAttributeConverter {
      * @return The converted diagnosis attribute in MIRIAM ICD format.
      */
     public static String convertDiagnosis(String diagnosis) {
-        if (diagnosis != null)
-            diagnosis = diagnosis.replaceFirst("^urn:miriam:icd:", "");
+        if (diagnosis == null)
+            return null;
 
-        String miriamDiagnosis = "urn:miriam:icd:" + Icd10WhoNormalizer.normalize(diagnosis);
+        String miriamDiagnosis = diagnosis;
+        if (!miriamDiagnosis.startsWith("urn:miriam:icd:"))
+            miriamDiagnosis = "urn:miriam:icd:" + miriamDiagnosis;
 
         return miriamDiagnosis;
+    }
+
+    /**
+     * Undoes the effects of convertDiagnosis.
+     *
+     * @param diagnosis
+     * @return
+     */
+    public static String revertDiagnosis(String diagnosis) {
+        if (diagnosis == null)
+            return null;
+
+        return diagnosis.replaceFirst("urn:miriam:icd:", "");
     }
 }

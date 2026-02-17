@@ -221,7 +221,7 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
    * @return
    */
   @Override
-  protected boolean isValidIcdValue(String diagnosis) {
+  public boolean isValidIcdValue(String diagnosis) {
     return true;
   }
 }
