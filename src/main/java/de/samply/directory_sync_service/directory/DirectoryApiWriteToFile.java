@@ -214,14 +214,105 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
     return true;
   }
 
+//  /**
+//   * Dummy operation.
+//   *
+//   * @param diagnosis
+//   * @return
+//   */
+//  @Override
+//  public boolean isValidIcdValue(String diagnosis) {
+//    return true;
+//  }
   /**
-   * Dummy operation.
+   * Dummy ICD-10 validation method used for testing purposes.
    *
-   * @param diagnosis
-   * @return
+   * <p>This method does <strong>not</strong> perform real ICD-10 validation.
+   * Instead, it applies a deterministic rule so that some codes are accepted
+   * and some are rejected in a predictable way.</p>
+   *
+   * <p>The expected input format is:</p>
+   * <pre>
+   *     urn:miriam:icd:&lt;ICD_CODE&gt;
+   * </pre>
+   *
+   * <p>Validation rules:</p>
+   * <ul>
+   *   <li>The leading prefix {@code "urn:miriam:icd:"} is removed (case-insensitive).</li>
+   *   <li>If the ICD code contains a decimal point:
+   *       <ul>
+   *         <li>The numeric value after the decimal point is parsed.</li>
+   *         <li>The method returns {@code true} if that number is even,
+   *             {@code false} if it is odd.</li>
+   *       </ul>
+   *   </li>
+   *   <li>If the ICD code does not contain a decimal point:
+   *       <ul>
+   *         <li>The numeric portion after the leading letter is parsed.</li>
+   *         <li>The method returns {@code true} if that number is even,
+   *             {@code false} if it is odd.</li>
+   *       </ul>
+   *   </li>
+   *   <li>If parsing fails or the input is malformed, {@code false} is returned.</li>
+   * </ul>
+   *
+   * <p>Examples:</p>
+   * <ul>
+   *   <li>{@code urn:miriam:icd:C75.4} → {@code true}</li>
+   *   <li>{@code urn:miriam:icd:C75.5} → {@code false}</li>
+   *   <li>{@code urn:miriam:icd:D62} → {@code true}</li>
+   *   <li>{@code urn:miriam:icd:D63} → {@code false}</li>
+   * </ul>
+   *
+   * <p>This method is intended solely for controlled test scenarios and
+   * should not be used for real medical validation.</p>
+   *
+   * @param diagnosis the ICD-10 URN string to validate
+   * @return {@code true} if the deterministic parity rule evaluates to even,
+   *         {@code false} otherwise
    */
   @Override
   public boolean isValidIcdValue(String diagnosis) {
-    return true;
+    if (diagnosis == null) {
+      return false;
+    }
+
+    String prefix = "urn:miriam:icd:";
+    String value = diagnosis;
+
+    // Strip prefix (case-insensitive)
+    if (value.regionMatches(true, 0, prefix, 0, prefix.length())) {
+      value = value.substring(prefix.length());
+    }
+
+    if (value.isEmpty()) {
+      return false;
+    }
+
+    int dotIndex = value.indexOf('.');
+
+    try {
+      if (dotIndex >= 0) {
+        // Case: decimal exists → check number after dot
+        String decimalPart = value.substring(dotIndex + 1);
+        if (decimalPart.isEmpty()) {
+          return false;
+        }
+
+        int number = Integer.parseInt(decimalPart);
+        return number % 2 == 0;  // true if even
+      } else {
+        // No decimal → check numeric part after first letter
+        if (value.length() < 2) {
+          return false;
+        }
+
+        String numberPart = value.substring(1); // skip leading letter
+        int number = Integer.parseInt(numberPart);
+        return number % 2 == 0;  // true if even
+      }
+    } catch (NumberFormatException e) {
+      return false; // non-numeric values fail
+    }
   }
 }
