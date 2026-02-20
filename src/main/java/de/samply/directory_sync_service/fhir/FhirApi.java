@@ -1175,6 +1175,8 @@ public class FhirApi {
    * <p>The method calculates the difference between the current date and the patient's birth date in years.
    * If the current date is before the patient's birthday in the current year, the age is adjusted accordingly.
    *
+   * Note: if the age is specified in an extension, this method will not see it.
+   *
    * @param patient The {@link Patient} object whose age is to be determined.
    * @return The patient's age in years, or {@code null} if the birth date is not available.
    */

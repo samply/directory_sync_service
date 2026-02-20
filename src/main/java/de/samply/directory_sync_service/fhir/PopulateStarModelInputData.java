@@ -144,7 +144,7 @@ public class PopulateStarModelInputData {
         if (birthDate == null) {
           if (nullAgeCounter++ < 5) { // Don't show this warning too many times
             logger.warn("determinePatientAgeAtCollection: patient.getBirthDate() is null, returning null.");
-            logger.warn("determinePatientAgeAtCollection: patient: " + Util.jsonStringFomObject(patient));
+            logger.warn("determinePatientAgeAtCollection: patient: " + patient.getIdElement().getIdPart());
           }
           return null;
         }
