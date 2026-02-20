@@ -118,7 +118,7 @@ public class Sync {
                 logger.warn("syncWithDirectory: Problem getting star model information from FHIR store");
                 return false;
             }
-            logger.debug("syncWithDirectory: number of collection IDs: " + starModelInput.getInputCollectionIds().size());
+            logger.info("syncWithDirectory: number of collection IDs: " + starModelInput.getInputCollectionIds().size());
 
             // Send fact tables to Directory
             FactTable factTable = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInput, directoryMinDonors, directoryMaxFacts);

@@ -35,7 +35,10 @@ public class CreateFactTablesFromStarModelInputData {
      */
     public static FactTable createFactTables(StarModelInput starModelInput, int maxFacts) {
         FactTable factTable = new FactTable();
-        for (String collectionId: starModelInput.getInputCollectionIds()) {
+        List<String> collectionIds = starModelInput.getInputCollectionIds();
+        if (collectionIds.size() == 0)
+            logger.warn("createFactTables: no collection IDs in starModelInput");
+        for (String collectionId: collectionIds) {
             List<Map<String, String>> factTableFinal = createFactTableFinal(collectionId,
                     starModelInput.getMinDonors(),
                     maxFacts,

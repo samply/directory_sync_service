@@ -59,7 +59,7 @@ public class PopulateStarModelInputData {
     if (specimensByCollection.keySet().size() ==0)
       logger.warn("populate: specimensByCollection.keySet() is empty");
     for (String collectionId: specimensByCollection.keySet()) {
-      logger.debug("populate: collectionId: " + collectionId);
+      logger.info("populate: collectionId: " + collectionId);
       populateCollection(starModelInput, collectionId, specimensByCollection.get(collectionId));
     }
 
@@ -121,6 +121,8 @@ public class PopulateStarModelInputData {
     StarModelInputRow row = new StarModelInputRow(collectionId, material, patientId, sex, age);
 
     List<String> diagnoses = extractDiagnosesFromPatientAndSpecimen(patient, specimen);
+
+    logger.info("populateSpecimen: diagnoses.size(): " + diagnoses.size());
 
     // Add all of the collected information to the input data table.
     for (String diagnosis: diagnoses)
