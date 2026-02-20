@@ -87,17 +87,4 @@ public class FhirToDirectoryAttributeConverter {
 
         return miriamDiagnosis;
     }
-
-    /**
-     * Undoes the effects of convertDiagnosis.
-     *
-     * @param diagnosis
-     * @return
-     */
-    public static String revertDiagnosis(String diagnosis) {
-        if (diagnosis == null)
-            return null;
-
-        return diagnosis.replaceFirst("urn:miriam:icd:", "");
-    }
 }

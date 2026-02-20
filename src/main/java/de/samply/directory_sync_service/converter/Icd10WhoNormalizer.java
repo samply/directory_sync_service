@@ -17,7 +17,7 @@ public class Icd10WhoNormalizer {
     /**
      * Regular expression for valid ICD-10 (WHO) codes.
      */
-    private static final Pattern ICD10_WHO_PATTERN = Pattern.compile("^[A-TV-Z]\\d{2}(?:\\.\\d{1,2})?$");
+    private static final Pattern ICD10_WHO_PATTERN = Pattern.compile("^[A-Z]\\d{2}(?:\\.\\d{1,2})?$");
 
     private static final String UNKNOWN_CODE = "R69";
 
@@ -37,6 +37,12 @@ public class Icd10WhoNormalizer {
     public static String normalize(String raw) {
         if (raw == null) {
             logFallback(null, "input was null");
+            return UNKNOWN_CODE;
+        }
+
+        // If the code contains no numeric characters, it is definitely not an ICD10 code
+        if (!raw.matches(".*\\d.*")) {
+            logFallback(null, "input contains no numeric characters");
             return UNKNOWN_CODE;
         }
 
@@ -72,11 +78,6 @@ public class Icd10WhoNormalizer {
         }
 
         char letter = s.charAt(0);
-        if (letter == 'U') {
-            logFallback(raw, "code starts with reserved letter 'U'");
-            return UNKNOWN_CODE;
-        }
-
         String digits = s.substring(1).replaceAll("\\D", "");
         if (digits.length() < 2) {
             logFallback(raw, "fewer than two digits after leading letter");

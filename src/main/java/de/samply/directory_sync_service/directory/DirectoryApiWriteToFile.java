@@ -214,16 +214,6 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
     return true;
   }
 
-//  /**
-//   * Dummy operation.
-//   *
-//   * @param diagnosis
-//   * @return
-//   */
-//  @Override
-//  public boolean isValidIcdValue(String diagnosis) {
-//    return true;
-//  }
   /**
    * Dummy ICD-10 validation method used for testing purposes.
    *

@@ -56,12 +56,6 @@ class Icd10WhoNormalizerTest {
     }
 
     @Test
-    void normalize_rejectsReservedU_andReturnsR69() {
-        assertEquals("R69", Icd10WhoNormalizer.normalize("U07.1"));
-        assertEquals("R69", Icd10WhoNormalizer.normalize("u07.1"));
-    }
-
-    @Test
     void normalize_requiresTwoDigitsAfterLetter_otherwiseR69() {
         assertEquals("R69", Icd10WhoNormalizer.normalize("C7"));
         assertEquals("R69", Icd10WhoNormalizer.normalize("C."));
@@ -99,7 +93,6 @@ class Icd10WhoNormalizerTest {
 
     @Test
     void isValid_rejectsInvalidForms() {
-        assertFalse(Icd10WhoNormalizer.isValid("U07.1"));    // excluded
         assertFalse(Icd10WhoNormalizer.isValid("C7"));       // too short
         assertFalse(Icd10WhoNormalizer.isValid("C750"));     // missing dot
         assertFalse(Icd10WhoNormalizer.isValid("C75."));     // empty decimal

@@ -221,7 +221,6 @@ public class Collection {
         miriamDiagnosis = "urn:miriam:icd:" + diagnosis;
       if (correctedDiagnoses.containsKey(miriamDiagnosis) && correctedDiagnoses.get(miriamDiagnosis) != null) {
         String correctedDiagnosis = correctedDiagnoses.get(miriamDiagnosis);
-        logger.debug("applyDiagnosisCorrections: original diagnosis: " + miriamDiagnosis + ", corrected diagnosis: " + correctedDiagnosis);
 
         // Strip MIRIAM part of diagnosis before adding to list
         String plainCorrectedDiagnosis = correctedDiagnosis.substring(15);

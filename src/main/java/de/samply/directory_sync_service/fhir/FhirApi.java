@@ -1006,10 +1006,43 @@ public class FhirApi {
    * It then extracts diagnoses from Specimen extensions and Patient condition codes, eliminating duplicates,
    * and combines the results into a list of unique diagnoses.
    *
+   * @param defaultCollectionId The BBMRI ERIC collection ID to fetch specimens and diagnoses.
+   * @return a List of unique diagnoses.
+   */
+  public List<String> fetchDiagnoses(String defaultCollectionId) {
+    Map<String, String> correctedDiagnoses = new HashMap<String, String>();
+    // Convert string version of collection ID into a BBMRI ERIC ID.
+    BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+            .valueOf(defaultCollectionId)
+            .orElse(null);
+
+    logger.info("generateDiagnosisCorrections: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
+
+    // Get all diagnoses from the FHIR store for specimens with identifiable
+    // collections and their associated patients.
+    List<String> fhirDiagnoses = fetchDiagnoses(defaultBbmriEricCollectionId);
+    if (fhirDiagnoses == null) {
+      logger.warn("Problem getting diagnosis information from FHIR store");
+      return null;
+    }
+
+    logger.info("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
+
+    return fhirDiagnoses;
+  }
+
+  /**
+   * Fetches diagnoses from Specimens and Patients to which collections can be assigned.
+   * <p>
+   * This method retrieves specimens grouped by collection.
+   * <p>
+   * It then extracts diagnoses from Specimen extensions and Patient condition codes, eliminating duplicates,
+   * and combines the results into a list of unique diagnoses.
+   *
    * @param defaultBbmriEricCollectionId The BBMRI ERIC collection ID to fetch specimens and diagnoses.
    * @return a List of unique diagnoses.
    */
-  public List<String> fetchDiagnoses(BbmriEricId defaultBbmriEricCollectionId) {
+  private List<String> fetchDiagnoses(BbmriEricId defaultBbmriEricCollectionId) {
     logger.debug("fetchDiagnoses: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
     // Group specimens according to collection.
     Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);

@@ -1,123 +1,212 @@
 package de.samply.directory_sync_service.sync;
 
+import de.samply.directory_sync_service.converter.FhirToDirectoryAttributeConverter;
+import de.samply.directory_sync_service.converter.Icd10WhoNormalizer;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.fhir.FhirApi;
-import de.samply.directory_sync_service.model.BbmriEricId;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class DiagnosisCorrectionsTest {
 
-    @Test
-    void returnsEmptyMap_whenFhirDiagnosesIsNull() {
-        FhirApi fhir = mock(FhirApi.class);
-        DirectoryApi dir = mock(DirectoryApi.class);
+    @Mock
+    private FhirApi fhirApi;
 
-        when(fhir.fetchDiagnoses(null)).thenReturn(null);
-
-        Map<String,String> result =
-                DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
-
-        assertTrue(result.isEmpty(), "Empty input -> empty corrections map");
-        verify(dir, never()).collectDiagnosisCorrections(any());
-    }
+    @Mock
+    private DirectoryApi directoryApi;
 
     @Test
-    void returnsEmptyMap_andSkipsDirectoryCall_whenFhirDiagnosesEmpty() {
-        FhirApi fhir = mock(FhirApi.class);
-        DirectoryApi dir = mock(DirectoryApi.class);
+    void returnsEmptyMapWhenFhirDiagnosesIsNull() {
+        when(fhirApi.fetchDiagnoses("col")).thenReturn(null);
 
-        when(fhir.fetchDiagnoses(null)).thenReturn(Collections.emptyList());
-
-        Map<String,String> result =
-                DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
+        Map<String, String> result =
+                DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, "col");
 
         assertNotNull(result);
-        assertTrue(result.isEmpty(), "Empty input -> empty corrections map");
-        verify(dir, never()).collectDiagnosisCorrections(any());
+        assertTrue(result.isEmpty());
+        verify(fhirApi).fetchDiagnoses("col");
+        verifyNoInteractions(directoryApi);
     }
 
     @Test
-    void convertsIcdToMiriam_thenDirectoryMayAdjustMappings() {
-        FhirApi fhir = mock(FhirApi.class);
-        DirectoryApi dir = mock(DirectoryApi.class);
+    void returnsNullOnException() {
+        when(fhirApi.fetchDiagnoses(any())).thenThrow(new RuntimeException("boom"));
 
-        // FHIR returns plain ICD and already-MIRIAM, with a duplicate
-        when(fhir.fetchDiagnoses(null)).thenReturn(List.of(
-                "C10",                           // plain ICD
-                "urn:miriam:icd:E23.1",          // already MIRIAM
-                "C10"                            // duplicate
-        ));
+        Map<String, String> result =
+                DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, "col");
 
-        // Directory adjusts one of the entries (simulating a normalization/correction)
-        doAnswer(inv -> {
-            @SuppressWarnings("unchecked")
-            Map<String,String> map = (Map<String, String>) inv.getArguments()[0];
-            // change value for C10 → some canonicalized target
-            map.put("urn:miriam:icd:C10", "urn:miriam:icd:C10-CANON");
-            return null;
-        }).when(dir).collectDiagnosisCorrections(anyMap());
-
-        Map<String,String> result =
-                DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
-
-        assertNotNull(result);
-        // Expect deduped MIRIAM keys only
-        assertEquals(
-                new HashSet<>(List.of("urn:miriam:icd:C10", "urn:miriam:icd:E23.1")),
-                result.keySet()
-        );
+        assertNull(result);
     }
 
     @Test
-    void passesParsedBbmriEricId_toFetchDiagnoses_whenDefaultCollectionIdProvided() {
-        FhirApi fhir = mock(FhirApi.class);
-        DirectoryApi dir = mock(DirectoryApi.class);
+    void leavesValidDiagnosesUntouched() {
+        List<String> fhirDiagnoses = Arrays.asList("raw1", "raw2");
+        when(fhirApi.fetchDiagnoses(null)).thenReturn(fhirDiagnoses);
 
-        // Any non-empty list so the method continues past the early-return
-        when(fhir.fetchDiagnoses(any())).thenReturn(List.of("C10"));
-        doAnswer(inv -> null).when(dir).collectDiagnosisCorrections(anyMap());
+        try (MockedStatic<FhirToDirectoryAttributeConverter> mocked = mockStatic(FhirToDirectoryAttributeConverter.class)) {
+            mocked.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw1"))
+                    .thenReturn("urn:miriam:icd:C75.4");
+            mocked.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw2"))
+                    .thenReturn("urn:miriam:icd:D62");
 
-        String defaultCollectionId = "bbmri-eric:ID:DE_123";
-        DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, defaultCollectionId);
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.4")).thenReturn(true);
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:D62")).thenReturn(true);
 
-        ArgumentCaptor<BbmriEricId> captor = ArgumentCaptor.forClass(BbmriEricId.class);
-        verify(fhir).fetchDiagnoses(captor.capture());
-        BbmriEricId id = captor.getValue();
-        assertNotNull(id);
-        assertEquals("DE", id.getCountryCode(), "Country code parsed from defaultCollectionId");
+            Map<String, String> result =
+                    DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, null);
+
+            assertEquals(2, result.size());
+            assertEquals("urn:miriam:icd:C75.4", result.get("urn:miriam:icd:C75.4"));
+            assertEquals("urn:miriam:icd:D62", result.get("urn:miriam:icd:D62"));
+
+            verify(directoryApi).isValidIcdValue("urn:miriam:icd:C75.4");
+            verify(directoryApi).isValidIcdValue("urn:miriam:icd:D62");
+        }
     }
 
     @Test
-    void passesNull_toFetchDiagnoses_whenDefaultCollectionIdIsNull() {
-        FhirApi fhir = mock(FhirApi.class);
-        DirectoryApi dir = mock(DirectoryApi.class);
+    void invalidDiagnosis_correctedByNormalizedCode_whenNormalizedBecomesValid() {
+        when(fhirApi.fetchDiagnoses(null)).thenReturn(List.of("raw"));
 
-        when(fhir.fetchDiagnoses(null)).thenReturn(List.of("C10"));
-        doAnswer(inv -> null).when(dir).collectDiagnosisCorrections(anyMap());
+        try (MockedStatic<FhirToDirectoryAttributeConverter> conv = mockStatic(FhirToDirectoryAttributeConverter.class);
+             MockedStatic<Icd10WhoNormalizer> norm = mockStatic(Icd10WhoNormalizer.class)) {
 
-        DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
+            // initial conversion
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw"))
+                    .thenReturn("urn:miriam:icd:C75.5"); // invalid
 
-        verify(fhir).fetchDiagnoses(isNull());
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.5")).thenReturn(false);
+
+            // normalization path
+            norm.when(() -> Icd10WhoNormalizer.normalize("raw")).thenReturn("C75.4");
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("C75.4"))
+                    .thenReturn("urn:miriam:icd:C75.4");
+
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.4")).thenReturn(true);
+
+            Map<String, String> result =
+                    DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, null);
+
+            assertEquals(1, result.size());
+            assertEquals("urn:miriam:icd:C75.4", result.get("urn:miriam:icd:C75.5"));
+        }
     }
 
     @Test
-    void throwsWhenConverterReturnsNull_documentingCurrentBehavior() {
-        // WARNING: This documents current implementation. If you later guard against nulls,
-        // update the test to reflect the new behavior.
-        FhirApi fhir = mock(FhirApi.class);
-        DirectoryApi dir = mock(DirectoryApi.class);
+    void invalidDiagnosis_correctedToNormalizedCategory_whenNormalizedInvalidButCategoryValid() {
+        when(fhirApi.fetchDiagnoses(null)).thenReturn(List.of("raw"));
 
-        // A value that FhirToDirectoryAttributeConverter.convertDiagnosis() would return null for
-        when(fhir.fetchDiagnoses(null)).thenReturn(List.of("not-a-valid-icd"));
+        try (MockedStatic<FhirToDirectoryAttributeConverter> conv = mockStatic(FhirToDirectoryAttributeConverter.class);
+             MockedStatic<Icd10WhoNormalizer> norm = mockStatic(Icd10WhoNormalizer.class)) {
 
-        Map<String,String> result = DiagnosisCorrections.generateDiagnosisCorrections(fhir, dir, null);
-        assertFalse(result.containsKey(null));
-        assertNull(result.get(null));
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw"))
+                    .thenReturn("urn:miriam:icd:C75.5"); // invalid
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.5")).thenReturn(false);
+
+            // normalization returns a code that still won't validate as full code
+            norm.when(() -> Icd10WhoNormalizer.normalize("raw")).thenReturn("C75.51");
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("C75.51"))
+                    .thenReturn("urn:miriam:icd:C75.51");
+
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.51")).thenReturn(false);
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75")).thenReturn(true); // category valid
+
+            Map<String, String> result =
+                    DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, null);
+
+            assertEquals("urn:miriam:icd:C75", result.get("urn:miriam:icd:C75.5"));
+        }
+    }
+
+    @Test
+    void invalidDiagnosis_correctedToOriginalCategory_whenNormalizedPathFailsButOriginalCategoryValid() {
+        when(fhirApi.fetchDiagnoses(null)).thenReturn(List.of("raw"));
+
+        try (MockedStatic<FhirToDirectoryAttributeConverter> conv = mockStatic(FhirToDirectoryAttributeConverter.class);
+             MockedStatic<Icd10WhoNormalizer> norm = mockStatic(Icd10WhoNormalizer.class)) {
+
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw"))
+                    .thenReturn("urn:miriam:icd:C75.5"); // invalid
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.5")).thenReturn(false);
+
+            // normalized code -> still invalid, and its category invalid too
+            norm.when(() -> Icd10WhoNormalizer.normalize("raw")).thenReturn("C75.51");
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("C75.51"))
+                    .thenReturn("urn:miriam:icd:C75.51");
+
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.51")).thenReturn(false);
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75")).thenReturn(false);
+
+            // original category check succeeds
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75")).thenReturn(true);
+
+            Map<String, String> result =
+                    DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, null);
+
+            assertEquals("urn:miriam:icd:C75", result.get("urn:miriam:icd:C75.5"));
+        }
+    }
+
+    @Test
+    void invalidDiagnosis_becomesNull_whenNoCategoryValid() {
+        when(fhirApi.fetchDiagnoses(null)).thenReturn(List.of("raw"));
+
+        try (MockedStatic<FhirToDirectoryAttributeConverter> conv = mockStatic(FhirToDirectoryAttributeConverter.class);
+             MockedStatic<Icd10WhoNormalizer> norm = mockStatic(Icd10WhoNormalizer.class)) {
+
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw"))
+                    .thenReturn("urn:miriam:icd:C75.5"); // invalid
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.5")).thenReturn(false);
+
+            norm.when(() -> Icd10WhoNormalizer.normalize("raw")).thenReturn("C75.51");
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("C75.51"))
+                    .thenReturn("urn:miriam:icd:C75.51");
+
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.51")).thenReturn(false);
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75")).thenReturn(false);
+
+            // original category also invalid
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75")).thenReturn(false);
+
+            Map<String, String> result =
+                    DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, null);
+
+            assertTrue(result.containsKey("urn:miriam:icd:C75.5"));
+            assertNull(result.get("urn:miriam:icd:C75.5"));
+        }
+    }
+
+    @Test
+    void duplicatesOverwriteInMap() {
+        when(fhirApi.fetchDiagnoses(null)).thenReturn(List.of("raw1", "raw2"));
+
+        try (MockedStatic<FhirToDirectoryAttributeConverter> conv = mockStatic(FhirToDirectoryAttributeConverter.class)) {
+            // both raw values convert to same MIRIAM code
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw1"))
+                    .thenReturn("urn:miriam:icd:C75.4");
+            conv.when(() -> FhirToDirectoryAttributeConverter.convertDiagnosis("raw2"))
+                    .thenReturn("urn:miriam:icd:C75.4");
+
+            when(directoryApi.isValidIcdValue("urn:miriam:icd:C75.4")).thenReturn(true);
+
+            Map<String, String> result =
+                    DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, null);
+
+            // only one key remains
+            assertEquals(1, result.size());
+            assertEquals("urn:miriam:icd:C75.4", result.get("urn:miriam:icd:C75.4"));
+        }
     }
 }
+

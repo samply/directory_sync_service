@@ -133,28 +133,6 @@ class DirectoryApiTest {
         assertEquals(List.of("DE","DE"), api.deleteCountryCodes);
     }
 
-    // ---------- collectDiagnosisCorrections ----------
-
-    @Test
-    void collectDiagnosisCorrections_truncatesOrNulls_invalidCodes() {
-        TestDirectoryApi api = new TestDirectoryApi(false);
-        // Valid codes: C10 and E23 — note no subcodes
-        api.validIcd = Set.of("C10", "E23");
-
-        Map<String,String> diagnoses = new HashMap<>();
-        diagnoses.put("C10.9", "C10.9"); // invalid → truncate to C10
-        diagnoses.put("XYZ",   "XYZ");   // invalid → null
-        diagnoses.put("E23.1", "E23.1"); // invalid → truncate to E23
-        diagnoses.put("C10",   "C10");   // valid → unchanged
-
-        api.collectDiagnosisCorrections(diagnoses);
-
-        assertEquals("C10", diagnoses.get("C10.9"));
-        assertNull(diagnoses.get("XYZ"));
-        assertEquals("E23", diagnoses.get("E23.1"));
-        assertEquals("C10", diagnoses.get("C10"));
-    }
-
     // ---------- extractCountryCodeFromBbmriEricId ----------
 
     @Test
