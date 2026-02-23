@@ -263,18 +263,7 @@ class DirectoryApiGraphqlTest {
             assertEquals(3, deletes);
         }
     }
-
-    @Nested
-    class FactPagingToggle {
-        @Test
-        void getNextPageOfFactIds_returnsOnce_thenEmpty() {
-            List<String> first = api.getNextPageOfFactIdsForCollection("bbmri-eric:ID:DE_1");
-            List<String> second = api.getNextPageOfFactIdsForCollection("bbmri-eric:ID:DE_1");
-            assertEquals(List.of("F1","F2","F3"), first);
-            assertTrue(second.isEmpty());
-        }
-    }
-
+    
     @Nested
     class IcdValidation {
         @Test

@@ -545,7 +545,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
     getFactPageToggle = true;
 
     try {
-      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), "CollectionFacts", null, new ArrayList<>(List.of("id")));
+      ArrayList<String> attributeNames = new ArrayList<>(List.of("id collection { id }"));
+      List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), "CollectionFacts", null, attributeNames);
       if (collectionFactsList == null) {
         logger.warn("getNextPageOfFactIdsForCollection: collectionFactsList is null for collectionId: " + collectionId + ", there may be a problem");
         return null;
@@ -557,17 +558,28 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
       for (Map<String, Object> item : collectionFactsList) {
         if (item == null) {
-          logger.warn("getNextPageOfFactIdsForCollection: item is null");
-          return null;
-        }
-        if (!item.containsKey("id")) {
-          logger.warn("getNextPageOfFactIdsForCollection: id key missing from item");
-          return null;
+          logger.warn("getNextPageOfFactIdsForCollection: item is null, skipping");
+          continue;
         }
 
-        String collectionFactsId = (String) item.get("id");
+        String itemId = getIdFromItem(item);
+        if (itemId == null) {
+          logger.warn("getNextPageOfFactIdsForCollection: itemId is null, skipping");
+          continue;
+        }
 
-        factIds.add(collectionFactsId);
+        String itemCollectionId = getCollectionIdFromItem(item);
+        if (itemCollectionId == null) {
+          logger.warn("getNextPageOfFactIdsForCollection: itemCollectionId is null, skipping");
+          continue;
+        }
+
+        logger.debug("getNextPageOfFactIdsForCollection: itemId: " + itemId + ", collectionId: " + collectionId + ", itemCollectionId: " + itemCollectionId);
+
+        // Try to ensure that we are only supplying fact IDs relevant to the
+        // collection
+        if (itemCollectionId.equals(collectionId))
+          factIds.add(itemId);
       }
     } catch (Exception e) {
       logger.warn("getNextPageOfFactIdsForCollection: Exception during biobank import: " + Util.traceFromException(e));
@@ -575,6 +587,59 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     return factIds;
+  }
+
+  private String getIdFromItem(Map<String, Object> item) {
+    if (!item.containsKey("id")) {
+      logger.warn("getIdFromItem: id key missing from item, skipping");
+      return null;
+    }
+
+    logger.debug("getIdFromItem: ------------------------------------------- item: " + Util.jsonStringFomObject(item));
+
+    String id = (String) item.get("id");
+
+    if (id == null) {
+      logger.warn("getIdFromItem: id is null, skipping");
+      return null;
+    }
+    if (id.isEmpty()) {
+      logger.warn("getIdFromItem: id is empty, skipping");
+      return null;
+    }
+
+    return id;
+  }
+
+  private String getCollectionIdFromItem(Map<String, Object> item) {
+    if (!item.containsKey("collection")) {
+      logger.warn("getCollectionFromItem: id key missing from item");
+      return null;
+    }
+
+    if (!(item.get("collection") instanceof Map)) {
+      logger.warn("getCollectionFromItem: collection is not a map");
+      return null;
+    }
+
+    Map<String, String> collection = ((Map<String, String>) item.get("collection"));
+    if (!collection.containsKey("id")) {
+      logger.warn("getCollectionFromItem: id key missing from collection");
+      return null;
+    }
+
+    String id = collection.get("id");
+
+    if (id == null) {
+      logger.warn("getCollectionFromItem: collection id is null");
+      return null;
+    }
+    if (id.isEmpty()) {
+      logger.warn("getCollectionFromItem: collection id is empty");
+      return null;
+    }
+
+    return id;
   }
 
   /**
@@ -695,7 +760,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // If there is a database called e.g. ERIC-DE, use that.
     database = "ERIC-" + countryCode;
     if (databases.contains(database)) {
-      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      logger.info("getDatabaseEricEndpoint: database " + database + " exists");
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
@@ -704,7 +769,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // Look to see if there is a database that ends with the country code and use if found
     for (String db : databases) {
       if (db.endsWith("-" + countryCode)) {
-        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        logger.info("getDatabaseEricEndpoint: database " + db + " exists");
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
         databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
         return databaseEricEndpoint;
@@ -714,7 +779,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // If there is a database called BBMRI-ERIC, use that.
     database = "BBMRI-ERIC";
     if (databases.contains(database)) {
-      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      logger.info("getDatabaseEricEndpoint: database " + database + " exists");
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
@@ -723,7 +788,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // If there is a database called ERIC, use that.
     database = "ERIC";
     if (databases.contains(database)) {
-      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      logger.info("getDatabaseEricEndpoint: database " + database + " exists");
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
@@ -732,7 +797,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // If there is a database with "ERIC" in its name, use that.
     for (String db : databases) {
       if (db.contains("ERIC")) {
-        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        logger.info("getDatabaseEricEndpoint: database " + db + " exists");
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
         databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
         return databaseEricEndpoint;
@@ -742,7 +807,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // If there is a database called BBMRI, use that.
     database = "BBMRI";
     if (databases.contains(database)) {
-      logger.debug("getDatabaseEricEndpoint: database " + database + " exists");
+      logger.info("getDatabaseEricEndpoint: database " + database + " exists");
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
       databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
       return databaseEricEndpoint;
@@ -751,7 +816,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // If there is a database with "BBMRI" in its name, use that.
     for (String db : databases) {
       if (db.contains("BBMRI")) {
-        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        logger.info("getDatabaseEricEndpoint: database " + db + " exists");
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
         databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
         return databaseEricEndpoint;
@@ -762,7 +827,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // non-ERIC database.
     for (String db : databases) {
       if (!db.equals("pet store") && !db.equals("TestPet") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) { // non-ERIC DBs
-        logger.debug("getDatabaseEricEndpoint: database " + db + " exists");
+        logger.info("getDatabaseEricEndpoint: database " + db + " exists");
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
         databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
         return databaseEricEndpoint;
