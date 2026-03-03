@@ -13,8 +13,8 @@ on:
     - develop
 
 env:
-  #DATASET: crc_full   # Dataset for integration testing
-  DATASET: 1patient_1collection   # Small dataset, just for testing
+  DATASET: crc_full   # Dataset for integration testing
+  #DATASET: 1patient_1collection   # Small dataset, just for checking the CI pipeline
 
 jobs:
   build:
