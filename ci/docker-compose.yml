@@ -36,9 +36,7 @@ services:
     volumes:
       - ./data/directory_databases:/directory_databases:ro
       - ./upload_directory_databases.sh:/upload_directory_databases.sh
-    entrypoint: ["/bin/sh","-lc"]
-    command: |
-      /upload_directory_databases.sh
+    command: sh -c "sh /upload_directory_databases.sh"
 
   store:
     container_name: "store"
