@@ -1,6 +1,45 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: molgenis
+      POSTGRES_PASSWORD: molgenis
+      POSTGRES_DB: molgenis
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U molgenis -d molgenis"]
+      interval: 5s
+      timeout: 60s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  emx2:
+    image: molgenis/molgenis-emx2
+    environment:
+      MOLGENIS_POSTGRES_URI: jdbc:postgresql://postgres/molgenis
+      MOLGENIS_POSTGRES_USER: molgenis
+      MOLGENIS_POSTGRES_PASS: molgenis
+      SPRING_APPLICATION_JSON: '{"logging":{"level":{"org":{"molgenis":{"emx2":"WARN"}}}}}'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+  emx2_init:
+    image: curlimages/curl:8.5.0
+    depends_on:
+      - emx2
+    volumes:
+      - ./data/directory_databases:/directory_databases:ro
+      - ./upload_directory_databases.sh:/upload_directory_databases.sh
+    entrypoint: ["/bin/sh","-lc"]
+    command: |
+      /upload_directory_databases.sh
+
   store:
     container_name: "store"
     image: "samply/blaze:0.18"
@@ -26,42 +65,94 @@ services:
     image: samply/data-loader
     environment:
       FHIR_STORE_URL: "http://store:8080/fhir"
-    command: sh -c "/app/run.sh | tee /tmp/output.txt && tail -f /dev/null"
+    #command: sh -c "/app/run.sh | tee /tmp/output.txt && tail -f /dev/null"
+    command: sh -c "/app/run.sh | tee /tmp/output.txt"
     volumes:
       - "./data/input/${DATASET:-crc_full}:/app/sample"
     depends_on: # wait until Blaze is ready
       store:
         condition: service_healthy
-    healthcheck:
-      # When the run.sh script outputs "Done", we know that the upload is complete
-      test: ["CMD", "grep", "Done", "/tmp/output.txt"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
+#    healthcheck:
+#      # When the run.sh script outputs "Done", we know that the upload is complete
+#      test: ["CMD", "grep", "Done", "/tmp/output.txt"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 20
 
-  directory_sync_service:
+  # Run Directory sync and push results to Molgenis/emx2
+  directory_sync_service_molgenis:
+    image: "samply/directory_sync_service"
+    environment:
+      DS_RETRY_INTERVAL: 20
+      DS_RETRY_MAX: 10
+      DS_FHIR_STORE_URL: "http://store:8080/fhir"
+      DS_DIRECTORY_URL: "http://emx2:8080"
+      DS_DIRECTORY_USER_NAME: admin
+      DS_DIRECTORY_USER_PASS: admin
+      #DS_DIRECTORY_USER_TOKEN: foo
+      DS_DIRECTORY_ALLOW_STAR_MODEL: "true"
+      #DS_DIRECTORY_WRITE_TO_FILE: "true"
+      #DS_DIRECTORY_OUTPUT_DIRECTORY: "/output/"
+      DS_DIRECTORY_MIN_DONORS: 1 # for small datasets
+      DS_IMPORT_BIOBANKS: "true"
+      DS_IMPORT_COLLECTIONS: "true"
+      SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
+      #DS_TIMER_CRON: "* * * * *"
+      DS_DIRECTORY_MOCK: "false"
+      DS_DIRECTORY_DEFAULT_COLLECTION_ID: bbmri-eric:ID:DE_DKFZ_TEST:collection:Test1
+    volumes:
+      - ./output:/output
+    depends_on:
+      data-loader: # wait for data-loader to finish
+        #condition: service_healthy
+        condition: service_completed_successfully
+      emx2_init: # Wait for Molgenis to finish initializing
+        condition: service_completed_successfully
+
+  emx2_tests:
+    image: python:3.11-slim
+    depends_on:
+      directory_sync_service_molgenis:
+        condition: service_completed_successfully
+    working_dir: /directory_pytest
+    volumes:
+      - ./directory_pytest:/directory_pytest
+      - ./data/directory_reference:/directory_reference
+    environment:
+      EMX2_URL: http://emx2:8080
+      EMX2_EMAIL: admin
+      EMX2_PASSWORD: admin
+      SCHEMA_BBMRI: BBMRI-ERIC
+      SCHEMA_ONTO: DirectoryOntologies
+    command: ["/bin/sh","-lc","pip install -r requirements.txt && pytest -q -s"]
+    restart: "no"
+
+  # Run Directory sync and dump results straight into a file.
+  directory_sync_service_file:
     image: "samply/directory_sync_service"
     environment:
       DS_RETRY_INTERVAL: 20
       DS_RETRY_MAX: 10
       DS_FHIR_STORE_URL: "http://store:8080/fhir"
       DS_DIRECTORY_URL: https://directory.bbmri-eric.eu # dummy value
-      #DS_DIRECTORY_USER_NAME: foo # dummy value
-      #DS_DIRECTORY_USER_PASS: foo # dummy value
-      DS_DIRECTORY_USER_TOKEN: foo # dummy value
+      DS_DIRECTORY_USER_NAME: foo # dummy value
+      DS_DIRECTORY_USER_PASS: foo # dummy value
+      #DS_DIRECTORY_USER_TOKEN: foo # dummy value
       DS_DIRECTORY_ALLOW_STAR_MODEL: "true"
       DS_DIRECTORY_WRITE_TO_FILE: "true"
       DS_DIRECTORY_OUTPUT_DIRECTORY: "/output/"
       #DS_DIRECTORY_MIN_DONORS: 1 # for small datasets
       DS_IMPORT_BIOBANKS: "true"
       DS_IMPORT_COLLECTIONS: "true"
-      #SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
+      SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
     volumes:
       - ./output:/output
     depends_on: # wait for data-loader to finish
       data-loader:
-        condition: service_healthy
+        #condition: service_healthy
+        condition: service_completed_successfully
 
 volumes:
   store-db-data:
     name: "store-db-data"
+  pgdata:
