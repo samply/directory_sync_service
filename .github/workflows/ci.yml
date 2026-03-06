@@ -13,8 +13,8 @@ on:
     - develop
 
 env:
-  DATASET: crc_full   # Dataset for integration testing
-  #DATASET: 1patient_1collection   # Small dataset, just for checking the CI pipeline
+  #DATASET: crc_full   # Dataset for integration testing
+  DATASET: 1patient_1collection   # Small dataset, just for checking the CI pipeline
 
 jobs:
   build:
@@ -54,8 +54,6 @@ jobs:
       working-directory: ci
       run: |
         set -euo pipefail
-        # Bring the stack up, fail fast if a container exits non-zero.
-        #docker compose up --abort-on-container-exit --quiet-pull
         docker compose up -d postgres emx2 store
         docker compose run --rm emx2_init
         docker compose run --rm data-loader

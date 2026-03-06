@@ -115,7 +115,7 @@ services:
     working_dir: /directory_pytest
     volumes:
       - ./directory_pytest:/directory_pytest
-      - ./data/directory_reference:/directory_reference
+      - ./data/directory_reference/${DATASET:-crc_full}:/directory_reference
     environment:
       EMX2_URL: http://emx2:8080
       EMX2_EMAIL: admin

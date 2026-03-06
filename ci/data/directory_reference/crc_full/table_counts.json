@@ -1,0 +1,6 @@
+{
+  "Biobanks": { "min": 2 },
+  "Collections": { "min": 4 },
+  "CollectionFacts": { "exact": 215 }
+}
+
