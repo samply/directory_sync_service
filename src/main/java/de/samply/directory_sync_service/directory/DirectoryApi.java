@@ -243,12 +243,26 @@ public abstract class DirectoryApi {
    * @param entity The collection to insert missing attributes into.
    */
   protected void insertMissingAttributesIntoEntity(DirectoryCollectionPut directoryCollectionPut, Map<String, Object> entity) {
+    String country = directoryCollectionPut.getCountryCode(); // Assumes all collections have same country
+    if (entity.containsKey("id")) {
+      // See if we can get the country from the entity itself. It is theoretically
+      // possible that the site hosts collections from more than one country, e.g. DE and EU.
+      try {
+        BbmriEricId bbmriEricCollectionId = BbmriEricId
+                .valueOf((String)entity.get("id"))
+                .orElse(null);
+        country = bbmriEricCollectionId.getCountryCode();
+      } catch (Exception e) {
+        logger.warn("insertMissingAttributesIntoEntity: problem getting country name from entity ID: " + entity.get("id"));
+        logger.warn("insertMissingAttributesIntoEntity: exception: " + Util.traceFromException(e));
+      }
+    }
     if (!entity.containsKey("country"))
-      entity.put("country", directoryCollectionPut.getCountryCode());
+      entity.put("country", country);
     if (!entity.containsKey("timestamp"))
       entity.put("timestamp", LocalDateTime.now().toString());
     if (!entity.containsKey("national_node"))
-      entity.put("national_node", directoryCollectionPut.getCountryCode());
+      entity.put("national_node", country);
     if (!entity.containsKey("biobank_label") && entity.containsKey("biobank") && entity.get("biobank") instanceof String)
       entity.put("biobank_label", entity.get("biobank"));
     if (!entity.containsKey("type")) {
