@@ -59,7 +59,7 @@ public class PopulateStarModelInputData {
     if (specimensByCollection.keySet().size() ==0)
       logger.warn("populate: specimensByCollection.keySet() is empty");
     for (String collectionId: specimensByCollection.keySet()) {
-      logger.info("populate: collectionId: " + collectionId);
+      logger.info("populate: TTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
       populateCollection(starModelInput, collectionId, specimensByCollection.get(collectionId));
     }
 

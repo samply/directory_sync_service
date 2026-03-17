@@ -62,7 +62,7 @@ public class FhirApi {
   private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   private static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
   private static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
-  private static final String DEFAULT_COLLECTION_ID = "DEFAULT";
+  private static final String DEFAULT_COLLECTION_ID = "DEFAULT_1010101";
   private Map<String, List<Specimen>> specimensByCollection = null;
   private Map<String, List<Patient>> patientsByCollection = null;
   private final IGenericClient fhirClient;
@@ -256,11 +256,11 @@ public class FhirApi {
     try {
       specimensByCollection = getAllSpecimensAsMap();
 
-      logger.debug("fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
+      logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT specimensByCollection size: " + specimensByCollection.size());
 
       defaultBbmriEricCollectionId = determineDefaultCollectionId(defaultBbmriEricCollectionId, specimensByCollection);
 
-      logger.debug("fetchSpecimensByCollection: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
+      logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
 
       // Remove specimens without a collection from specimensByCollection, but keep
       // the relevant specimen list, just in case we have a valid default ID to
@@ -268,14 +268,14 @@ public class FhirApi {
       List<Specimen> defaultCollection = specimensByCollection.remove(DEFAULT_COLLECTION_ID);
 
       if (defaultCollection == null)
-        logger.debug("fetchSpecimensByCollection: defaultCollection is null");
+        logger.info("fetchSpecimensByCollection: defaultCollection is null");
       else
-        logger.debug("fetchSpecimensByCollection: defaultCollection size: " + defaultCollection.size());
+        logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT defaultCollection size: " + defaultCollection.size());
 
       // Replace the DEFAULT_COLLECTION_ID key in specimensByCollection by a sensible collection ID,
       // assuming, of course, that there were any specemins caregorized by DEFAULT_COLLECTION_ID.
       if (defaultCollection != null && defaultCollection.size() != 0 && defaultBbmriEricCollectionId != null) {
-        logger.debug("fetchSpecimensByCollection: Replace the DEFAULT_COLLECTION_ID key");
+        logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT Replace the DEFAULT_COLLECTION_ID key");
 
         if (specimensByCollection.containsKey(defaultBbmriEricCollectionId.toString()))
           // Add all specimens with DEFAULT_COLLECTION_ID to defaultBbmriEricCollectionId if it exists
@@ -286,10 +286,13 @@ public class FhirApi {
           specimensByCollection.put(defaultBbmriEricCollectionId.toString(), defaultCollection);
       }
 
-      logger.debug("fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
+      logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT specimensByCollection size: " + specimensByCollection.size());
       if (specimensByCollection.size() == 0)
         logger.warn("fetchSpecimensByCollection: no collections found, maybe you need to upload some data to your FHIR store?");
-
+      else {
+        String randomCollectionId = (String) specimensByCollection.keySet().toArray()[0];
+        logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT for collection ID " + randomCollectionId + ", specimen count is: " + specimensByCollection.get(randomCollectionId).size());
+      }
       return specimensByCollection;
     } catch (Exception e) {
       logger.warn("fetchSpecimensByCollection: exception" + Util.traceFromException(e));
@@ -1026,7 +1029,7 @@ public class FhirApi {
       return null;
     }
 
-    logger.info("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
+    logger.info("generateDiagnosisCorrections: TTTTTTTTTTTTTTTTTTTTTTTTTTT fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
     return fhirDiagnoses;
   }
@@ -1050,6 +1053,8 @@ public class FhirApi {
       logger.warn("fetchDiagnoses: Problem finding specimens");
       return null;
     }
+    if (specimensByCollection.size() == 0)
+      logger.warn("fetchDiagnoses: no specimens found");
 
     // Get diagnoses from Specimen extensions
     List<String> diagnoses = specimensByCollection.values().stream()
@@ -1059,7 +1064,7 @@ public class FhirApi {
             .distinct()
             .collect(Collectors.toList());
 
-    logger.debug("fetchDiagnoses: number of diagnoses from specimens: " + diagnoses.size());
+    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT number of diagnoses from specimens: " + diagnoses.size());
 
     // Get diagnoses from Patients
     Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
@@ -1070,13 +1075,18 @@ public class FhirApi {
             .distinct()
             .collect(Collectors.toList());
 
-    logger.debug("fetchDiagnoses: patientsByCollection.size(): " + patientsByCollection.size());
+    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT patientsByCollection.size(): " + patientsByCollection.size());
 
     // Combine diagnoses from specimens and patients, ensuring that there
     // are no duplicates.
     diagnoses = Stream.concat(diagnoses.stream(), patientDiagnoses.stream())
             .distinct()
             .collect(Collectors.toList());
+
+    if (diagnoses.size() == 0)
+      logger.warn("fetchDiagnoses: no diagnoses found");
+
+    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT fhirDiagnoses.size(): " + diagnoses.size());
 
     return diagnoses;
   }

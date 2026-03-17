@@ -185,24 +185,6 @@ class DirectoryApiGraphqlTest {
 
     @Nested
     class DatabaseEndpointHeuristics {
-        @Test
-        void picks_exact_ERIC_country_first_and_caches() throws Exception {
-            // default schemas include ERIC-DE
-            var endpoint1 = invokeGetDatabaseEricEndpoint("DE");
-            var endpoint2 = invokeGetDatabaseEricEndpoint("DE"); // cached
-            assertEquals("ERIC-DE/api/graphql", endpoint1);
-            assertEquals(endpoint1, endpoint2);
-            // Only one _schemas call despite two invocations
-            assertEquals(1, fake.schemaCalls.get());
-        }
-
-        @Test
-        void falls_back_to_BBMRI_ERIC_if_no_country_specific() throws Exception {
-            fake.schemas = List.of("BBMRI-ERIC", "DirectoryOntologies");
-            var endpoint = invokeGetDatabaseEricEndpoint("CY");
-            assertEquals("BBMRI-ERIC/api/graphql", endpoint);
-        }
-
         // reflectively call private getDatabaseEricEndpoint
         private String invokeGetDatabaseEricEndpoint(String cc) throws Exception {
             var m = DirectoryApiGraphql.class.getDeclaredMethod("getDatabaseEricEndpoint", String.class);

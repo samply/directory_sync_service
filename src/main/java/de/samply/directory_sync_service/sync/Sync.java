@@ -81,6 +81,8 @@ public class Sync {
         Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
         FhirApi fhirApi = new FhirApi(fhirStoreUrl);
+
+        // Decide which API to use: dump to file, GraphQL or REST.
         DirectoryApi directoryApi;
         if (directoryWriteToFile) {
             directoryApi = new DirectoryApiWriteToFile(directoryOutputDirectory);
@@ -106,6 +108,9 @@ public class Sync {
 
         logger.debug("syncWithDirectory: starting synchronization");
 
+        // The Directory is very strict about diagnosis codes and will reject an entire collection
+        // if even one code is not recognized. So first find out which codes it will accept and
+        // make a note of them.
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses.size() == 0)
             logger.warn("syncWithDirectory: no diagnosis corrections were found");
@@ -118,15 +123,14 @@ public class Sync {
                 logger.warn("syncWithDirectory: Problem getting star model information from FHIR store");
                 return false;
             }
-            logger.info("syncWithDirectory: number of collection IDs: " + starModelInput.getInputCollectionIds().size());
+            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTT number of collection IDs: " + starModelInput.getInputCollectionIds().size());
 
             // Send fact tables to Directory
             FactTable factTable = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInput, directoryMinDonors, directoryMaxFacts);
-            if (factTable == null) {
+            if (factTable == null)
                 logger.warn("syncWithDirectory: there was a problem during star model update to Directory");
-                return false;
-            }
-            factTable.runSanityChecks(fhirApi, directoryDefaultCollectionId);
+            else
+                factTable.runSanityChecks(fhirApi, directoryDefaultCollectionId);
         }
 
         // Mine the FHIR store for all available collections. This gets aggregated

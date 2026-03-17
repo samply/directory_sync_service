@@ -41,6 +41,8 @@ public class DiagnosisCorrections {
                 return correctedDiagnoses;
             }
 
+            logger.info("generateDiagnosisCorrections: TTTTTTTTTTTTTTTTTTTTTTTTTTT diagnosis count: " + fhirDiagnoses.size());
+
             int diagnosisCounter = 0; // for diagnostics only
             int diagnosisNullCounter = 0;
             int invalidIcdValueCounter = 0;
