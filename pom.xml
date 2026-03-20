@@ -5,12 +5,12 @@
     <parent>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-parent</artifactId>
-      <version>3.3.3</version>
+      <version>4.0.3</version>
       <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>de.samply</groupId>
     <artifactId>directory_sync_service</artifactId>
-    <version>1.6.47</version>
+    <version>1.6.48</version>
     <name>directory_sync_service</name>
     <description>Directory sync</description>
     <url>https://github.com/samply/directory_sync_service</url>
@@ -26,10 +26,10 @@
 
     <properties>
       <java.version>19</java.version>
-      <quartz.version>2.5.0</quartz.version>
-      <hapi.version>7.4.0</hapi.version>
-      <lombok.version>1.18.34</lombok.version>
-      <gson.version>2.11.0</gson.version>
+      <quartz.version>2.5.2</quartz.version>
+      <hapi.version>8.8.0</hapi.version>
+      <lombok.version>1.18.44</lombok.version>
+      <gson.version>2.13.2</gson.version>
     </properties>
 
     <dependencies>
