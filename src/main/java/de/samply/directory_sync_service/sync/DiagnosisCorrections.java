@@ -38,7 +38,7 @@ public class DiagnosisCorrections {
 
             if (fhirDiagnoses == null) {
                 logger.warn("generateDiagnosisCorrections: problem finding diagnoses in FHIR store, aborting");
-                return correctedDiagnoses;
+                return null;
             }
 
             logger.info("generateDiagnosisCorrections: TTTTTTTTTTTTTTTTTTTTTTTTTTT diagnosis count: " + fhirDiagnoses.size());

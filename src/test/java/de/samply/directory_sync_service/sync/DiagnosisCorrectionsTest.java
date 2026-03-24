@@ -27,16 +27,13 @@ class DiagnosisCorrectionsTest {
     private DirectoryApi directoryApi;
 
     @Test
-    void returnsEmptyMapWhenFhirDiagnosesIsNull() {
+    void returnsNullWhenFhirDiagnosesIsNull() {
         when(fhirApi.fetchDiagnoses("col")).thenReturn(null);
 
         Map<String, String> result =
                 DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, "col");
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(fhirApi).fetchDiagnoses("col");
-        verifyNoInteractions(directoryApi);
+        assertNull(result);
     }
 
     @Test
