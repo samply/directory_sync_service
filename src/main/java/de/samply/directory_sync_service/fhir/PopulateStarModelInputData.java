@@ -122,7 +122,7 @@ public class PopulateStarModelInputData {
 
     List<String> diagnoses = extractDiagnosesFromPatientAndSpecimen(patient, specimen);
 
-    logger.info("populateSpecimen: diagnoses.size(): " + diagnoses.size());
+    logger.debug("populateSpecimen: diagnoses.size(): " + diagnoses.size());
 
     // Add all of the collected information to the input data table.
     for (String diagnosis: diagnoses)

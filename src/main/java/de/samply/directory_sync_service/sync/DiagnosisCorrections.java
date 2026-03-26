@@ -106,7 +106,7 @@ public class DiagnosisCorrections {
             if (correctedDiagnoses.size() == 0)
                 logger.warn("generateDiagnosisCorrections: No diagnosis corrections generated");
 
-            logger.info("generateDiagnosisCorrections: done");
+            logger.debug("generateDiagnosisCorrections: done");
 
             return correctedDiagnoses;
         } catch (Exception e) {

@@ -336,7 +336,7 @@ public class FhirApi {
    * @return A Map where keys are Collection IDs and values are Lists of Specimens associated with each Collection ID.
    */
   private Map<String, List<Specimen>> getAllSpecimensAsMap() {
-    logger.info("getAllSpecimensAsMap: entered");
+    logger.debug("getAllSpecimensAsMap: entered");
 
     Map<String, List<Specimen>> result = new HashMap<String, List<Specimen>>();
 
@@ -345,7 +345,7 @@ public class FhirApi {
       IQuery<IBaseBundle> bundleTransaction = fhirClient.search().forResource(Specimen.class);
       Bundle bundle = (Bundle) bundleTransaction.execute();
 
-      logger.info("getAllSpecimensAsMap: gather specimens");
+      logger.debug("getAllSpecimensAsMap: gather specimens");
 
       // Keep looping until the store has no more specimens.
       // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
@@ -539,7 +539,7 @@ public class FhirApi {
           return null;
         }
       }
-      logger.info("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
+      logger.debug("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
 
       // Find the Patient with the ID found from the reference in the Specimen.
       patient =  fhirClient
@@ -547,7 +547,7 @@ public class FhirApi {
                 .resource(Patient.class)
                 .withId(specimenSubjectReference)
                 .execute();
-      logger.info("extractPatientFromSpecimen: done");
+      logger.debug("extractPatientFromSpecimen: done");
     } catch (Exception e) {
       logger.warn("extractPatientFromSpecimen: exception message: " + e.getMessage());
       logger.warn("extractPatientFromSpecimen: exception: " + e);
@@ -580,7 +580,7 @@ public class FhirApi {
           .execute()
           .getTotal();
         conditionsPresentInFhirStore = conditionCount > 0;
-        logger.info("extractConditionCodesFromPatient: total of all conditions in FHIR store, conditionCount: " + conditionCount);
+        logger.debug("extractConditionCodesFromPatient: total of all conditions in FHIR store, conditionCount: " + conditionCount);
       }
       if (!conditionsPresentInFhirStore)
         return conditionCodes;
@@ -697,7 +697,7 @@ public class FhirApi {
 
     String collectionId = reference;
     if (reference.matches("^http[^/:]*://.*/.[^/]*$")) {
-      logger.info("extractCollectionIdFromReference: reference is a URL (" + reference + "), using last part of URL as collection ID");
+      logger.debug("extractCollectionIdFromReference: reference is a URL (" + reference + "), using last part of URL as collection ID");
       // The reference has been written like a URL. Assume that the collection ID
       // is the last part of the URL
       String[] collectionIdParts = reference.split("/");

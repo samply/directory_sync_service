@@ -134,6 +134,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     try {
       String countryCode = id.getCountryCode();
+      logger.info("fetchBiobank: UUUUUUUUUUUUUUUUUUUUUUUU fetching biobank: " + id);
       Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(getDatabaseEricEndpoint(countryCode), "Biobanks", "filter: { id: { equals: \"" + id + "\" } }", new ArrayList<>(List.of("id", "name")));
       if (item == null) {
         logger.warn("fetchBiobank: item is null");
@@ -222,6 +223,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "}";
 
       String collectionCountryCode = extractCountryCodeFromBbmriEricId(collectionId);
+      logger.info("generateCollections: UUUUUUUUUUUUUUUUUUUUUUUU collectionId: " + collectionId);
       List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(collectionCountryCode), graphqlCommand);
       if (collectionsList == null) {
         logger.warn("generateCollections: biobankList list is null");
@@ -288,6 +290,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
                 "  ) { message }\n" +
                 "}";
 
+        logger.info("sendUpdatedCollections: UUUUUUUUUUUUUUUUUUUUUUUU collectionId: " + collectionId);
         result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
@@ -360,6 +363,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // in the Directory's GrapgQL API.
     boolean includeNationalNode = isColumnInTable(countryCode, "CollectionFacts", "national_node");
 
+    String databaseEricEndpoint = getDatabaseEricEndpoint(countryCode);
+    logger.info("updateFactTablesBlock: UUUUUUUUUUUUUUUUUUUUUUUU databaseEricEndpoint: " + databaseEricEndpoint);
+
     for (Map<String, String> factTable : factTablesBlock)
       try {
         if (!factTable.containsKey("national_node") && countryCode != null && !countryCode.isEmpty())
@@ -367,8 +373,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
         String factTableAttributeString = buildFactTableAttributeString(factTable, includeNationalNode);
         String graphqlCommand = buildUpdateFactTableGraphqlCommand(factTableAttributeString);
-        String databaseEricEndpoint = getDatabaseEricEndpoint(countryCode);
-        logger.info("updateFactTablesBlock: UUUUUUUUUUUUUUUUUUUUUUUU databaseEricEndpoint: " + databaseEricEndpoint);
         JsonObject result = directoryCallsGraphql.runGraphqlCommand(databaseEricEndpoint, graphqlCommand);
         if (result == null) {
           logger.warn("updateFactTablesBlock: result is null with national_node attribute");
@@ -548,6 +552,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     try {
       ArrayList<String> attributeNames = new ArrayList<>(List.of("id collection { id }"));
+      logger.info("getNextPageOfFactIdsForCollection: UUUUUUUUUUUUUUUUUUUUUUUU collectionId: " + collectionId);
       List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), "CollectionFacts", null, attributeNames);
       if (collectionFactsList == null) {
         logger.warn("getNextPageOfFactIdsForCollection: collectionFactsList is null for collectionId: " + collectionId + ", there may be a problem");
@@ -659,6 +664,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
       // Nothing to delete
       return true;
 
+    logger.info("deleteFactsByIds: UUUUUUUUUUUUUUUUUUUUUUUU countryCode: " + countryCode);
+
     for (String factId : factIds)
       if (!deleteFactById(countryCode, factId))
         return false;
@@ -743,6 +750,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @return The database endpoint for the ERIC database API, or null if no valid endpoint is found.
    */
   private String getDatabaseEricEndpoint(String countryCode) {
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU countryCode: " + countryCode);
+
     if (databaseEricEndpointMap.containsKey(countryCode))
       return databaseEricEndpointMap.get(countryCode);
 
@@ -758,10 +767,13 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return null;
     }
 
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU databases: " + Util.jsonStringFomObject(databases));
+
     String database;
     String databaseEricEndpoint;
 
     // If there is a database called e.g. ERIC-DE, use that.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called e.g. ERIC-DE, use that.");
     database = "ERIC-" + countryCode;
     if (databases.contains(database)) {
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
@@ -773,6 +785,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     // Look to see if there is a database that ends with the country code and use if found
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU Look to see if there is a database that ends with the country code and use if found");
     for (String db : databases) {
       if (db.endsWith("-" + countryCode)) {
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
@@ -785,6 +798,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     // If there is a database called BBMRI-ERIC, use that.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called BBMRI-ERIC, use that.");
     database = "BBMRI-ERIC";
     if (databases.contains(database)) {
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
@@ -796,6 +810,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     // If there is a database called ERIC, use that.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called ERIC, use that.");
     database = "ERIC";
     if (databases.contains(database)) {
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
@@ -807,6 +822,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     // If there is a database with "ERIC" in its name, use that.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database with \"ERIC\" in its name, use that.");
     for (String db : databases) {
       if (db.contains("ERIC")) {
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
@@ -819,6 +835,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     // If there is a database called BBMRI, use that.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called BBMRI, use that.");
     database = "BBMRI";
     if (databases.contains(database)) {
       databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
@@ -830,6 +847,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     }
 
     // If there is a database with "BBMRI" in its name, use that.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database with \"BBMRI\" in its name, use that.");
     for (String db : databases) {
       if (db.contains("BBMRI")) {
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
@@ -843,6 +861,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     // We are scraping the barrel here. Pick a database whose name is not an already known
     // non-ERIC database.
+    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU Pick a database whose name is not an already known non-ERIC database.");
     for (String db : databases) {
       if (!db.equals("pet store") && !db.equals("TestPet") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) { // non-ERIC DBs
         databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
@@ -867,7 +886,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @return true if valid.
    */
   private boolean isValidDatabaseEndpoint(String databaseEndpoint) {
-    logger.debug("isValidDatabase: entered");
+    logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU databaseEndpoint: " + databaseEndpoint);
 
     boolean validEndpoint = false;
 
@@ -885,34 +904,36 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "}";
 
       JsonObject data = directoryCallsGraphql.runGraphqlCommand(databaseEndpoint, graphqlCommand);
-      if (data != null) {
-        logger.info("isValidDatabase: UUUUUUUUUUUUUUUUUUUUUUUU data: " + Util.jsonStringFomObject(data));
+      if (data == null)
+        logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU data is null, this is probably not a valid endpoint");
+      else {
+        logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU data is not null");
         List<String> collectionIds = extractIdsFromJsonObjectForField(data, "Collections");
         List<String> collectionFactIds = extractIdsFromJsonObjectForField(data, "CollectionFacts");
         List<String> biobankIds = extractIdsFromJsonObjectForField(data, "Biobanks");
 
         if (collectionIds == null || collectionFactIds == null || biobankIds == null) {
           if (collectionIds == null)
-            logger.warn("isValidDatabase: collectionIds == null");
+            logger.info("isValidDatabaseEndpoint: collectionIds == null");
           if (collectionFactIds == null)
-            logger.warn("isValidDatabase: collectionFactIds == null");
+            logger.info("isValidDatabaseEndpoint: collectionFactIds == null");
           if (biobankIds == null)
-            logger.warn("isValidDatabase: biobankIds == null");
+            logger.info("isValidDatabaseEndpoint: biobankIds == null");
         } else {
-          logger.info("isValidDatabase: UUUUUUUUUUUUUUUUUUUUUUUU collectionIds count: " + collectionIds.size() + ", collectionFactIds count: " + collectionFactIds.size() + ", biobankIds count: " + biobankIds.size());
+          logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionIds count: " + collectionIds.size() + ", collectionFactIds count: " + collectionFactIds.size() + ", biobankIds count: " + biobankIds.size());
 
           if (collectionIds.size() == 0)
-            logger.warn("isValidDatabase: collectionIds is empty");
+            logger.info("isValidDatabaseEndpoint: collectionIds is empty");
           if (biobankIds.size() == 0)
-            logger.warn("isValidDatabase: biobankIds is empty");
+            logger.info("isValidDatabaseEndpoint: biobankIds is empty");
 
           if (collectionIds.size() > 0 && collectionFactIds.size() >= 0 && biobankIds.size() > 0)
             validEndpoint = true;
         }
       }
     } catch (Exception e) {
-      logger.warn("isValidDatabase: error getting data from Molgenis via GraphQL");
-      logger.warn("isValidDatabase: exception: " + Util.traceFromException(e));
+      logger.warn("isValidDatabaseEndpoint: error getting data from Molgenis via GraphQL");
+      logger.warn("isValidDatabaseEndpoint: exception: " + Util.traceFromException(e));
     }
 
     return validEndpoint;

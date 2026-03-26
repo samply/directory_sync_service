@@ -181,12 +181,12 @@ public class CollectionsUpdater extends AbstractUpdater {
         }
         BbmriEricId bbmriEricId = bbmriEricIdOpt.get();
 
-        logger.info("updateCollectionInFhirStore: bbmriEricId: " + bbmriEricId);
+        logger.debug("updateCollectionInFhirStore: bbmriEricId: " + bbmriEricId);
 
         // Fetch the corresponding collection from the Directory API
         Collection directoryCollection = collections.getCollection(bbmriEricId.toString());
 
-        logger.info("updateCollectionInFhirStore: directoryCollection: " + directoryCollection);
+        logger.debug("updateCollectionInFhirStore: directoryCollection: " + directoryCollection);
 
         // Check if fetching the collection was successful, if not, return false
         if (directoryCollection == null) {
