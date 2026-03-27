@@ -186,10 +186,12 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return;
     }
 
+    logger.info("generateCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT ewntered");
+
     login();
 
     for (String collectionId: collections.getCollectionIds()) {
-      logger.debug("generateCollections: collectionId: " + collectionId);
+      logger.info("generateCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
       String graphqlCommand = "query {" +
               "  Collections( filter: { id: { equals: \"" + collectionId + "\" } } ) {\n" +
               "    id\n" +
@@ -223,7 +225,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "}";
 
       String collectionCountryCode = extractCountryCodeFromBbmriEricId(collectionId);
-      logger.info("generateCollections: UUUUUUUUUUUUUUUUUUUUUUUU collectionId: " + collectionId);
+      logger.info("generateCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionCountryCode: " + collectionCountryCode);
       List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(collectionCountryCode), graphqlCommand);
       if (collectionsList == null) {
         logger.warn("generateCollections: biobankList list is null");
@@ -265,14 +267,14 @@ public class DirectoryApiGraphql extends DirectoryApi {
       logger.warn("sendUpdatedCollections: Problem converting FHIR attributes to Directory attributes");
       return false;
     }
-    logger.debug("sendUpdatedCollections: 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
+    logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1 directoryCollectionPut.getCollectionIds().size()): " + directoryCollectionPut.getCollectionIds().size());
 
     login();
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
       JsonObject result = null;
       try {
-        logger.debug("sendUpdatedCollections: about to update collection: " + collectionId);
+        logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT about to update collection: " + collectionId);
 
         Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
         cleanEntity(entity);
@@ -290,7 +292,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
                 "  ) { message }\n" +
                 "}";
 
-        logger.info("sendUpdatedCollections: UUUUUUUUUUUUUUUUUUUUUUUU collectionId: " + collectionId);
+        logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
         result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
@@ -755,122 +757,126 @@ public class DirectoryApiGraphql extends DirectoryApi {
     if (databaseEricEndpointMap.containsKey(countryCode))
       return databaseEricEndpointMap.get(countryCode);
 
-    List<String> databases = getDatabases();
+    try {
+      List<String> databases = getDatabases();
 
-    if (databases == null)  {
-      logger.warn("getDatabaseEricEndpoint: databases is null");
-      return null;
-    }
-
-    if (databases.size() == 0) {
-      logger.warn("getDatabaseEricEndpoint: databases is empty");
-      return null;
-    }
-
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU databases: " + Util.jsonStringFomObject(databases));
-
-    String database;
-    String databaseEricEndpoint;
-
-    // If there is a database called e.g. ERIC-DE, use that.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called e.g. ERIC-DE, use that.");
-    database = "ERIC-" + countryCode;
-    if (databases.contains(database)) {
-      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
-      if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-        logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
-        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
-        return databaseEricEndpoint;
+      if (databases == null)  {
+        logger.warn("getDatabaseEricEndpoint: databases is null");
+        return null;
       }
-    }
 
-    // Look to see if there is a database that ends with the country code and use if found
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU Look to see if there is a database that ends with the country code and use if found");
-    for (String db : databases) {
-      if (db.endsWith("-" + countryCode)) {
-        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+      if (databases.size() == 0) {
+        logger.warn("getDatabaseEricEndpoint: databases is empty");
+        return null;
+      }
+
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU databases: " + Util.jsonStringFomObject(databases));
+
+      String database;
+      String databaseEricEndpoint;
+
+      // If there is a database called e.g. ERIC-DE, use that.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called e.g. ERIC-DE, use that.");
+      database = "ERIC-" + countryCode;
+      if (databases.contains(database)) {
+        databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
         if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
           databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
           return databaseEricEndpoint;
         }
       }
-    }
 
-    // If there is a database called BBMRI-ERIC, use that.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called BBMRI-ERIC, use that.");
-    database = "BBMRI-ERIC";
-    if (databases.contains(database)) {
-      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
-      if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-        logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
-        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
-        return databaseEricEndpoint;
+      // Look to see if there is a database that ends with the country code and use if found
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU Look to see if there is a database that ends with the country code and use if found");
+      for (String db : databases) {
+        if (db.endsWith("-" + countryCode)) {
+          databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+          if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
+            logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+            databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+            return databaseEricEndpoint;
+          }
+        }
       }
-    }
 
-    // If there is a database called ERIC, use that.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called ERIC, use that.");
-    database = "ERIC";
-    if (databases.contains(database)) {
-      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
-      if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-        logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
-        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
-        return databaseEricEndpoint;
-      }
-    }
-
-    // If there is a database with "ERIC" in its name, use that.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database with \"ERIC\" in its name, use that.");
-    for (String db : databases) {
-      if (db.contains("ERIC")) {
-        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+      // If there is a database called BBMRI-ERIC, use that.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called BBMRI-ERIC, use that.");
+      database = "BBMRI-ERIC";
+      if (databases.contains(database)) {
+        databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
         if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
           databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
           return databaseEricEndpoint;
         }
       }
-    }
 
-    // If there is a database called BBMRI, use that.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called BBMRI, use that.");
-    database = "BBMRI";
-    if (databases.contains(database)) {
-      databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
-      if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-        logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
-        databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
-        return databaseEricEndpoint;
-      }
-    }
-
-    // If there is a database with "BBMRI" in its name, use that.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database with \"BBMRI\" in its name, use that.");
-    for (String db : databases) {
-      if (db.contains("BBMRI")) {
-        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+      // If there is a database called ERIC, use that.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called ERIC, use that.");
+      database = "ERIC";
+      if (databases.contains(database)) {
+        databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
         if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
           databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
           return databaseEricEndpoint;
         }
       }
-    }
 
-    // We are scraping the barrel here. Pick a database whose name is not an already known
-    // non-ERIC database.
-    logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU Pick a database whose name is not an already known non-ERIC database.");
-    for (String db : databases) {
-      if (!db.equals("pet store") && !db.equals("TestPet") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) { // non-ERIC DBs
-        databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+      // If there is a database with "ERIC" in its name, use that.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database with \"ERIC\" in its name, use that.");
+      for (String db : databases) {
+        if (db.contains("ERIC")) {
+          databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+          if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
+            logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+            databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+            return databaseEricEndpoint;
+          }
+        }
+      }
+
+      // If there is a database called BBMRI, use that.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database called BBMRI, use that.");
+      database = "BBMRI";
+      if (databases.contains(database)) {
+        databaseEricEndpoint = database + directoryEndpointsGraphql.getApiEndpoint();
         if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
-          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+          logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + database + " is a valid endpoint");
           databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
           return databaseEricEndpoint;
         }
       }
+
+      // If there is a database with "BBMRI" in its name, use that.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU If there is a database with \"BBMRI\" in its name, use that.");
+      for (String db : databases) {
+        if (db.contains("BBMRI")) {
+          databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+          if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
+            logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+            databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+            return databaseEricEndpoint;
+          }
+        }
+      }
+
+      // We are scraping the barrel here. Pick a database whose name is not an already known
+      // non-ERIC database.
+      logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU Pick a database whose name is not an already known non-ERIC database.");
+      for (String db : databases) {
+        if (!db.equals("pet store") && !db.equals("TestPet") && !db.equals("DirectoryOntologies") && !db.equals("_SYSTEM_")) { // non-ERIC DBs
+          databaseEricEndpoint = db + directoryEndpointsGraphql.getApiEndpoint();
+          if (isValidDatabaseEndpoint(databaseEricEndpoint)) {
+            logger.info("getDatabaseEricEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU database " + db + " is a valid endpoint");
+            databaseEricEndpointMap.put(countryCode, databaseEricEndpoint);
+            return databaseEricEndpoint;
+          }
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("getDatabaseEricEndpoint: problem while trying to find suitable Directory database, exception: " + Util.traceFromException(e));
     }
 
     logger.warn("getDatabaseEricEndpoint: no database found for country code: " + countryCode);

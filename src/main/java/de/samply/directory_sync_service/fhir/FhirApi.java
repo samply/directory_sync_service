@@ -580,7 +580,7 @@ public class FhirApi {
           .execute()
           .getTotal();
         conditionsPresentInFhirStore = conditionCount > 0;
-        logger.debug("extractConditionCodesFromPatient: total of all conditions in FHIR store, conditionCount: " + conditionCount);
+        logger.info("extractConditionCodesFromPatient: total of all conditions in FHIR store, conditionCount: " + conditionCount);
       }
       if (!conditionsPresentInFhirStore)
         return conditionCodes;

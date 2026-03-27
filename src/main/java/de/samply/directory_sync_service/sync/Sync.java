@@ -106,7 +106,7 @@ public class Sync {
             return true;
         }
 
-        logger.debug("syncWithDirectory: starting synchronization");
+        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT get diagnosis corrections");
 
         // The Directory is very strict about diagnosis codes and will reject an entire collection
         // if even one code is not recognized. So first find out which codes it will accept and
@@ -114,6 +114,7 @@ public class Sync {
         boolean correctedDiagnosesProblem = false;
         correctedDiagnoses = DiagnosisCorrections.generateDiagnosisCorrections(fhirApi, directoryApi, directoryDefaultCollectionId);
         if (correctedDiagnoses == null) {
+            logger.warn("syncWithDirectory: problem finding diagnosis corrections");
             // If there was a problem getting corrected diagnoses, carry on with an empty list,
             // but take note of what happened.
             correctedDiagnosesProblem = true;
@@ -123,6 +124,7 @@ public class Sync {
 
         boolean factTableProblem = false;
         if (directoryAllowStarModel) {
+            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT update star model");
             // Pull data from the FHIR store and save it in a format suitable for generating
             // star model hypercubes. If a problem arises, note it, but carry on.
             StarModelInput starModelInput = (new PopulateStarModelInputData(fhirApi)).populate(directoryDefaultCollectionId);
@@ -142,6 +144,8 @@ public class Sync {
             }
         }
 
+        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT update collections");
+
         boolean updateCollectionsProblem = false;
         // Mine the FHIR store for all available collections. This gets aggregated
         // information about the collections, like the number of samples, the number
@@ -152,6 +156,7 @@ public class Sync {
             logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
             updateCollectionsProblem = true;
         } else {
+            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT initial collections.size(): " + collections.size());
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
@@ -161,7 +166,7 @@ public class Sync {
             // This is stuff like collection name, description, associated biobank,
             // etc. It gets combined with the information from the FHIR store.
             directoryApi.fetchBasicCollectionData(collections);
-            logger.debug("syncWithDirectory: collections.size(): " + collections.size());
+            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT after fetching data collections.size(): " + collections.size());
 
             // Push the combined collection information (from the FHIR store and the basic
             // information from the Directory) to the Directory.
@@ -170,6 +175,8 @@ public class Sync {
                 updateCollectionsProblem = true;
             }
         }
+
+        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT import metadata");
 
         boolean importProblem = false;
         // Pull metadata from the Directory and insert it into the FHIR store.  If a problem
@@ -186,6 +193,8 @@ public class Sync {
                 importProblem = true;
             }
         }
+
+        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT report problems");
 
         if (correctedDiagnosesProblem || factTableProblem || updateCollectionsProblem || importProblem) {
             if (correctedDiagnosesProblem)

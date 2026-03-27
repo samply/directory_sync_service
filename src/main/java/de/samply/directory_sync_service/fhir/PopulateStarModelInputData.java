@@ -86,7 +86,7 @@ public class PopulateStarModelInputData {
     for (Specimen specimen: specimens) {
       populateSpecimen(starModelInput, collectionId, specimen);
       if (specimenCounter % 1000 == 0) {
-        logger.debug("populateCollection: specimenCounter: " + specimenCounter + " of " + specimens.size());
+        logger.info("populateCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT specimenCounter: " + specimenCounter + " of " + specimens.size());
       }
       specimenCounter++;
     }
@@ -123,6 +123,9 @@ public class PopulateStarModelInputData {
     List<String> diagnoses = extractDiagnosesFromPatientAndSpecimen(patient, specimen);
 
     logger.debug("populateSpecimen: diagnoses.size(): " + diagnoses.size());
+
+    if (diagnoses.size() == 0)
+      logger.warn("populateSpecimen: diagnoses is empty, no rows will be added to fact table");
 
     // Add all of the collected information to the input data table.
     for (String diagnosis: diagnoses)
