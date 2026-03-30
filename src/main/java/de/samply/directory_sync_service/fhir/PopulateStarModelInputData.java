@@ -124,8 +124,8 @@ public class PopulateStarModelInputData {
 
     // Add all of the collected information to the input data table.
     if (diagnoses.size() == 0) {
-      logger.warn("populateSpecimen: diagnoses is empty, adding single row to fact table without diagnosis");
-      starModelInput.addInputRow(collectionId, row);
+      logger.debug("populateSpecimen: diagnoses is empty, adding single row to fact table without diagnosis");
+      starModelInput.addInputRow(collectionId, StarModelInputRow.newInputRow(row, ""));
     } else
       for (String diagnosis: diagnoses)
         starModelInput.addInputRow(collectionId, StarModelInputRow.newInputRow(row, diagnosis));

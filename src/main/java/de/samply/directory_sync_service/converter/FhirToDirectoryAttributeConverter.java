@@ -80,6 +80,8 @@ public class FhirToDirectoryAttributeConverter {
     public static String convertDiagnosis(String diagnosis) {
         if (diagnosis == null)
             return null;
+        if (diagnosis.isEmpty())
+            return "";
 
         String miriamDiagnosis = diagnosis;
         if (!miriamDiagnosis.startsWith("urn:miriam:icd:"))
