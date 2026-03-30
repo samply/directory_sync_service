@@ -539,7 +539,6 @@ public class FhirApi {
           return null;
         }
       }
-      logger.debug("extractPatientFromSpecimen: specimen subject reference: " + specimenSubjectReference);
 
       // Find the Patient with the ID found from the reference in the Specimen.
       patient =  fhirClient
@@ -547,7 +546,6 @@ public class FhirApi {
                 .resource(Patient.class)
                 .withId(specimenSubjectReference)
                 .execute();
-      logger.debug("extractPatientFromSpecimen: done");
     } catch (Exception e) {
       logger.warn("extractPatientFromSpecimen: exception message: " + e.getMessage());
       logger.warn("extractPatientFromSpecimen: exception: " + e);
@@ -737,8 +735,6 @@ public class FhirApi {
     // Pull the locally-used collection ID from the specimen extension.
     String reference = ((Reference) extension.getValue()).getReference();
     String localCollectionId = extractCollectionIdFromReference(reference);
-
-    logger.debug("extractCollectionIdFromSpecimen: localCollectionId: " + localCollectionId);
 
     try {
       Organization collection = fhirClient

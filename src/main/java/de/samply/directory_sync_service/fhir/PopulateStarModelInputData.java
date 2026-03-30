@@ -122,14 +122,13 @@ public class PopulateStarModelInputData {
 
     List<String> diagnoses = extractDiagnosesFromPatientAndSpecimen(patient, specimen);
 
-    logger.debug("populateSpecimen: diagnoses.size(): " + diagnoses.size());
-
-    if (diagnoses.size() == 0)
-      logger.warn("populateSpecimen: diagnoses is empty, no rows will be added to fact table");
-
     // Add all of the collected information to the input data table.
-    for (String diagnosis: diagnoses)
-      starModelInput.addInputRow(collectionId, StarModelInputRow.newInputRow(row, diagnosis));
+    if (diagnoses.size() == 0) {
+      logger.warn("populateSpecimen: diagnoses is empty, adding single row to fact table without diagnosis");
+      starModelInput.addInputRow(collectionId, row);
+    } else
+      for (String diagnosis: diagnoses)
+        starModelInput.addInputRow(collectionId, StarModelInputRow.newInputRow(row, diagnosis));
   }
 
   int nullAgeCounter = 0;

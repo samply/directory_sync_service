@@ -13,8 +13,8 @@ on:
     - develop
 
 env:
-  DATASET: crc_full_with_extra_collection   # Dataset for integration testing
-  #DATASET: 1patient_1collection   # Small dataset, just for checking the CI pipeline
+  #DATASET: crc_full_with_extra_collection   # Dataset for integration testing
+  DATASET: 1patient_1collection   # Small dataset, just for checking the CI pipeline
 
 jobs:
   build:
@@ -49,6 +49,7 @@ jobs:
       working-directory: ci/data_loader
       run: |
         docker build --no-cache --progress=plain -t samply/data-loader .
+        docker volume ls
 
     - name: Run integration stack (docker compose)
       working-directory: ci
