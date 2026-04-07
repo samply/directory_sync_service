@@ -942,6 +942,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
       logger.warn("isValidDatabaseEndpoint: exception: " + Util.traceFromException(e));
     }
 
+    if (validEndpoint)
+      logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU endpoint " + databaseEndpoint + " is valid");
+    else
+      logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU endpoint " + databaseEndpoint + " is NOT valid");
+
     return validEndpoint;
   }
 
@@ -954,7 +959,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     try {
       JsonArray arr = data.getAsJsonArray(field);
       if (arr == null) {
-        logger.warn("extractIdsFromJsonObjectForField: arr is null");
+        logger.warn("extractIdsFromJsonObjectForField: arr is null for field: " + field + ", maybe this field does not exist?");
         return null;
       }
 

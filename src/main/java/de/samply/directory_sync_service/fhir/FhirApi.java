@@ -998,7 +998,7 @@ public class FhirApi {
   }
 
   /**
-   * Fetches diagnoses from Specimens and Patients to which collections can be assigned.
+   * Fetches diagnoses from Specimens and Patients in all collections.
    * <p>
    * This method retrieves specimens grouped by collection.
    * <p>
@@ -1031,7 +1031,7 @@ public class FhirApi {
   }
 
   /**
-   * Fetches diagnoses from Specimens and Patients to which collections can be assigned.
+   * Fetches diagnoses from Specimens and Patients in all collections.
    * <p>
    * This method retrieves specimens grouped by collection.
    * <p>
@@ -1072,6 +1072,7 @@ public class FhirApi {
             .collect(Collectors.toList());
 
     logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT patientsByCollection.size(): " + patientsByCollection.size());
+    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT patientDiagnoses.size(): " + patientDiagnoses.size());
 
     // Combine diagnoses from specimens and patients, ensuring that there
     // are no duplicates.
