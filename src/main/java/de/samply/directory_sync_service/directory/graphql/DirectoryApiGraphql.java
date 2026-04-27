@@ -366,8 +366,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
     boolean includeNationalNode = isColumnInTable(countryCode, "CollectionFacts", "national_node");
 
     String databaseEricEndpoint = getDatabaseEricEndpoint(countryCode);
-    logger.info("updateFactTablesBlock: UUUUUUUUUUUUUUUUUUUUUUUU databaseEricEndpoint: " + databaseEricEndpoint);
+    logger.info("updateFactTablesBlock: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV databaseEricEndpoint: " + databaseEricEndpoint);
 
+    int factCounter = 0;
     for (Map<String, String> factTable : factTablesBlock)
       try {
         if (!factTable.containsKey("national_node") && countryCode != null && !countryCode.isEmpty())
@@ -380,12 +381,48 @@ public class DirectoryApiGraphql extends DirectoryApi {
           logger.warn("updateFactTablesBlock: result is null with national_node attribute");
           return false;
         }
+        factCounter++;
       } catch (Exception e) {
         logger.warn("updateFactTablesBlock: Exception during fact updating: " + Util.traceFromException(e));
         return false;
       }
 
+    logger.info("updateFactTablesBlock: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV uploaded " + factCounter + " facts");
+    examineFactTable(databaseEricEndpoint);
+
     return true;
+  }
+
+  /**
+   * Take a look at the fact table in the GraphQL database and print what is found.
+   * @param databaseEndpoint
+   */
+  private void examineFactTable(String databaseEndpoint) {
+    try {
+      String graphqlCommand = "query {" +
+              "  CollectionFacts {\n" +
+              "    id\n" +
+              "  }\n" +
+              "}";
+
+      JsonObject data = directoryCallsGraphql.runGraphqlCommand(databaseEndpoint, graphqlCommand);
+      if (data == null)
+        logger.info("examineFactTable: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV data is null, problem executing graphqlCommand: " + graphqlCommand);
+      else {
+        logger.info("examineFactTable: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV data is not null, suggesting that a fact table is present in the Directory instance that you are uploading to");
+        List<String> collectionFactIds = extractIdsFromJsonObjectForField(data, "CollectionFacts");
+
+        if (collectionFactIds == null)
+          logger.info("examineFactTable: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV collectionFactIds == null, suggesting that the facts in the Directory instance do not have IDs.");
+        else if (collectionFactIds.size() == 0)
+          logger.info("examineFactTable: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV collectionFactIds is empty. Either no facts were generated or the facts did not get successfully uploaded.");
+        else
+          logger.info("examineFactTable: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV collectionFactIds count: " + collectionFactIds.size() + ", this looks good!");
+      }
+    } catch (Exception e) {
+      logger.warn("examineFactTable: error getting data from Molgenis via GraphQL");
+      logger.warn("examineFactTable: exception: " + Util.traceFromException(e));
+    }
   }
 
   /**
@@ -911,29 +948,34 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
       JsonObject data = directoryCallsGraphql.runGraphqlCommand(databaseEndpoint, graphqlCommand);
       if (data == null)
-        logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU data is null, this is probably not a valid endpoint");
+        logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU data is null, this is not a valid endpoint");
       else {
         logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU data is not null");
         List<String> collectionIds = extractIdsFromJsonObjectForField(data, "Collections");
         List<String> collectionFactIds = extractIdsFromJsonObjectForField(data, "CollectionFacts");
         List<String> biobankIds = extractIdsFromJsonObjectForField(data, "Biobanks");
 
-        if (collectionIds == null || collectionFactIds == null || biobankIds == null) {
+        if (collectionFactIds == null)
+          logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionFactIds == null");
+        else if (collectionFactIds.size() == 0)
+          logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionFactIds is empty");
+
+        if (collectionIds == null || biobankIds == null) {
           if (collectionIds == null)
-            logger.info("isValidDatabaseEndpoint: collectionIds == null");
-          if (collectionFactIds == null)
-            logger.info("isValidDatabaseEndpoint: collectionFactIds == null");
+            logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionIds == null");
           if (biobankIds == null)
-            logger.info("isValidDatabaseEndpoint: biobankIds == null");
+            logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU biobankIds == null");
         } else {
-          logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionIds count: " + collectionIds.size() + ", collectionFactIds count: " + collectionFactIds.size() + ", biobankIds count: " + biobankIds.size());
+          logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionIds count: " + collectionIds.size() + ", biobankIds count: " + biobankIds.size());
+          if (collectionFactIds != null)
+            logger.info("isValidDatabaseEndpoint: UUUUUUUUUUUUUUUUUUUUUUUU collectionFactIds count: " + collectionFactIds.size());
 
           if (collectionIds.size() == 0)
             logger.info("isValidDatabaseEndpoint: collectionIds is empty");
           if (biobankIds.size() == 0)
             logger.info("isValidDatabaseEndpoint: biobankIds is empty");
 
-          if (collectionIds.size() > 0 && collectionFactIds.size() >= 0 && biobankIds.size() > 0)
+          if (collectionIds.size() > 0 && biobankIds.size() > 0)
             validEndpoint = true;
         }
       }

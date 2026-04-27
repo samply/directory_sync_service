@@ -85,6 +85,8 @@ public abstract class DirectoryApi {
       return true;
     }
 
+    // If star model attribute does not already exist in database, create it.
+
     // Get rid of previous star models first. This is necessary, because:
     // 1. A new star model may be decomposed into different hypercubes.
     // 2. The new fact IDs may be different from the old ones.
@@ -103,13 +105,13 @@ public abstract class DirectoryApi {
     // Break the fact table into blocks of 1000 before sending to the Directory.
     // This is the maximum number of facts allowed per Directory API call.
     if (factTables.size() == 0) {
-      logger.info("updateStarModel: zero length star model");
+      logger.info("updateStarModel: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV zero length star model");
       updateFactTablesBlock(countryCode, new ArrayList<Map<String, String>>());
     } else {
       for (int i = 0; i < factTables.size(); i += blockSize) {
         List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
 
-        logger.debug("updateStarModel: sending block: " + i + " of " + factTables.size());
+        logger.debug("updateStarModel: sending block: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV " + i + " of " + factTables.size());
         if (!updateFactTablesBlock(countryCode, factTablesBlock)) {
           logger.warn("updateStarModel: failed, block: " + i + " of " + factTables.size());
           return false;
