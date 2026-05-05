@@ -515,13 +515,15 @@ public class DirectoryApiGraphql extends DirectoryApi {
     boolean first = true;
 
     for (Map.Entry<String, String> entry : factTable.entrySet()) {
+      String key = entry.getKey();
+      if (key.equals("national_node") && !includeNationalNode)
+        continue; // including national_node causes problems with directory-playground.molgenis.net
       if (!first) {
         result.append(", ");  // Add comma between key-value pairs
       } else {
         first = false;
       }
 
-      String key = entry.getKey();
       String value = entry.getValue();
 
       String transformedValue = "\"" + value + "\""; // Default: surround value with double quotes
@@ -533,14 +535,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
               key.equals("sample_type"))
         transformedValue = wrapValueInHashWithAttribute("name", value);
       else if (
-              key.equals("national_node") && !includeNationalNode
-      )
-        continue; // including national_node causes problems with directory-playground.molgenis.net
-      else if (
-              key.equals("national_node") && includeNationalNode
-      )
-        transformedValue = wrapValueInHashWithAttribute("id", value);
-      else if (
+              key.equals("national_node") ||
               key.equals("collection")
       )
         transformedValue = wrapValueInHashWithAttribute("id", value);
