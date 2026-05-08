@@ -45,6 +45,7 @@ public class FhirToDirectoryAttributeConverter {
                 .replaceAll("^BLOOD_SERUM$", "SERUM")
                 .replaceAll("^STOOL_FAECES$", "FECES")
                 .replaceAll("^BLOOD_PLASMA$", "SERUM")
+                .replaceAll("^PLASMA_EDTA$", "SERUM")
                 // Some names are present in FHIR but not in Directory. Use "OTHER" as a placeholder.
                 .replaceAll("^.*_OTHER$", "OTHER")
                 .replaceAll("^DERIVATIVE$", "OTHER")

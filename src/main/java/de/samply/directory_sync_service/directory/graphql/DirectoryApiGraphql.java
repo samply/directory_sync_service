@@ -293,6 +293,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
                 "}";
 
         logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
+        logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT graphqlCommand: " + graphqlCommand);
         result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
