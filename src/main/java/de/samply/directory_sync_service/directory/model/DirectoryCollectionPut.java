@@ -3,6 +3,7 @@ package de.samply.directory_sync_service.directory.model;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
@@ -159,7 +160,7 @@ public class DirectoryCollectionPut extends HashMap {
             return null;
         }
 
-        logger.debug("getCountryCode: countryCode: " + countryCode);
+        logger.info("getCountryCode: countryCode: " + countryCode);
         return countryCode;
     }
 
@@ -247,9 +248,24 @@ public class DirectoryCollectionPut extends HashMap {
             if (!this.containsKey("country"))
                 return null;
             Object country = this.get("country");
+            // Known types are:
+            // * String, e.g. "NL";
+            // * Map with key "name", e.g. "{"name": "CZ"}".
             if (country.getClass() != String.class) {
-                // This should never happen. TODO: find out why this happens.
-                logger.warn("getCountry: country is not a String, country: " + Util.jsonStringFomObject(country));
+                if (country.getClass() == Map.class) {
+                    Map countryMap = (Map) country;
+                    if (countryMap.containsKey("name")) {
+                        Object nameObject = countryMap.get("name");
+                        if (nameObject.getClass() == String.class) {
+                            String countryName = (String) nameObject;
+                            if (countryName != null && !countryName.isEmpty()) {
+                                logger.info("getCountry: found embedded country name: " + countryName);
+                                return countryName;
+                            }
+                        }
+                    }
+                }
+                logger.warn("getCountry: country is not a String or a Map, it is of type " + country.getClass() + ", country: " + Util.jsonStringFomObject(country));
                 return null;
             }
             return (String) country;
