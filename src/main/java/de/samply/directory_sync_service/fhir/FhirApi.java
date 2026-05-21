@@ -96,10 +96,6 @@ public class FhirApi {
         .findFirst().map(Identifier::getValue).flatMap(BbmriEricId::valueOf);
   }
 
-//  public String resourceToJsonString(IBaseResource resource) {
-//    return ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resource);
-//  }
-
   /**
    * Updates the provided resource on the FHIR server.
    * <p>
