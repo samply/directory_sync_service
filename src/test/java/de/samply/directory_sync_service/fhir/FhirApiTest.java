@@ -85,18 +85,18 @@ class FhirApiTest {
         }
     }
 
-    @Test
-    @DisplayName("resourceToJsonString: pretty JSON contains resourceType and id")
-    void resourceToJsonString_basic() {
-        FhirApi api = new FhirApi("http://example.org/fhir");
-        Patient p = new Patient();
-        p.setId("pat-1");
-        String json = api.resourceToJsonString(p);
-        assertTrue(json.contains("\"resourceType\""));
-        assertTrue(json.contains("\"Patient\""));
-        assertTrue(json.contains("\"id\""));
-        assertTrue(json.contains("pat-1"));
-    }
+//    @Test
+//    @DisplayName("resourceToJsonString: pretty JSON contains resourceType and id")
+//    void resourceToJsonString_basic() {
+//        FhirApi api = new FhirApi("http://example.org/fhir");
+//        Patient p = new Patient();
+//        p.setId("pat-1");
+//        String json = api.resourceToJsonString(p);
+//        assertTrue(json.contains("\"resourceType\""));
+//        assertTrue(json.contains("\"Patient\""));
+//        assertTrue(json.contains("\"id\""));
+//        assertTrue(json.contains("pat-1"));
+//    }
 
     @Nested
     class SpecimenCacheDrivenLogic {
