@@ -261,8 +261,11 @@ public abstract class DirectoryApi {
     }
     if (!entity.containsKey("country"))
       entity.put("country", country);
-    if (!entity.containsKey("timestamp"))
-      entity.put("timestamp", LocalDateTime.now().toString());
+    if (!entity.containsKey("timestamp")) {
+      String timestamp = LocalDateTime.now().toString();
+      logger.info("insertMissingAttributesIntoEntity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX adding local time as timestamp: " + timestamp);
+      entity.put("timestamp", timestamp);
+    }
     if (!entity.containsKey("national_node"))
       entity.put("national_node", country);
     if (!entity.containsKey("biobank_label") && entity.containsKey("biobank") && entity.get("biobank") instanceof String)
