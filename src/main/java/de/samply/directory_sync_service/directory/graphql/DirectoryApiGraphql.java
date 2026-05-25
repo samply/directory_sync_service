@@ -272,40 +272,61 @@ public class DirectoryApiGraphql extends DirectoryApi {
     login();
 
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
-      JsonObject result = null;
       try {
         logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT about to update collection: " + collectionId);
 
         Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
         cleanEntity(entity);
-        if (entity.containsKey("timestamp"))
-          entity.put("timestamp", cleanTimestamp(entity.get("timestamp").toString()));
+        if (entity.containsKey("timestamp")) {
+          String timestamp = cleanTimestamp(entity.get("timestamp").toString());
+          logger.info("sendUpdatedCollections: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX using timestamp: " + timestamp);
+          entity.put("timestamp", timestamp);
+        } else
+          logger.warn("sendUpdatedCollections: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX no timestamp available for this entity");
         insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
         transformEntityForEmx2(entity);
         deleteUnknownFieldsFromEntity(extractCountryCodeFromBbmriEricId(collectionId), entity);
-        String entityGraphql = mapToGraphQL(entity);
-        String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
 
-        String graphqlCommand = "mutation {\n" +
-                "  update (Collections: \n" +
-                entityGraphql +
-                "  ) { message }\n" +
-                "}";
+        JsonObject result = sendUpdatedCollection(collectionId, entity);
 
-        logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
-        logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT graphqlCommand: " + graphqlCommand);
-        result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+        // If something went wrong when trying to send the GraphQL, successively remove
+        // attributes and try resending. This can help to identify where the error is
+        // coming from.
+        if (result == null) {
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", removing Directory sync. attributes and trying again.");
+          removeDirsyncKeysFromMap(entity);
+          result = sendUpdatedCollection(collectionId, entity);
+          if (result == null) {
+            logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", removing all non-essential attributes and trying again.");
+            keepOnlyEssentialAttributesInMap(entity);
+            result = sendUpdatedCollection(collectionId, entity);
+            if (result == null)
+              logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", you have aproblem with one or more of hte essential attributes.");
+          }
+        }
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
-      }
-
-      if (result == null) {
-        logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", skipping");
-        continue;
       }
     }
 
     return true;
+  }
+
+  private JsonObject sendUpdatedCollection(String collectionId, Map<String, Object> entity) {
+    String entityGraphql = mapToGraphQL(entity);
+    String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
+
+    String graphqlCommand = "mutation {\n" +
+            "  update (Collections: \n" +
+            entityGraphql +
+            "  ) { message }\n" +
+            "}";
+
+    logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
+    logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT graphqlCommand: " + graphqlCommand);
+    JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+
+    return result;
   }
 
   /**
@@ -325,6 +346,38 @@ public class DirectoryApiGraphql extends DirectoryApi {
       entity.remove("national_node");
     if (entity.containsKey("biobank_label") && !isColumnInTable(countryCode, "Collections", "biobank_label"))
       entity.remove("biobank_label");
+  }
+
+  /**
+   * Remove anything inserted by Directory sync. from the input map.
+   *
+   * @param map
+   * @return
+   */
+  private void removeDirsyncKeysFromMap(Map<String, Object> map) {
+    map.remove("diagnosis_available");
+    map.remove("data_categories");
+    map.remove("storage_temperatures");
+    map.remove("sex");
+    map.remove("type");
+    map.remove("age_low");
+    map.remove("size");
+    map.remove("order_of_magnitude_donors");
+    map.remove("materials");
+    map.remove("age_high");
+    map.remove("number_of_donors");
+    map.remove("order_of_magnitude");
+    map.remove("timestamp");
+  }
+
+  /**
+   * Removes all attributes that are not absolutely essential from the Map.
+   *
+   * @param map
+   * @return
+   */
+  private void keepOnlyEssentialAttributesInMap(Map<String, Object> map) {
+    map.remove("description");
   }
 
   /**

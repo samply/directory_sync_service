@@ -225,6 +225,8 @@ public class DirectoryCollectionPut extends HashMap {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
             String formattedDateTime = dateTime.format(formatter);
 
+            logger.info("setTimestamp: XXXXXXXXXXXXXXXXXXXXXXXXXXXX formattedDateTime: " + formattedDateTime);
+
             put("timestamp", formattedDateTime);
         }
 
