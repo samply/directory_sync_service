@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FhirApi {
   private static final Logger logger = LoggerFactory.getLogger(FhirApi.class);
+  private static final String MIABIS_BIOBANK_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-biobank"; // Needed by isMiabisOnFhirProfile
   private static final String STORAGE_TEMPERATURE_URI = "https://fhir.bbmri.de/StructureDefinition/StorageTemperature";
   private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   private static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
@@ -84,6 +85,70 @@ public class FhirApi {
     this.fhirClient =  client;
   }
 
+  /**
+   * Determines whether the connected FHIR store uses the MIABIS on FHIR profile.
+   *
+   * <p>The method searches all {@link Organization} resources in the FHIR store
+   * and checks whether at least one resource declares the MIABIS biobank profile
+   * URI in its {@code meta.profile} element:
+   *
+   * <pre>
+   * https://fhir.bbmri-eric.eu/StructureDefinition/miabis-biobank
+   * </pre>
+   *
+   * <p>If a matching profile is found, the method immediately returns {@code true}.
+   * If no matching profile is found after inspecting all Organization resources,
+   * the method returns {@code false}.
+   *
+   * <p>If the FHIR store contains no Organization resources at all, a warning is
+   * logged and the method returns {@code false}.
+   *
+   * @return {@code true} if the FHIR store contains at least one Organization
+   *         resource declaring the MIABIS biobank profile; {@code false} otherwise
+   */
+  public boolean isMiabisOnFhirProfile() {
+    Bundle bundle = fhirClient
+            .search()
+            .forResource(Organization.class)
+            .returnBundle(Bundle.class)
+            .execute();
+
+    boolean foundAnyOrganization = false;
+
+    while (bundle != null) {
+      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+        if (!(entry.getResource() instanceof Organization organization)) {
+          continue;
+        }
+
+        foundAnyOrganization = true;
+
+        boolean hasMiabisProfile = organization.hasMeta()
+                && organization.getMeta().hasProfile(MIABIS_BIOBANK_PROFILE_URI);
+
+        if (hasMiabisProfile) {
+          return true;
+        }
+      }
+
+      // Just in case there are so many Organization resources that the FHIR store
+      // has to revert to pagination.
+      if (bundle.getLink(Bundle.LINK_NEXT) != null) {
+        bundle = fhirClient
+                .loadPage()
+                .next(bundle)
+                .execute();
+      } else {
+        bundle = null;
+      }
+    }
+
+    if (!foundAnyOrganization) {
+      logger.warn("No Organization resources found in the FHIR store.");
+    }
+
+    return false;
+  }
   /**
    * Returns the BBMRI-ERIC identifier of {@code collection} if some valid one could be found.
    *
