@@ -57,18 +57,18 @@ import org.slf4j.LoggerFactory;
  * Provides convenience methods for selected FHIR operations.
  */
 public class FhirApi {
-  private static final Logger logger = LoggerFactory.getLogger(FhirApi.class);
-  private static final String MIABIS_BIOBANK_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-biobank"; // Needed by isMiabisOnFhirProfile
-  private static final String STORAGE_TEMPERATURE_URI = "https://fhir.bbmri.de/StructureDefinition/StorageTemperature";
-  private static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
-  private static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
-  private static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
-  private static final String DEFAULT_COLLECTION_ID = "DEFAULT_1010101";
-  private Map<String, List<Specimen>> specimensByCollection = null;
-  private Map<String, List<Patient>> patientsByCollection = null;
-  private final IGenericClient fhirClient;
-  private final FhirContext ctx;
-  String fhirStoreUrl;
+  protected static final Logger logger = LoggerFactory.getLogger(FhirApi.class);
+  protected static final String MIABIS_BIOBANK_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-biobank"; // Needed by isMiabisOnFhirProfile
+  protected static final String STORAGE_TEMPERATURE_URI = "https://fhir.bbmri.de/StructureDefinition/StorageTemperature";
+  protected static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
+  protected static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
+  protected static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
+  protected static final String DEFAULT_COLLECTION_ID = "DEFAULT_1010101";
+  protected Map<String, List<Specimen>> specimensByCollection = null;
+  protected Map<String, List<Patient>> patientsByCollection = null;
+  protected final IGenericClient fhirClient;
+  protected final FhirContext ctx;
+  protected String fhirStoreUrl;
 
   public FhirApi(String fhirStoreUrl) {
     ctx = FhirContext.forR4();
@@ -149,6 +149,7 @@ public class FhirApi {
 
     return false;
   }
+
   /**
    * Returns the BBMRI-ERIC identifier of {@code collection} if some valid one could be found.
    *
@@ -223,7 +224,7 @@ public class FhirApi {
    * @return A list of {@link Organization} objects representing biobank collections,
    *         or {@code null} if an error occurs.
    */
-  private List<Organization> listAllCollections() {
+  protected List<Organization> listAllCollections() {
     // List all organizations with the specified biobank profile URI
     Bundle organizationBundle = listAllOrganizations(COLLECTION_PROFILE_URI);
 
@@ -266,7 +267,7 @@ public class FhirApi {
      * @param profileUri The URI of the FHIR profile used to filter the organizations.
      * @return A {@link Bundle} containing the matching organizations, or {@code null} if an error occurs.
      */
-  private Bundle listAllOrganizations(String profileUri) {
+  protected Bundle listAllOrganizations(String profileUri) {
     try {
       return (Bundle) fhirClient.search().forResource(Organization.class)
               .withProfile(profileUri).execute();
@@ -288,7 +289,7 @@ public class FhirApi {
    * @param profileUrl The expected profile URL to filter organizations.
    * @return A list of {@link Organization} objects matching the specified profile.
    */
-  private static List<Organization> extractOrganizations(Bundle bundle, String profileUrl) {
+  protected static List<Organization> extractOrganizations(Bundle bundle, String profileUrl) {
     return bundle.getEntry().stream()
         .map(BundleEntryComponent::getResource)
         .filter(r -> r.getResourceType() == ResourceType.Organization)
@@ -396,7 +397,7 @@ public class FhirApi {
    *
    * @return A Map where keys are Collection IDs and values are Lists of Specimens associated with each Collection ID.
    */
-  private Map<String, List<Specimen>> getAllSpecimensAsMap() {
+  protected Map<String, List<Specimen>> getAllSpecimensAsMap() {
     logger.debug("getAllSpecimensAsMap: entered");
 
     Map<String, List<Specimen>> result = new HashMap<String, List<Specimen>>();
@@ -453,7 +454,7 @@ public class FhirApi {
    * @param specimensByCollection
    * @return
    */
-  private Map<String,List<Patient>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {
+  protected Map<String,List<Patient>> fetchPatientsByCollection(Map<String,List<Specimen>> specimensByCollection) {
     // This method is slow, so use cached value if available.
     if (patientsByCollection != null)
       return patientsByCollection;
@@ -486,7 +487,7 @@ public class FhirApi {
    * @param specimens
    * @return
    */
-  private List<Patient> extractPatientListFromSpecimenList(List<Specimen> specimens) {
+  protected List<Patient> extractPatientListFromSpecimenList(List<Specimen> specimens) {
     return specimens.stream()
             // filter out specimens without a patient reference
             .filter(specimen -> specimen.hasSubject())
@@ -551,7 +552,7 @@ public class FhirApi {
    * @param bundle
    * @return
    */
-  private Bundle getNextPage(Bundle bundle) {
+  protected Bundle getNextPage(Bundle bundle) {
     // TODO: This is a simplistic implementation; it might be better to use fhirClient.loadPage() or follow the next link yourself.
     Bundle nextBundle = null;
     Bundle.BundleLinkComponent nextLink = bundle.getLink("next");
@@ -712,7 +713,7 @@ public class FhirApi {
      * @param specimensByCollection a map of collection id to list of specimens
      * @return the default collection id, or null if none is found
      */
-  private BbmriEricId determineDefaultCollectionId(BbmriEricId defaultBbmriEricCollectionId, Map<String,List<Specimen>> specimensByCollection) {
+  protected BbmriEricId determineDefaultCollectionId(BbmriEricId defaultBbmriEricCollectionId, Map<String,List<Specimen>> specimensByCollection) {
     logger.debug("determineDefaultCollectionId: entered");
     logger.debug("determineDefaultCollectionId: initial defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
 
@@ -751,7 +752,7 @@ public class FhirApi {
    * @param reference
    * @return The collection id.
    */
-  private String extractCollectionIdFromReference(String reference) {
+  protected String extractCollectionIdFromReference(String reference) {
     if (reference == null) return null;
 
     String collectionId = reference;
@@ -783,7 +784,7 @@ public class FhirApi {
    * @param specimen the Specimen object to extract the collection id from
    * @return the collection id as a String
    */
-  private String extractCollectionIdFromSpecimen(Specimen specimen) {
+  protected String extractCollectionIdFromSpecimen(Specimen specimen) {
     // We expect the specimen to have an extension for a collection, where we would find a collection
     // ID. If we can't find that, then return the default collection ID.
     if (!specimen.hasExtension())
@@ -822,7 +823,7 @@ public class FhirApi {
   /**
    * Fetches and returns a list of Organization ID/Name pairs as strings.
    */
-  private List<String> listOrganizations() {
+  protected List<String> listOrganizations() {
     List<String> results = new ArrayList<>();
 
     try {
@@ -864,7 +865,7 @@ public class FhirApi {
    * @param collection
    * @return
    */
-  private String extractValidDirectoryIdentifierFromCollection(Organization collection) {
+  protected String extractValidDirectoryIdentifierFromCollection(Organization collection) {
     String collectionId = DEFAULT_COLLECTION_ID;
     List<Identifier> collectionIdentifiers = collection.getIdentifier();
     for (Identifier collectionIdentifier : collectionIdentifiers) {
@@ -896,7 +897,7 @@ public class FhirApi {
    * @param url the URL of the extension element to extract
    * @return a list of strings that contains the code value of each extension element with the given URL, or an empty list if none is found
    */
-  private List<String> extractExtensionElementValuesFromSpecimen(Specimen specimen, String url) {
+  protected List<String> extractExtensionElementValuesFromSpecimen(Specimen specimen, String url) {
     List<Extension> extensions = specimen.getExtensionsByUrl(url);
     List<String> elementValues = new ArrayList<String>();
 
@@ -918,7 +919,7 @@ public class FhirApi {
    * @param url the URL of the extension elements to extract
    * @return a list of strings that contains the distinct code values of the extension elements with the given URL, or an empty list if none are found
    */
-  private List<String> extractExtensionElementValuesFromSpecimens(List<Specimen> specimens, String url) {
+  protected List<String> extractExtensionElementValuesFromSpecimens(List<Specimen> specimens, String url) {
     return specimens.stream()
             // Flatten each specimen's extension elements into a single stream
             .flatMap(s -> extractExtensionElementValuesFromSpecimen(s, url).stream())
@@ -975,7 +976,7 @@ public class FhirApi {
    * @param specimensByCollection A map where each key represents a collection ID,
    *                              and the value is a list of {@link Specimen} objects associated with that collection.
    */
-  private void updateCollectionsWithSpecimenData(Collections collections, Map<String, List<Specimen>> specimensByCollection) {
+  protected void updateCollectionsWithSpecimenData(Collections collections, Map<String, List<Specimen>> specimensByCollection) {
     for (String collectionId: specimensByCollection.keySet()) {
       List<Specimen> specimenList = specimensByCollection.get(collectionId);
       Collection collection = collections.getOrDefault(collectionId, new Collection());
@@ -1000,7 +1001,7 @@ public class FhirApi {
    * @param patientsByCollection A map where each key represents a collection ID,
    *                              and the value is a list of {@link Patient} objects associated with that collection.
    */
-  private void updateCollectionsWithPatientData(Collections collections, Map<String, List<Patient>> patientsByCollection) {
+  protected void updateCollectionsWithPatientData(Collections collections, Map<String, List<Patient>> patientsByCollection) {
     for (String collectionId: patientsByCollection.keySet()) {
       List<Patient> patientList = patientsByCollection.get(collectionId);
       Collection collection = collections.getOrDefault(collectionId, new Collection());
@@ -1024,7 +1025,7 @@ public class FhirApi {
    * @return A {@link List} of unique diagnosis codes as {@link String} values.
    *         If no diagnoses are found, returns an empty list.
    */
-  private List<String> extractDiagnosesFromPatientList(List<Patient> patientList) {
+  protected List<String> extractDiagnosesFromPatientList(List<Patient> patientList) {
     Set<String> diagnosisSet = new HashSet<>(); // Use Set to ensure uniqueness
 
     for (Patient patient : patientList) {
@@ -1102,7 +1103,7 @@ public class FhirApi {
    * @param defaultBbmriEricCollectionId The BBMRI ERIC collection ID to fetch specimens and diagnoses.
    * @return a List of unique diagnoses.
    */
-  private List<String> fetchDiagnoses(BbmriEricId defaultBbmriEricCollectionId) {
+  protected List<String> fetchDiagnoses(BbmriEricId defaultBbmriEricCollectionId) {
     logger.debug("fetchDiagnoses: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
     // Group specimens according to collection.
     Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
@@ -1156,7 +1157,7 @@ public class FhirApi {
    * @param specimenList A list of {@code Specimen} objects from which to extract material codes.
    * @return A list of unique material codes (as strings) extracted from the specimens.
    */
-  private List<String> extractMaterialsFromSpecimenList(List<Specimen> specimenList) {
+  protected List<String> extractMaterialsFromSpecimenList(List<Specimen> specimenList) {
     if (specimenList == null) {
       logger.warn("extractMaterialsFromSpecimenList: specimenList is null");
       return null;
@@ -1188,7 +1189,7 @@ public class FhirApi {
    * @param patients The list of {@link Patient} objects from which to extract gender information.
    * @return A list of unique gender values as strings.
    */
-  private List<String> extractSexFromPatientList(List<Patient> patients) {
+  protected List<String> extractSexFromPatientList(List<Patient> patients) {
     return patients.stream()
             .filter(patient -> Objects.nonNull(patient.getGenderElement())) // Filter out patients with null gender
             .map(patient -> patient.getGenderElement().getValueAsString()) // Map each patient to their gender
@@ -1204,7 +1205,7 @@ public class FhirApi {
    * @param patients The list of {@link Patient} objects.
    * @return The lowest age found, or -1 if no valid ages are present.
    */
-  private Integer extractAgeLowFromPatientList(List<Patient> patients) {
+  protected Integer extractAgeLowFromPatientList(List<Patient> patients) {
     return patients.stream()
             // Filter out patients with null age
             .filter(p -> Objects.nonNull(determinePatientAge(p)))
@@ -1225,7 +1226,7 @@ public class FhirApi {
    * @param patients The list of {@link Patient} objects.
    * @return The highest age found, or -1 if no valid ages are present.
    */
-  private Integer extractAgeHighFromPatientList(List<Patient> patients) {
+  protected Integer extractAgeHighFromPatientList(List<Patient> patients) {
     return patients.stream()
             // Filter out patients with null age
             .filter(p -> Objects.nonNull(determinePatientAge(p)))
@@ -1248,7 +1249,7 @@ public class FhirApi {
    * @param patient The {@link Patient} object whose age is to be determined.
    * @return The patient's age in years, or {@code null} if the birth date is not available.
    */
-  private Integer determinePatientAge(Patient patient) {
+  protected Integer determinePatientAge(Patient patient) {
     if (!patient.hasBirthDate())
       return null;
 

@@ -4,6 +4,7 @@ import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
+import de.samply.directory_sync_service.fhir.FhirApiFactory;
 import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
@@ -80,7 +81,8 @@ public class Sync {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
-        FhirApi fhirApi = new FhirApi(fhirStoreUrl);
+        //FhirApi fhirApi = new FhirApi(fhirStoreUrl);
+        FhirApi fhirApi = FhirApiFactory.create(fhirStoreUrl);
 
         // Decide which API to use: dump to file, GraphQL or REST.
         DirectoryApi directoryApi;
