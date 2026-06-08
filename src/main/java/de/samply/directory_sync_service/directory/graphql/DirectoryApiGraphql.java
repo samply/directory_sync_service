@@ -289,21 +289,24 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
         JsonObject result = sendUpdatedCollection(collectionId, entity);
 
-        // If something went wrong when trying to send the GraphQL, successively remove
-        // attributes and try resending. This can help to identify where the error is
+        // If something went wrong when trying to send the GraphQL, successively replace
+        // attributes with dummy values and try resending. This can help to identify where the error is
         // coming from.
         if (result == null) {
-          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", removing Directory sync. attributes and trying again.");
-          removeDirsyncKeysFromMap(entity);
-          result = sendUpdatedCollection(collectionId, entity);
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", tring individual standardized Directory sync. attributes.");
+          result = sendUpdatedFixedCollection(collectionId, entity);
+
           if (result == null) {
-            logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", removing all non-essential attributes and trying again.");
-            keepOnlyEssentialAttributesInMap(entity);
-            result = sendUpdatedCollection(collectionId, entity);
+            logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", something is still wrong when tring individual standardized Directory sync. attributes. Now trying all standardized attributes.");
+            result = sendUpdatedStandardizedCollection(collectionId, entity);
             if (result == null)
-              logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", you have aproblem with one or more of hte essential attributes.");
-          }
-        }
+              logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", something went wrong while tring all standardized Directory sync. attributes.");
+            else
+              logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after trying all Directory sync. attributes");
+          } else
+            logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after trying individual Directory sync. attributes");
+        } else
+          logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId);
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
       }
@@ -322,11 +325,117 @@ public class DirectoryApiGraphql extends DirectoryApi {
             "  ) { message }\n" +
             "}";
 
-    logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
-    logger.info("sendUpdatedCollections: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT graphqlCommand: " + graphqlCommand);
+    logger.info("sendUpdatedCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
+    logger.info("sendUpdatedCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT graphqlCommand: " + graphqlCommand);
     JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
 
+    // Note: the minimal requirement for a successful collection push is that the following
+    // attributes are present: country, description, contact, name, id, biobank.
+    // In order to work on a local MOLGENIS, the following additional attributes are necessary:
+    // biobank_label, national_node.
+
     return result;
+  }
+
+  // Vanilla attribute values that are known to be unproblematic when sent in GraphQL to the Directory.
+  private static final Map<String, Object> STANDARD_ATTRIBUTE_VALUES = Map.ofEntries(
+          Map.entry("diagnosis_available", List.of(
+                  Map.of(
+                          "name", "urn:miriam:icd:C15.8"
+                  )
+          )),
+          Map.entry("data_categories", List.of(
+                  Map.of(
+                          "name", "ANTIBODIES"
+                  )
+          )),
+          Map.entry("storage_temperatures", List.of(
+                  Map.of(
+                          "name", "temperatureOther"
+                  )
+          )),
+          Map.entry("sex", Map.of(
+                  "name", "MALE"
+          )),
+          Map.entry("description", "description"),
+          Map.entry("type", List.of(
+                  Map.of(
+                          "name", "QUALITY_CONTROL"
+                  )
+          )),
+          Map.entry("age_low", 36),
+          Map.entry("size", 14),
+          Map.entry("order_of_magnitude_donors", Map.of(
+                  "name", "0"
+          )),
+          Map.entry("materials", List.of(
+                  Map.of(
+                          "name", "SALIVA"
+                  )
+          )),
+          Map.entry("name", "name"),
+          Map.entry("age_high", 36),
+          Map.entry("number_of_donors", 1),
+          Map.entry("order_of_magnitude", Map.of(
+                  "name", "1"
+          )),
+          Map.entry("timestamp", "2026-06-05T13:06:13")
+  );
+
+  /**
+   * Try replacing each of the attributes in an entity with a standard value and then sending the correcponding GraphQL
+   * to the Directory, to see if it fixes the 400 error.
+   *
+   * @param collectionId
+   * @param entity
+   * @return
+   */
+  private JsonObject sendUpdatedFixedCollection(String collectionId, Map<String, Object> entity) {
+    JsonObject result = null;
+    for (String attribute: STANDARD_ATTRIBUTE_VALUES.keySet()) {
+      Map<String, Object> clonedEntity = cloneEntity(entity);
+      clonedEntity.put(attribute, STANDARD_ATTRIBUTE_VALUES.get(attribute));
+      result = sendUpdatedCollection(collectionId, clonedEntity);
+      if (result != null) {
+        logger.info("sendUpdatedFixedCollection: replacing attribute " + attribute + " was successful!!!");
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Try replacing all of the attributes in an entity with a standard value and then sending the correcponding GraphQL
+   * to the Directory, to see if it fixes the 400 error.
+   *
+   * @param collectionId
+   * @param entity
+   * @return
+   */
+  private JsonObject sendUpdatedStandardizedCollection(String collectionId, Map<String, Object> entity) {
+    JsonObject result = null;
+    for (String attribute: STANDARD_ATTRIBUTE_VALUES.keySet()) {
+      entity.put(attribute, STANDARD_ATTRIBUTE_VALUES.get(attribute));
+    }
+
+    result = sendUpdatedCollection(collectionId, entity);
+
+    return result;
+  }
+
+  /**
+   * Shallow clone the entity.
+   *
+   * @param entity
+   * @return
+   */
+  private Map<String, Object> cloneEntity(Map<String, Object> entity) {
+    HashMap<String, Object> clonedEntity = new HashMap<>();
+    for (String attribute: entity.keySet())
+      clonedEntity.put(attribute, entity.get(attribute));
+
+    return clonedEntity;
   }
 
   /**
@@ -368,16 +477,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
     map.remove("number_of_donors");
     map.remove("order_of_magnitude");
     map.remove("timestamp");
-  }
-
-  /**
-   * Removes all attributes that are not absolutely essential from the Map.
-   *
-   * @param map
-   * @return
-   */
-  private void keepOnlyEssentialAttributesInMap(Map<String, Object> map) {
-    map.remove("description");
   }
 
   /**
