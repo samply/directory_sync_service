@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.text.Normalizer;
 
 /**
  * The DirectoryApiGraphql class provides an interface for interacting with the Directory service.
@@ -290,23 +291,35 @@ public class DirectoryApiGraphql extends DirectoryApi {
         JsonObject result = sendUpdatedCollection(collectionId, entity);
 
         // If something went wrong when trying to send the GraphQL, successively replace
-        // attributes with dummy values and try resending. This can help to identify where the error is
-        // coming from.
+        // attributes with other values and try resending. This may fix the problem, or at
+        // least help to identify where the error is coming from.
         if (result == null) {
-          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", tring individual standardized Directory sync. attributes.");
-          result = sendUpdatedFixedCollection(collectionId, entity);
-
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedNewlineTextCollection.");
+          // Remove newlines from name and description.
+          result = sendUpdatedNewlineTextCollection(collectionId, entity);
           if (result == null) {
-            logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", something is still wrong when tring individual standardized Directory sync. attributes. Now trying all standardized attributes.");
-            result = sendUpdatedStandardizedCollection(collectionId, entity);
-            if (result == null)
-              logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", something went wrong while tring all standardized Directory sync. attributes.");
-            else
-              logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after trying all Directory sync. attributes");
+            logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedSpecialCharacterTextCollection.");
+            // Remove special characters from name and description.
+            result = sendUpdatedSpecialCharacterTextCollection(collectionId, entity);
+            if (result == null) {
+              logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedFixedCollection.");
+              // Try replacing individual attributes with vanilla values.
+              result = sendUpdatedFixedCollection(collectionId, entity);
+              if (result == null) {
+                logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedStandardizedCollection.");
+                // Try replacing ALL attributes with vanilla values.
+                result = sendUpdatedStandardizedCollection(collectionId, entity);
+                if (result == null)
+                  logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", no further fallbacks available, so giving up.");
+                else
+                  logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedStandardizedCollection.");
+              } else
+                logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedFixedCollection.");
+            } else
+              logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedSpecialCharacterTextCollection");
           } else
-            logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after trying individual Directory sync. attributes");
-        } else
-          logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId);
+            logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedNewlineTextCollection");
+        }
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
       }
@@ -335,6 +348,115 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // biobank_label, national_node.
 
     return result;
+  }
+
+  /**
+   * Try replacing newlines in the name and description attributes and then sending the corresponding GraphQL
+   * to the Directory, to see if it fixes the 400 error.
+   *
+   * Return value is null if no change was necessary or if the change was not successful.
+   *
+   * @param collectionId
+   * @param entity
+   * @return
+   */
+  private JsonObject sendUpdatedNewlineTextCollection(String collectionId, Map<String, Object> entity) {
+    boolean textChanged = false;
+
+    try {
+      String name = (String) entity.get("name");
+      String cleanedName = replaceNewlines(name);
+      if (!name.equals(cleanedName)) {
+        entity.put("name", cleanedName);
+        logger.info("sendUpdatedNewlineTextCollection: corrected name: " + cleanedName);
+        textChanged = true;
+      }
+    } catch (Exception e) {
+      logger.warn("sendUpdatedNewlineTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+    }
+
+    try {
+      String description = (String) entity.get("description");
+      String cleanedDescription = replaceNewlines(description);
+      if (!description.equals(cleanedDescription)) {
+        entity.put("description", cleanedDescription);
+        logger.info("sendUpdatedNewlineTextCollection: corrected description: " + cleanedDescription);
+        textChanged = true;
+      }
+    } catch (Exception e) {
+      logger.warn("sendUpdatedNewlineTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+    }
+
+    JsonObject result = null;
+    if (textChanged)
+      result = sendUpdatedCollection(collectionId, entity);
+
+    return result;
+  }
+
+  /**
+   * Try replacing special characters in the name and description attributes and then sending the corresponding GraphQL
+   * to the Directory, to see if it fixes the 400 error.
+   *
+   * Return value is null if no change was necessary or if the change was not successful.
+   *
+   * @param collectionId
+   * @param entity
+   * @return
+   */
+  private JsonObject sendUpdatedSpecialCharacterTextCollection(String collectionId, Map<String, Object> entity) {
+    boolean textChanged = false;
+
+    try {
+      String name = (String) entity.get("name");
+      String cleanedName = replaceSpecialCharacters(name);
+      if (!name.equals(cleanedName)) {
+        entity.put("name", cleanedName);
+        logger.info("sendUpdatedSpecialCharacterTextCollection: corrected name: " + cleanedName);
+        textChanged = true;
+      }
+    } catch (Exception e) {
+      logger.warn("sendUpdatedSpecialCharacterTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+    }
+
+    try {
+      String description = (String) entity.get("description");
+      String cleanedDescription = replaceSpecialCharacters(description);
+      if (!description.equals(cleanedDescription)) {
+        entity.put("description", cleanedDescription);
+        logger.info("sendUpdatedSpecialCharacterTextCollection: corrected description: " + cleanedDescription);
+        textChanged = true;
+      }
+    } catch (Exception e) {
+      logger.warn("sendUpdatedSpecialCharacterTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+    }
+
+    JsonObject result = null;
+    if (textChanged)
+      result = sendUpdatedCollection(collectionId, entity);
+
+    return result;
+  }
+
+  private String replaceNewlines(String text) {
+    if (text == null || text.isEmpty())
+      return text;
+    // Replace newlines with spaces.
+    String cleaned = text
+            .replaceAll("\\R", " ");
+
+    return cleaned;
+  }
+
+  private String replaceSpecialCharacters(String text) {
+    if (text == null || text.isEmpty())
+      return text;
+    // Replace special characters with the nearest applicable standard ASCII.
+    String cleaned = Normalizer.normalize(text, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "")
+            .replaceAll("[^\\p{ASCII}]", "");
+
+    return cleaned;
   }
 
   // Vanilla attribute values that are known to be unproblematic when sent in GraphQL to the Directory.
@@ -383,7 +505,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   );
 
   /**
-   * Try replacing each of the attributes in an entity with a standard value and then sending the correcponding GraphQL
+   * Try replacing each of the attributes in an entity with a standard value and then sending the corresponding GraphQL
    * to the Directory, to see if it fixes the 400 error.
    *
    * @param collectionId
