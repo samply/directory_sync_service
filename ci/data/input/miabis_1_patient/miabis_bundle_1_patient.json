@@ -88,6 +88,10 @@
           {
             "system": "http://www.bbmri-eric.eu/",
             "value": "biobank-21437024"
+	  },
+          {
+            "system": "http://www.bbmri-eric.eu/",
+            "value": "bbmri-eric:ID:DE_DKFZ_TEST"
           }
         ],
         "name": "New Davidtown Biobank",
@@ -222,6 +226,10 @@
           {
             "system": "http://www.bbmri-eric.eu/",
             "value": "collection-91071572"
+          },
+          {
+            "system": "http://www.bbmri-eric.eu/",
+            "value": "bbmri-eric:ID:DE_DKFZ_TEST:collection:Test2"
           }
         ],
         "name": "Anyone Collection",
@@ -364,6 +372,10 @@
           {
             "system": "http://www.bbmri-eric.eu/",
             "value": "collection-98151813"
+          },
+          {
+            "system": "http://www.bbmri-eric.eu/",
+            "value": "bbmri-eric:ID:DE_DKFZ_TEST:collection:Test1"
           }
         ],
         "name": "Law Collection",
