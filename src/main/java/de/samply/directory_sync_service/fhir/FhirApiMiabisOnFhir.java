@@ -1,51 +1,18 @@
 package de.samply.directory_sync_service.fhir;
 
-import ca.uhn.fhir.rest.api.SummaryEnum;
-import ca.uhn.fhir.rest.gclient.IQuery;
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import de.samply.directory_sync_service.Util;
-import de.samply.directory_sync_service.model.BbmriEricId;
-import de.samply.directory_sync_service.model.Collection;
-import de.samply.directory_sync_service.model.Collections;
-import org.hl7.fhir.instance.model.api.IBaseBundle;
-import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
-import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Extension;
-import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r4.model.Organization;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static ca.uhn.fhir.rest.api.PreferReturnEnum.OPERATION_OUTCOME;
-import static org.hl7.fhir.r4.model.OperationOutcome.IssueSeverity.ERROR;
 
 /**
  * Provides convenience methods for selected FHIR operations.
@@ -54,6 +21,10 @@ public class FhirApiMiabisOnFhir extends FhirApi {
   protected static final Logger logger = LoggerFactory.getLogger(FhirApiMiabisOnFhir.class);
   protected static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-biobank";
   protected static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-collection"; // there is also a miabis-collection-organization, I am not sure which one to use.
+  protected static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-storage-temperature-extension";
+  private static final String STORAGE_TEMP_EXTENSION = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-storage-temperature-extension";
+  private static final String STORAGE_TEMP_SYSTEM = "https://fhir.bbmri-eric.eu/CodeSystem/miabis-storage-temperature-cs";
+  private static final String COLLECTION_EXTENSION_URL = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-collection-extension";
 
   public FhirApiMiabisOnFhir(String fhirStoreUrl) {
     super(fhirStoreUrl);
@@ -68,149 +39,119 @@ public class FhirApiMiabisOnFhir extends FhirApi {
     return COLLECTION_PROFILE_URI;
   }
 
-  /**
-   * Lists all Organization resources with the biobank profile.
-   *
-   * @return a list of {@link Organization} resources or null on *
-   * errors
-   */
-  public List<Organization> listAllBiobanks() {
-    return null;
+  protected String getSampleDiagnosisUri() {
+    return SAMPLE_DIAGNOSIS_URI;
   }
 
   /**
-   * Retrieves a list of all collections that match the given list of collection IDs.
+   * Find the local ID of the collection to which the specimen belongs.
    *
-   * @param collectionIds A list of collection IDs.
-   * @return A list of {@link Organization} objects representing biobank collections,
-   *         or {@code null} if an error occurs.
-   */
-  public List<Organization> listAllCollections(List<String> collectionIds) {
-    return null;
-  }
-
-  /**
-   * Fetches specimens from the FHIR server and groups them by their collection id.
-   * If no default collection id is provided, tries to find one from the available collections.
-   * If the default collection id is invalid or not found, removes the specimens without a collection id from the result.
-   *
-   * @param defaultBbmriEricCollectionId the default collection id supplied by the site, to be used for specimens without a collection id. May be null
-   * @return a map of collection id to list of specimens, or null in case of an error
-   */
-  public Map<String,List<Specimen>> fetchSpecimensByCollection(BbmriEricId defaultBbmriEricCollectionId) {
-    return null;
-  }
-
-  /**
-   * Retrieves all Specimens from the FHIR server and organizes them into a Map based on their Collection ID.
-   *
-   * @return A Map where keys are Collection IDs and values are Lists of Specimens associated with each Collection ID.
-   */
-  protected Map<String, List<Specimen>> getAllSpecimensAsMap() {
-    return null;
-  }
-
-  public int calculateTotalSpecimenCount(BbmriEricId defaultBbmriEricCollectionId) {
-    return -1;
-  }
-
-  /**
-   * Retrieves all sample materials over all collections.
-   *
-   * @param defaultBbmriEricCollectionId the default BBMRI-ERIC collection ID. May be null.
-   * @return a Map representing sample materials as key-value pairs
-   */
-  public Map<String,String> getSampleMaterials(BbmriEricId defaultBbmriEricCollectionId) {
-    return null;
-  }
-
-  /**
-   * Distingushing function used to ensure that Patient objects do not get duplicated.
-   * Takes a function as argument and uses the return value of this function when
-   * making comparsons.
-   *
-   * @param keyExtractor
-   * @return
-   * @param <T>
-   */
-  public static <T> Predicate<T> distinctBy(Function<? super T, ?> keyExtractor) {
-    Set<Object> seen = new HashSet<>();
-    return t -> seen.add(keyExtractor.apply(t));
-  }
-
-  /**
-   * Finds all {@link Specimen} resources that reference the given {@link Patient}.
-   *
-   * <p>This method performs a FHIR search query to retrieve all Specimen resources
-   * where the {@code subject} field contains a reference to the specified Patient.
-   * It handles paginated results by iterating through multiple response bundles.
-   *
-   * @param patient The {@link Patient} resource whose related Specimen resources should be retrieved.
-   *               Must be a valid Patient object with an assigned FHIR ID.
-   * @return A {@link List} of {@link Specimen} objects that reference the given Patient.
-   *         If no Specimen resources are found, an empty list is returned.
-   */
-  public List<Specimen> findAllSpecimensWithReferencesToPatient(Patient patient) {
-    return null;
-  }
-
-  /**
-   * Extracts a Patient resource from a Specimen resource.
-   *
-   * This works because every Specimen resource contains a reference to a Patient resource.
-   *
-   * @param specimen a Specimen resource that contains a reference to a Patient resource
-   * @return a Patient resource that matches the reference in the Specimen resource, or null if not found
-   */
-  public Patient extractPatientFromSpecimen(Specimen specimen) {
-    return null;
-  }
-
-  /**
-   * Extracts a list of condition codes from a Patient resource using a FHIR client.
-   * The condition codes are based on the system "http://hl7.org/fhir/sid/icd-10".
-   * @param patient a Patient resource that has an ID element
-   * @return a list of strings that represent the condition codes of the patient, or an empty list if none are found
-   */
-  public List<String> extractConditionCodesFromPatient(Patient patient) {
-    return null;
-  }
-
-  /**
-   * Extracts and returns any diagnoses in the extension to the specimen with the
-   * URI SAMPLE_DIAGNOSIS_URI.
+   * For MIABIS on FHIR, we expect the Specimen to have an extension for a collection, where we would
+   * find a collection ID. We expect to find an identifier.
    *
    * @param specimen
    * @return
    */
-  public List<String> extractDiagnosesFromSpecimen(Specimen specimen) {
-    return null;
+  protected String extractLocalCollectionIdFromSpecimen(Specimen specimen) {
+    if (!specimen.hasExtension())
+      return null;
+    Extension extension = specimen.getExtensionByUrl(COLLECTION_EXTENSION_URL);
+    if (extension == null)
+      return null;
+    if (!(extension.getValue() instanceof Identifier identifier))
+      return null;
+    String localCollectionId = extractCollectionIdFromReference(identifier.getValue());
+
+    logger.debug("extractLocalCollectionIdFromSpecimen: localCollectionId: " + localCollectionId);
+
+    return localCollectionId;
   }
 
-  /**
-   * Pulls information relevant to collections from the FHIR store.
-   * <p>
-   * Returns a list of Collection objects, one per collection.
-   *
-   * @param directoryDefaultCollectionId
-   * @return
-   */
-  public Collections generateCollections(String directoryDefaultCollectionId) {
-    return null;
-  }
+  // Map MIABIS on FHIR materials onto bbmri.de materials.
+  private static final Map<String, String> MIABIS_TO_BBMRI_MATERIALS = Map.ofEntries(
+          Map.entry("Blood","whole-blood"),
+          Map.entry("BoneMarrowAspirate","bone-marrow"),
+          Map.entry("BuffyCoat","buffy-coat"),
+          Map.entry("CerebrospinalFluid","csf-liquor"),
+          Map.entry("DNA","dna"),
+          Map.entry("Faeces","stool-faeces"),
+          Map.entry("LiquidBiopsy","liquid-other"),
+          Map.entry("Other",""),
+          Map.entry("PBMC","peripheral-blood-cells-vital"),
+          Map.entry("Plasma","blood-plasma"),
+          Map.entry("RNA","rna"),
+          Map.entry("Saliva","saliva"),
+          Map.entry("Serum","blood-serum"),
+          Map.entry("Sputum","saliva"),
+          Map.entry("TissueFFPE","tissue-formalin"),
+          Map.entry("TissueFixed","tissue-paxgene-or-else"),
+          Map.entry("TissueFreshFrozen","tissue-frozen"),
+          Map.entry("TissueFrozen","tissue-frozen"),
+          Map.entry("Urine","urine"),
+          Map.entry("WholeBlood","whole-blood")
+  );
 
   /**
-   * Fetches diagnoses from Specimens and Patients in all collections.
-   * <p>
-   * This method retrieves specimens grouped by collection.
-   * <p>
-   * It then extracts diagnoses from Specimen extensions and Patient condition codes, eliminating duplicates,
-   * and combines the results into a list of unique diagnoses.
+   * Extracts a material code from a specimen.
    *
-   * @param defaultCollectionId The BBMRI ERIC collection ID to fetch specimens and diagnoses.
-   * @return a List of unique diagnoses.
+   * @param specimen A {@code Specimen} object from which to extract a material code.
+   * @return A material code extracted from the specimen.
    */
-  public List<String> fetchDiagnoses(String defaultCollectionId) {
-    return null;
+  protected String extractMaterialFromSpecimen(Specimen specimen) {
+    String miabisMaterial = super.extractMaterialFromSpecimen(specimen);
+    if (miabisMaterial == null)
+      return null;
+    String material = miabisMaterial.toLowerCase();
+    if (MIABIS_TO_BBMRI_MATERIALS.containsKey(miabisMaterial))
+      material = MIABIS_TO_BBMRI_MATERIALS.get(miabisMaterial);
+    else
+      logger.warn("extractMaterialFromSpecimen: no mapping for MIABIS on FHIR material: " + miabisMaterial + ", replacing with:" + material);
+    return material;
+  }
+
+  // Map MIABIS on FHIR materials onto bbmri.de materials.
+  private static final Map<String, String> MIABIS_TO_BBMRI_TEMPERATURES = Map.ofEntries(
+          Map.entry("RT","temperatureRoom"),
+          Map.entry("2to10","temperature2to10"),
+          Map.entry("-18to-35","temperature-18to-35"),
+          Map.entry("-60to-85","temperature-60to-85"),
+          Map.entry("LN","temperatureLN"),
+          Map.entry("Other","temperatureOther")
+  );
+
+  protected List<String> extractStorageTemperaturesFromSpecimenList(List<Specimen> specimens) {
+    List<String> storageTemperatures = null;
+    try {
+      List<String> miabisStorageTemperatures = specimens.stream()
+              .flatMap(specimen -> specimen.getProcessing().stream())
+              .flatMap(processing -> processing.getExtension().stream())
+              .filter(extension -> STORAGE_TEMP_EXTENSION.equals(extension.getUrl()))
+              .map(extension -> extension.getValue())
+              .filter(CodeableConcept.class::isInstance)
+              .map(CodeableConcept.class::cast)
+              .flatMap(cc -> cc.getCoding().stream())
+              .filter(coding -> STORAGE_TEMP_SYSTEM.equals(coding.getSystem()))
+              .map(Coding::getCode)
+              .filter(Objects::nonNull)
+              .distinct()
+              .toList();
+      // Convert MIABIS on FHIR storage temperatures to bbmri.de storage temperatures.
+      storageTemperatures = new ArrayList<>();
+      for (String miabisStorageTemperature : miabisStorageTemperatures) {
+        if (miabisStorageTemperature == null || miabisStorageTemperature.isEmpty())
+          continue;
+        if (MIABIS_TO_BBMRI_TEMPERATURES.containsKey(miabisStorageTemperature))
+          storageTemperatures.add(MIABIS_TO_BBMRI_TEMPERATURES.get(miabisStorageTemperature));
+        else {
+          String temperature = "temperature" + miabisStorageTemperature;
+          logger.warn("extractStorageTemperaturesFromSpecimenList: no mapping for MIABIS on FHIR temperature: " + miabisStorageTemperatures + ", replacing with: " + temperature);
+          storageTemperatures.add(temperature);
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("extractStorageTemperaturesFromSpecimenList: exception: " + Util.traceFromException(e));
+    }
+
+    return storageTemperatures;
   }
 }
