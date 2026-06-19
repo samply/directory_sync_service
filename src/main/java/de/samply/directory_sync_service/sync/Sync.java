@@ -4,16 +4,20 @@ import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.directory.DirectoryApi;
 import de.samply.directory_sync_service.directory.DirectoryApiWriteToFile;
 import de.samply.directory_sync_service.directory.graphql.DirectoryApiGraphql;
+import de.samply.directory_sync_service.model.BbmriEricId;
 import de.samply.directory_sync_service.model.Collections;
 import de.samply.directory_sync_service.directory.rest.DirectoryApiRest;
 import de.samply.directory_sync_service.fhir.FhirApi;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.FactTable;
 import de.samply.directory_sync_service.model.StarModelInput;
+import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,6 +111,8 @@ public class Sync {
         }
 
         logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT get diagnosis corrections");
+
+        filterOutCollectionsNotInDirectory(fhirApi, directoryApi, directoryDefaultCollectionId);
 
         // The Directory is very strict about diagnosis codes and will reject an entire collection
         // if even one code is not recognized. So first find out which codes it will accept and
@@ -208,5 +214,54 @@ public class Sync {
         } else
             logger.info(">>>>>>>>>>>>>>> syncWithDirectory: all synchronization tasks finished");
         return true;
+    }
+
+    /**
+     * Keep only those collections that the Directory also knows about. This avoids attempts
+     * to push collections or facts that the Directory does not know about.
+     *
+     * This method takes advantage of a side-effect of FhirApi.fetchSpecimensByCollection():
+     * it returns a list of specimens for each collection which it also stores in the FhirApi object.
+     * Changes made to the returned list will thus also be stored in the FhirApi object.
+     * This object is then returned whenever the fetchSpecimensByCollection subsequently is called, complete
+     * with any changes.
+     *
+     * @param fhirApi
+     * @param directoryApi
+     * @param directoryDefaultCollectionId
+     */
+    private static void filterOutCollectionsNotInDirectory(FhirApi fhirApi, DirectoryApi directoryApi, String directoryDefaultCollectionId) {
+        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+                .valueOf(directoryDefaultCollectionId)
+                .orElse(null);
+        Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+        if (specimensByCollection == null) {
+            logger.info("filterOutCollectionsNotInDirectory: not able to get specimens from FHIR store");
+            return;
+        }
+        Set<String> fhirKnownCollectionIds = specimensByCollection.keySet();
+        if (fhirKnownCollectionIds == null) {
+            logger.info("filterOutCollectionsNotInDirectory: not able to get known collection ids from FHIR store");
+            return;
+        }
+        if (fhirKnownCollectionIds.isEmpty()) {
+            logger.info("filterOutCollectionsNotInDirectory: no collections found in FHIR store");
+            return;
+        }
+        logger.info("filterOutCollectionsNotInDirectory: get collection IDs from Directory");
+
+        // TODO: the next line extracts a country code from a random collection ID. This is OK if all collections are from the same country but will break if collections are from multiple countries.
+        String countryCode = directoryApi.extractCountryCodeFromBbmriEricId(fhirKnownCollectionIds.iterator().next());
+        List<String> directoryknownCollectionIds = directoryApi.fetchKnownCollectionIds(countryCode);
+        if (directoryknownCollectionIds == null) {
+            logger.info("filterOutCollectionsNotInDirectory: not able to get known collection ids from Directory");
+            return;
+        }
+        for (String collectionId : fhirKnownCollectionIds) {
+            if (!directoryknownCollectionIds.contains(collectionId)) {
+                logger.info("filterOutCollectionsNotInDirectory: removing collection " + collectionId + " from collections to be updated, because it is not known to the Directory.");
+                specimensByCollection.remove(collectionId);
+            }
+        }
     }
 }

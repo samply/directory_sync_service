@@ -305,4 +305,14 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
       return false; // non-numeric values fail
     }
   }
+
+  /**
+   * Fetch all collection IDs known to the Directory.
+   * @param countryCode E.g. "DE"
+   * @return
+   */
+  @Override
+  public List<String> fetchKnownCollectionIds(String countryCode) {
+    return null;
+  }
 }

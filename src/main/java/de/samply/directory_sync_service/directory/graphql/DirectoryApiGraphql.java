@@ -245,7 +245,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
       }
       ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
     }
-
   }
 
   /**
@@ -1345,4 +1344,43 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return databases;
   }
 
+  /**
+   * Fetch all collection IDs known to the Directory.
+   * @param countryCode E.g. "DE"
+   * @return
+   */
+  @Override
+  public List<String> fetchKnownCollectionIds(String countryCode) {
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      return null;
+    }
+
+    login();
+
+    String graphqlCommand = "query {" +
+            "  Collections {\n" +
+            "    id\n" +
+            "    name\n" +
+            "  }\n" +
+            "}";
+
+    List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+    if (collectionsList == null) {
+      logger.warn("generateCollections: biobankList list is null");
+      return null;
+    }
+    if (collectionsList.size() == 0) {
+      logger.warn("generateCollections: collectionFactsList list is empty");
+      return new ArrayList<String>();
+    }
+
+    List<String> collectionIds = new ArrayList<>();
+    for (Map<String, Object> collection : collectionsList) {
+      String collectionId = (String) collection.get("id");
+      collectionIds.add(collectionId);
+    }
+
+    return collectionIds;
+  }
 }

@@ -55,6 +55,11 @@ class DirectoryApiTest {
         public boolean isValidIcdValue(String diagnosis) {
             return validIcd.contains(diagnosis);
         }
+
+        @Override
+        public List<String> fetchKnownCollectionIds(String countryCode) {
+            return null;
+        }
     }
 
     // ---------- updateStarModel ----------

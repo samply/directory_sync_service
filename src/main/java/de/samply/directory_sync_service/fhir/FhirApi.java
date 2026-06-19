@@ -241,6 +241,9 @@ public class FhirApi {
    * If no default collection id is provided, tries to find one from the available collections.
    * If the default collection id is invalid or not found, removes the specimens without a collection id from the result.
    *
+   * Note: This method pulls the specimens only once from the FHIR store. Subsequent calls to
+   * the method will retrieve a cached value.
+   *
    * @param defaultBbmriEricCollectionId the default collection id supplied by the site, to be used for specimens without a collection id. May be null
    * @return a map of collection id to list of specimens, or null in case of an error
    */
