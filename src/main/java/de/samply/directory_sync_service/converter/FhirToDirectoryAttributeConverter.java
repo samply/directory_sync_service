@@ -18,8 +18,10 @@ public class FhirToDirectoryAttributeConverter {
      * @return The converted sex attribute in uppercase.
      */
     public static String convertSex(String sex) {
-        // Signifiers for sex largely overlap between FHIR and Directory, but Directory likes
-        // upper case
+        if (sex.equals("other"))
+            return "UNDIFFERENTIAL";
+        if (sex.equals("unknown"))
+            return "NAV";
         return sex.toUpperCase();
     }
 
