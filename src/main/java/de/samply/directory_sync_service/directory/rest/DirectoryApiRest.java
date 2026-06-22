@@ -359,4 +359,14 @@ public class DirectoryApiRest extends DirectoryApi {
 
     return false;
   }
+
+  /**
+   * Fetch all collection IDs known to the Directory.
+   * @param countryCode E.g. "DE"
+   * @return
+   */
+  @Override
+  public List<String> fetchKnownCollectionIds(String countryCode) {
+    return null;
+  }
 }

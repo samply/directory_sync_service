@@ -204,7 +204,7 @@ public abstract class DirectoryApi {
    * @param id The BBMRI ID string from which to extract the country code.
    * @return The country code extracted from the BBMRI ID string.
    */
-  protected String extractCountryCodeFromBbmriEricId(String id) {
+  public String extractCountryCodeFromBbmriEricId(String id) {
     if (id == null) return null;
     BbmriEricId bbmriEricCollectionId = BbmriEricId
             .valueOf(id)
@@ -361,4 +361,11 @@ public abstract class DirectoryApi {
       }
     }
   }
+
+  /**
+   * Fetch all collection IDs known to the Directory.
+   * @param countryCode E.g. "DE"
+   * @return
+   */
+  public abstract List<String> fetchKnownCollectionIds(String countryCode);
 }

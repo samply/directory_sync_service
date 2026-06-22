@@ -47,6 +47,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
    */
   public DirectoryApiGraphql(String baseUrl, boolean mockDirectory, String username, String password, String token) {
     super(mockDirectory);
+    logger.info("DirectoryApiGraphql: baseUrl: " + baseUrl);
     this.directoryCallsGraphql = new DirectoryCallsGraphql(baseUrl, username, password);
     this.directoryEndpointsGraphql = new DirectoryEndpointsGraphql();
     directoryEndpoints = new DirectoryEndpointsGraphql();
@@ -245,7 +246,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
       }
       ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
     }
-
   }
 
   /**
@@ -346,6 +346,48 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // attributes are present: country, description, contact, name, id, biobank.
     // In order to work on a local MOLGENIS, the following additional attributes are necessary:
     // biobank_label, national_node.
+
+
+
+
+//    String cyprusGraphQlCommand = "mutation { update (Collections: {\n" +
+////            "    diagnosis_available:[{name:\"urn:miriam:icd:C20\"},{name:\"urn:miriam:icd:C18.7\"}],\n" + // diagnosis field absent in Cyprus
+//            "    country:{name:\"EU\"},\n" +
+////            "    data_categories:[{name:\"ANTIBODIES\"}],\n" +
+//            "  data_categories:[{name:\"SURVEY_DATA\"},{name:\"CLINICAL_SYMPTOMS\"},{name:\"PHYSIOLOGICAL_BIOCHEMICAL_MEASUREMENTS\"},{name:\"MEDICAL_RECORDS\"},{name:\"BIOLOGICAL_SAMPLES\"}],\n" +
+////            "    sex:[{name:\"FEMALE\"},{name:\"MALE\"}],\n" +
+////            "  sex:[{name:\"OTHER\"},{name:\"FEMALE\"},{name:\"MALE\"}],\n" + // This is causing GraphQL errors
+////            "  sex:[{name:\"OTHER\"}],\n" + // This is causing GraphQL errors
+//            "  sex:[{name:\"NAV\"}],\n" +
+//            "    description:\"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\",\n" +
+//            "    biobank_label:\"bbmri-eric:ID:EU_BBMRI-ERIC\",\n" +
+////            "    type:[{name:\"POPULATION_BASED\"}],\n" +
+//            "  type:[{name:\"PROSPECTIVE_COLLECTION\"}],\n" +
+//            "    age_low:85,\n" +
+//            "    national_node:{id:\"EU\"},\n" +
+//            "    size:14,\n" +
+//            "    order_of_magnitude_donors:{name:\"0\"},\n" +
+////            "    materials:[{name:\"OTHER\"},{name:\"TISSUE_PARAFFIN_EMBEDDED\"},{name:\"TISSUE_FROZEN\"}],\n" +
+//            "  materials:[{name:\"SERUM\"},{name:\"URINE\"}],\n" +
+//            "    contact:{id:\"erdi\"},\n" +
+//            "    name:\"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\",\n" +
+//            "    age_high:86,\n" +
+//            "    id:\"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\",\n" +
+//            "    number_of_donors:2,\n" +
+//            "    order_of_magnitude:{name:\"1\"},\n" +
+//            "    biobank:{id:\"bbmri-eric:ID:EU_BBMRI-ERIC\"},\n" +
+//            "    timestamp:\"2026-06-19T11:30:28\"\n" +
+//            "}  ) { message } }\n";
+//    JsonObject cyprusResult = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), cyprusGraphQlCommand);
+//    if (cyprusResult == null)
+//      logger.info("sendUpdatedCollection: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA cyprusResult is null.");
+//    else
+//      logger.info("sendUpdatedCollection: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA cyprusResult is OK.");
+
+
+
+
+
 
     return result;
   }
@@ -1345,4 +1387,43 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return databases;
   }
 
+  /**
+   * Fetch all collection IDs known to the Directory.
+   * @param countryCode E.g. "DE"
+   * @return
+   */
+  @Override
+  public List<String> fetchKnownCollectionIds(String countryCode) {
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      return null;
+    }
+
+    login();
+
+    String graphqlCommand = "query {" +
+            "  Collections {\n" +
+            "    id\n" +
+            "    name\n" +
+            "  }\n" +
+            "}";
+
+    List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+    if (collectionsList == null) {
+      logger.warn("generateCollections: biobankList list is null");
+      return null;
+    }
+    if (collectionsList.size() == 0) {
+      logger.warn("generateCollections: collectionFactsList list is empty");
+      return new ArrayList<String>();
+    }
+
+    List<String> collectionIds = new ArrayList<>();
+    for (Map<String, Object> collection : collectionsList) {
+      String collectionId = (String) collection.get("id");
+      collectionIds.add(collectionId);
+    }
+
+    return collectionIds;
+  }
 }
