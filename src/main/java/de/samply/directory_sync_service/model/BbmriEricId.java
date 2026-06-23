@@ -52,10 +52,8 @@ public class BbmriEricId {
       return Optional.empty();
     }
     Matcher matcher = PATTERN.matcher(s);
-    if (!matcher.matches()) {
-      logger.info("valueOf: \"" + s + "\" doesnt match BBMRI ID pattern, cannot determine an ID");
+    if (!matcher.matches())
       return Optional.empty();
-    }
     return Optional.of(new BbmriEricId(matcher.group(1), matcher.group(2)));
   }
 

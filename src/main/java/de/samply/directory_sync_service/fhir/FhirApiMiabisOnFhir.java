@@ -62,8 +62,6 @@ public class FhirApiMiabisOnFhir extends FhirApi {
       return null;
     String localCollectionId = extractCollectionIdFromReference(identifier.getValue());
 
-    logger.debug("extractLocalCollectionIdFromSpecimen: localCollectionId: " + localCollectionId);
-
     return localCollectionId;
   }
 

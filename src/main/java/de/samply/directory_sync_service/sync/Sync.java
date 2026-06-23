@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 import de.samply.directory_sync_service.fhir.PopulateStarModelInputData;
 import de.samply.directory_sync_service.model.FactTable;
@@ -250,6 +251,7 @@ public class Sync {
             logger.info("filterOutCollectionsNotInDirectory: no collections found in FHIR store");
             return;
         }
+        List<String> fhirKnownCollectionIdsList = new ArrayList<>(fhirKnownCollectionIds); // clone keys, because we may be deleting some of them
         logger.info("filterOutCollectionsNotInDirectory: get collection IDs from Directory");
 
         // TODO: the next line extracts a country code from a random collection ID. This is OK if all collections are from the same country but will break if collections are from multiple countries.
@@ -259,7 +261,7 @@ public class Sync {
             logger.info("filterOutCollectionsNotInDirectory: not able to get known collection ids from Directory");
             return;
         }
-        for (String collectionId : fhirKnownCollectionIds) {
+        for (String collectionId : fhirKnownCollectionIdsList) {
             if (!directoryknownCollectionIds.contains(collectionId)) {
                 logger.info("filterOutCollectionsNotInDirectory: removing collection " + collectionId + " from collections to be updated, because it is not known to the Directory.");
                 specimensByCollection.remove(collectionId);
