@@ -189,11 +189,40 @@ public class FhirApi {
       logger.warn("listAllCollections: collections is null");
       return null;
     }
+    if (collections.size() == 0) {
+      logger.warn("listAllCollections: collections is empty");
+      return null;
+    }
 
-    return collections.stream()
-            .filter(c -> c.getIdentifier().stream()
-                    .anyMatch(identifier -> collectionIds.contains(identifier.getValue())))
-            .collect(Collectors.toList());
+//    return collections.stream()
+//            .filter(c -> c.getIdentifier().stream()
+//                    .anyMatch(identifier -> collectionIds.contains(identifier.getValue())))
+//            .collect(Collectors.toList());
+    List<Organization> result = new ArrayList<>();
+
+    boolean success = false;
+    for (Organization collection : collections) {
+      List<Identifier> identifiers = collection.getIdentifier();
+      logger.info("listAllCollections: identifiers.size(): " + identifiers.size());
+      for (Identifier identifier : identifiers) {
+        String identifierValue = identifier.getValue();
+        logger.info("listAllCollections: identifierValue: " + identifierValue);
+        if (collectionIds.contains(identifierValue)) {
+          result.add(collection);
+          logger.info("listAllCollections: adding collection");
+          success = true;
+          break; // avoid adding the same collection multiple times
+        }
+      }
+    }
+
+    logger.info("listAllCollections: success: " + success);
+    if (!success) {
+      logger.warn("listAllCollections: no matching collections could be found in the FHIR store, collectionIds: " + Util.jsonStringFomObject(collectionIds));
+      return null;
+    }
+
+    return result;
   }
 
     /**
