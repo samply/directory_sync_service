@@ -207,7 +207,7 @@ public class FhirApi {
       for (Identifier identifier : identifiers) {
         String identifierValue = identifier.getValue();
         logger.info("listAllCollections: identifierValue: " + identifierValue);
-        if (collectionIds.contains(identifierValue)) {
+        if (collectionIds.contains(identifierValue) || collectionIds.contains(extractCollectionIdFromReference(identifierValue))) {
           result.add(collection);
           logger.info("listAllCollections: adding collection");
           success = true;
