@@ -110,7 +110,7 @@ public class Sync {
             return true;
         }
 
-        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT get diagnosis corrections");
+        logger.info("syncWithDirectory: get diagnosis corrections");
 
         filterOutCollectionsNotInDirectory(fhirApi, directoryApi, directoryDefaultCollectionId);
 
@@ -130,7 +130,7 @@ public class Sync {
 
         boolean factTableProblem = false;
         if (directoryAllowStarModel) {
-            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT update star model");
+            logger.info("syncWithDirectory: update star model");
             // Pull data from the FHIR store and save it in a format suitable for generating
             // star model hypercubes. If a problem arises, note it, but carry on.
             StarModelInput starModelInput = (new PopulateStarModelInputData(fhirApi)).populate(directoryDefaultCollectionId);
@@ -138,7 +138,7 @@ public class Sync {
                 logger.warn("syncWithDirectory: Problem getting star model information from FHIR store");
                 factTableProblem = true;
             } else {
-                logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTT number of collection IDs: " + starModelInput.getInputCollectionIds().size());
+                logger.info("syncWithDirectory: number of collection IDs: " + starModelInput.getInputCollectionIds().size());
 
                 // Send fact tables to Directory
                 FactTable factTable = StarModelUpdater.sendStarModelUpdatesToDirectory(directoryApi, correctedDiagnoses, starModelInput, directoryMinDonors, directoryMaxFacts);
@@ -150,7 +150,7 @@ public class Sync {
             }
         }
 
-        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT update collections");
+        logger.info("syncWithDirectory: update collections");
 
         boolean updateCollectionsProblem = false;
         // Mine the FHIR store for all available collections. This gets aggregated
@@ -162,7 +162,7 @@ public class Sync {
             logger.warn("syncWithDirectory: Problem getting collections from FHIR store");
             updateCollectionsProblem = true;
         } else {
-            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT initial collections.size(): " + collections.size());
+            logger.info("syncWithDirectory: initial collections.size(): " + collections.size());
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
@@ -172,7 +172,7 @@ public class Sync {
             // This is stuff like collection name, description, associated biobank,
             // etc. It gets combined with the information from the FHIR store.
             directoryApi.fetchBasicCollectionData(collections);
-            logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT after fetching data collections.size(): " + collections.size());
+            logger.info("syncWithDirectory: after fetching data collections.size(): " + collections.size());
 
             // Push the combined collection information (from the FHIR store and the basic
             // information from the Directory) to the Directory.
@@ -182,7 +182,7 @@ public class Sync {
             }
         }
 
-        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT import metadata");
+        logger.info("syncWithDirectory: import metadata");
 
         boolean importProblem = false;
         // Pull metadata from the Directory and insert it into the FHIR store.  If a problem
@@ -200,7 +200,7 @@ public class Sync {
             }
         }
 
-        logger.info("syncWithDirectory: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT report problems");
+        logger.info("syncWithDirectory: report problems");
 
         if (correctedDiagnosesProblem || factTableProblem || updateCollectionsProblem || importProblem) {
             if (correctedDiagnosesProblem)
