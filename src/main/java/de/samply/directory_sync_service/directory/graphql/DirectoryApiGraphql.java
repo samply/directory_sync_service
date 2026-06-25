@@ -297,29 +297,26 @@ public class DirectoryApiGraphql extends DirectoryApi {
           logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedNewlineTextCollection.");
           // Remove newlines from name and description.
           result = sendUpdatedNewlineTextCollection(collectionId, entity);
-          if (result == null) {
-            logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedSpecialCharacterTextCollection.");
-            // Remove special characters from name and description.
-            result = sendUpdatedSpecialCharacterTextCollection(collectionId, entity);
-            if (result == null) {
-              logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedFixedCollection.");
-              // Try replacing individual attributes with vanilla values.
-              result = sendUpdatedFixedCollection(collectionId, entity);
-              if (result == null) {
-                logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedStandardizedCollection.");
-                // Try replacing ALL attributes with vanilla values.
-                result = sendUpdatedStandardizedCollection(collectionId, entity);
-                if (result == null)
-                  logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", no further fallbacks available, so giving up.");
-                else
-                  logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedStandardizedCollection.");
-              } else
-                logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedFixedCollection.");
-            } else
-              logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedSpecialCharacterTextCollection");
-          } else
-            logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId + " after running sendUpdatedNewlineTextCollection");
         }
+        if (result == null) {
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedSpecialCharacterTextCollection.");
+          // Remove special characters from name and description.
+          result = sendUpdatedSpecialCharacterTextCollection(collectionId, entity);
+        }
+        if (result == null) {
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedCollectionDeleteIndividualListAttributes.");
+          // Try deleting individual list attributes.
+          result = sendUpdatedCollectionDeleteIndividualListAttributes(collectionId, entity);
+        }
+        if (result == null) {
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedCollectionDeleteAllListAttributes.");
+          // Try deleting ALL list attributes.
+          result = sendUpdatedCollectionDeleteAllListAttributes(collectionId, entity);
+        }
+        if (result == null)
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", no further fallbacks available, so giving up.");
+        else
+          logger.info("sendUpdatedCollections: result is OK for collectionId: " + collectionId);
       } catch (Exception e) {
         logger.warn("sendUpdatedCollections: problem for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
       }
@@ -347,28 +344,19 @@ public class DirectoryApiGraphql extends DirectoryApi {
     // In order to work on a local MOLGENIS, the following additional attributes are necessary:
     // biobank_label, national_node.
 
-
-
-
 //    String cyprusGraphQlCommand = "mutation { update (Collections: {\n" +
-////            "    diagnosis_available:[{name:\"urn:miriam:icd:C20\"},{name:\"urn:miriam:icd:C18.7\"}],\n" + // diagnosis field absent in Cyprus
+//            "    diagnosis_available:[{name:\"urn:miriam:icd:C20\"},{name:\"urn:miriam:icd:C18.7\"}],\n" + // diagnosis field absent in Cyprus
 //            "    country:{name:\"EU\"},\n" +
-////            "    data_categories:[{name:\"ANTIBODIES\"}],\n" +
-//            "  data_categories:[{name:\"SURVEY_DATA\"},{name:\"CLINICAL_SYMPTOMS\"},{name:\"PHYSIOLOGICAL_BIOCHEMICAL_MEASUREMENTS\"},{name:\"MEDICAL_RECORDS\"},{name:\"BIOLOGICAL_SAMPLES\"}],\n" +
-////            "    sex:[{name:\"FEMALE\"},{name:\"MALE\"}],\n" +
-////            "  sex:[{name:\"OTHER\"},{name:\"FEMALE\"},{name:\"MALE\"}],\n" + // This is causing GraphQL errors
-////            "  sex:[{name:\"OTHER\"}],\n" + // This is causing GraphQL errors
-//            "  sex:[{name:\"NAV\"}],\n" +
+//            "    data_categories:[{name:\"ANTIBODIES\"}],\n" +
+//            "    sex:[{name:\"FEMALE\"},{name:\"MALE\"}],\n" +
 //            "    description:\"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\",\n" +
 //            "    biobank_label:\"bbmri-eric:ID:EU_BBMRI-ERIC\",\n" +
-////            "    type:[{name:\"POPULATION_BASED\"}],\n" +
-//            "  type:[{name:\"PROSPECTIVE_COLLECTION\"}],\n" +
+//            "    type:[{name:\"POPULATION_BASED\"}],\n" +
 //            "    age_low:85,\n" +
 //            "    national_node:{id:\"EU\"},\n" +
 //            "    size:14,\n" +
 //            "    order_of_magnitude_donors:{name:\"0\"},\n" +
-////            "    materials:[{name:\"OTHER\"},{name:\"TISSUE_PARAFFIN_EMBEDDED\"},{name:\"TISSUE_FROZEN\"}],\n" +
-//            "  materials:[{name:\"SERUM\"},{name:\"URINE\"}],\n" +
+//            "    materials:[{name:\"OTHER\"},{name:\"TISSUE_PARAFFIN_EMBEDDED\"},{name:\"TISSUE_FROZEN\"}],\n" +
 //            "    contact:{id:\"erdi\"},\n" +
 //            "    name:\"bbmri-eric:ID:EU_BBMRI-ERIC:collection:CRC-Cohort\",\n" +
 //            "    age_high:86,\n" +
@@ -383,11 +371,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
 //      logger.info("sendUpdatedCollection: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA cyprusResult is null.");
 //    else
 //      logger.info("sendUpdatedCollection: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA cyprusResult is OK.");
-
-
-
-
-
 
     return result;
   }
@@ -432,6 +415,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
     JsonObject result = null;
     if (textChanged)
       result = sendUpdatedCollection(collectionId, entity);
+    else
+      logger.info("sendUpdatedNewlineTextCollection: no change necessary, returning null.");
 
     return result;
   }
@@ -476,6 +461,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
     JsonObject result = null;
     if (textChanged)
       result = sendUpdatedCollection(collectionId, entity);
+    else
+      logger.info("sendUpdatedSpecialCharacterTextCollection: no change necessary, returning null.");
 
     return result;
   }
@@ -501,67 +488,23 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return cleaned;
   }
 
-  // Vanilla attribute values that are known to be unproblematic when sent in GraphQL to the Directory.
-  private static final Map<String, Object> STANDARD_ATTRIBUTE_VALUES = Map.ofEntries(
-          Map.entry("diagnosis_available", List.of(
-                  Map.of(
-                          "name", "urn:miriam:icd:C15.8"
-                  )
-          )),
-          Map.entry("data_categories", List.of(
-                  Map.of(
-                          "name", "ANTIBODIES"
-                  )
-          )),
-          Map.entry("storage_temperatures", List.of(
-                  Map.of(
-                          "name", "temperatureOther"
-                  )
-          )),
-          Map.entry("sex", Map.of(
-                  "name", "MALE"
-          )),
-          Map.entry("description", "description"),
-          Map.entry("type", List.of(
-                  Map.of(
-                          "name", "QUALITY_CONTROL"
-                  )
-          )),
-          Map.entry("age_low", 36),
-          Map.entry("size", 14),
-          Map.entry("order_of_magnitude_donors", Map.of(
-                  "name", "0"
-          )),
-          Map.entry("materials", List.of(
-                  Map.of(
-                          "name", "SALIVA"
-                  )
-          )),
-          Map.entry("name", "name"),
-          Map.entry("age_high", 36),
-          Map.entry("number_of_donors", 1),
-          Map.entry("order_of_magnitude", Map.of(
-                  "name", "1"
-          )),
-          Map.entry("timestamp", "2026-06-05T13:06:13")
-  );
-
+  private static final List<String> LIST_ATTRIBUTES = List.of("diagnosis_available", "sex", "storage_temperatures", "materials");
   /**
-   * Try replacing each of the attributes in an entity with a standard value and then sending the corresponding GraphQL
+   * Try deleting each of the list attributes in an entity and then sending the corresponding GraphQL
    * to the Directory, to see if it fixes the 400 error.
    *
    * @param collectionId
    * @param entity
    * @return
    */
-  private JsonObject sendUpdatedFixedCollection(String collectionId, Map<String, Object> entity) {
+  private JsonObject sendUpdatedCollectionDeleteIndividualListAttributes(String collectionId, Map<String, Object> entity) {
     JsonObject result = null;
-    for (String attribute: STANDARD_ATTRIBUTE_VALUES.keySet()) {
+    for (String attribute: LIST_ATTRIBUTES) {
       Map<String, Object> clonedEntity = cloneEntity(entity);
-      clonedEntity.put(attribute, STANDARD_ATTRIBUTE_VALUES.get(attribute));
+      clonedEntity.remove(attribute);
       result = sendUpdatedCollection(collectionId, clonedEntity);
       if (result != null) {
-        logger.info("sendUpdatedFixedCollection: replacing attribute " + attribute + " was successful!!!");
+        logger.info("sendUpdatedEmptyListAttributeCollection: inserting empty attribute " + attribute + " was successful!!!");
         break;
       }
     }
@@ -570,20 +513,19 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * Try replacing all of the attributes in an entity with a standard value and then sending the correcponding GraphQL
+   * Try deleting all of the list attributes in an entity and then sending the corresponding GraphQL
    * to the Directory, to see if it fixes the 400 error.
    *
    * @param collectionId
    * @param entity
    * @return
    */
-  private JsonObject sendUpdatedStandardizedCollection(String collectionId, Map<String, Object> entity) {
+  private JsonObject sendUpdatedCollectionDeleteAllListAttributes(String collectionId, Map<String, Object> entity) {
     JsonObject result = null;
-    for (String attribute: STANDARD_ATTRIBUTE_VALUES.keySet()) {
-      entity.put(attribute, STANDARD_ATTRIBUTE_VALUES.get(attribute));
-    }
-
-    result = sendUpdatedCollection(collectionId, entity);
+    Map<String, Object> clonedEntity = cloneEntity(entity);
+    for (String attribute: LIST_ATTRIBUTES)
+      clonedEntity.remove(attribute);
+    result = sendUpdatedCollection(collectionId, clonedEntity);
 
     return result;
   }
