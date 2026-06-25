@@ -259,11 +259,40 @@ public class FhirApi {
       logger.warn("listAllCollections: collections is null");
       return null;
     }
+    if (collections.size() == 0) {
+      logger.warn("listAllCollections: collections is empty");
+      return null;
+    }
 
-    return collections.stream()
-            .filter(c -> c.getIdentifier().stream()
-                    .anyMatch(identifier -> collectionIds.contains(identifier.getValue())))
-            .collect(Collectors.toList());
+//    return collections.stream()
+//            .filter(c -> c.getIdentifier().stream()
+//                    .anyMatch(identifier -> collectionIds.contains(identifier.getValue())))
+//            .collect(Collectors.toList());
+    List<Organization> result = new ArrayList<>();
+
+    boolean success = false;
+    for (Organization collection : collections) {
+      List<Identifier> identifiers = collection.getIdentifier();
+      logger.info("listAllCollections: identifiers.size(): " + identifiers.size());
+      for (Identifier identifier : identifiers) {
+        String identifierValue = identifier.getValue();
+        logger.info("listAllCollections: identifierValue: " + identifierValue);
+        if (collectionIds.contains(identifierValue) || collectionIds.contains(extractCollectionIdFromReference(identifierValue))) {
+          result.add(collection);
+          logger.info("listAllCollections: adding collection");
+          success = true;
+          break; // avoid adding the same collection multiple times
+        }
+      }
+    }
+
+    logger.info("listAllCollections: success: " + success);
+    if (!success) {
+      logger.warn("listAllCollections: no matching collections could be found in the FHIR store, collectionIds: " + Util.jsonStringFomObject(collectionIds));
+      return null;
+    }
+
+    return result;
   }
 
   /**
@@ -329,11 +358,11 @@ public class FhirApi {
     try {
       specimensByCollection = getAllSpecimensAsMap();
 
-      logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT specimensByCollection size: " + specimensByCollection.size());
+      logger.info("fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
 
       defaultBbmriEricCollectionId = determineDefaultCollectionId(defaultBbmriEricCollectionId, specimensByCollection);
 
-      logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
+      logger.info("fetchSpecimensByCollection: defaultBbmriEricCollectionId: " + defaultBbmriEricCollectionId);
 
       // Remove specimens without a collection from specimensByCollection, but keep
       // the relevant specimen list, just in case we have a valid default ID to
@@ -343,12 +372,12 @@ public class FhirApi {
       if (defaultCollection == null)
         logger.info("fetchSpecimensByCollection: defaultCollection is null");
       else
-        logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT defaultCollection size: " + defaultCollection.size());
+        logger.info("fetchSpecimensByCollection: defaultCollection size: " + defaultCollection.size());
 
       // Replace the DEFAULT_COLLECTION_ID key in specimensByCollection by a sensible collection ID,
       // assuming, of course, that there were any specemins caregorized by DEFAULT_COLLECTION_ID.
       if (defaultCollection != null && defaultCollection.size() != 0 && defaultBbmriEricCollectionId != null) {
-        logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT Replace the DEFAULT_COLLECTION_ID key");
+        logger.info("fetchSpecimensByCollection: Replace the DEFAULT_COLLECTION_ID key");
 
         if (specimensByCollection.containsKey(defaultBbmriEricCollectionId.toString()))
           // Add all specimens with DEFAULT_COLLECTION_ID to defaultBbmriEricCollectionId if it exists
@@ -359,12 +388,12 @@ public class FhirApi {
           specimensByCollection.put(defaultBbmriEricCollectionId.toString(), defaultCollection);
       }
 
-      logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT specimensByCollection size: " + specimensByCollection.size());
+      logger.info("fetchSpecimensByCollection: specimensByCollection size: " + specimensByCollection.size());
       if (specimensByCollection.size() == 0)
         logger.warn("fetchSpecimensByCollection: no collections found, maybe you need to upload some data to your FHIR store?");
       else {
         String randomCollectionId = (String) specimensByCollection.keySet().toArray()[0];
-        logger.info("fetchSpecimensByCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTT for collection ID " + randomCollectionId + ", specimen count is: " + specimensByCollection.get(randomCollectionId).size());
+        logger.info("fetchSpecimensByCollection: for collection ID " + randomCollectionId + ", specimen count is: " + specimensByCollection.get(randomCollectionId).size());
       }
       return specimensByCollection;
     } catch (Exception e) {
@@ -1144,7 +1173,7 @@ public class FhirApi {
       return null;
     }
 
-    logger.info("generateDiagnosisCorrections: TTTTTTTTTTTTTTTTTTTTTTTTTTT fhirDiagnoses.size(): " + fhirDiagnoses.size());
+    logger.info("generateDiagnosisCorrections: fhirDiagnoses.size(): " + fhirDiagnoses.size());
 
     return fhirDiagnoses;
   }
@@ -1179,7 +1208,7 @@ public class FhirApi {
             .distinct()
             .collect(Collectors.toList());
 
-    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT number of diagnoses from specimens: " + diagnoses.size());
+    logger.info("fetchDiagnoses: number of diagnoses from specimens: " + diagnoses.size());
 
     // Get diagnoses from Patients
     Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
@@ -1190,8 +1219,8 @@ public class FhirApi {
             .distinct()
             .collect(Collectors.toList());
 
-    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT patientsByCollection.size(): " + patientsByCollection.size());
-    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT patientDiagnoses.size(): " + patientDiagnoses.size());
+    logger.info("fetchDiagnoses: patientsByCollection.size(): " + patientsByCollection.size());
+    logger.info("fetchDiagnoses: patientDiagnoses.size(): " + patientDiagnoses.size());
 
     // Combine diagnoses from specimens and patients, ensuring that there
     // are no duplicates.
@@ -1202,7 +1231,7 @@ public class FhirApi {
     if (diagnoses.size() == 0)
       logger.warn("fetchDiagnoses: no diagnoses found");
 
-    logger.info("fetchDiagnoses: TTTTTTTTTTTTTTTTTTTTTTTTTTT fhirDiagnoses.size(): " + diagnoses.size());
+    logger.info("fetchDiagnoses: fhirDiagnoses.size(): " + diagnoses.size());
 
     return diagnoses;
   }
