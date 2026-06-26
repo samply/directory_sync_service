@@ -86,7 +86,6 @@ public class Sync {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
-        //FhirApi fhirApi = new FhirApi(fhirStoreUrl);
         FhirApi fhirApi = FhirApiFactory.create(fhirStoreUrl);
 
         // Decide which API to use: dump to file, GraphQL or REST.
