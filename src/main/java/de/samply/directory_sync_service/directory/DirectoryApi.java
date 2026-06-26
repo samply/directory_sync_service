@@ -105,13 +105,13 @@ public abstract class DirectoryApi {
     // Break the fact table into blocks of 1000 before sending to the Directory.
     // This is the maximum number of facts allowed per Directory API call.
     if (factTables.size() == 0) {
-      logger.info("updateStarModel: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV zero length star model");
+      logger.info("updateStarModel: zero length star model");
       updateFactTablesBlock(countryCode, new ArrayList<Map<String, String>>());
     } else {
       for (int i = 0; i < factTables.size(); i += blockSize) {
         List<Map<String, String>> factTablesBlock = factTables.subList(i, Math.min(i + blockSize, factTables.size()));
 
-        logger.debug("updateStarModel: sending block: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV " + i + " of " + factTables.size());
+        logger.debug("updateStarModel: sending block: " + i + " of " + factTables.size());
         if (!updateFactTablesBlock(countryCode, factTablesBlock)) {
           logger.warn("updateStarModel: failed, block: " + i + " of " + factTables.size());
           return false;

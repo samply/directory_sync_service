@@ -70,12 +70,6 @@ services:
     depends_on: # wait until Blaze is ready
       store:
         condition: service_healthy
-#    healthcheck:
-#      # When the run.sh script outputs "Done", we know that the upload is complete
-#      test: ["CMD", "grep", "Done", "/tmp/output.txt"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 20
 
   # Run Directory sync and push results to Molgenis/emx2
   directory_sync_service_molgenis:

@@ -119,6 +119,7 @@ public class FactTable {
      */
     public void runSanityChecks(FhirApi fhirApi, String directoryDefaultCollectionId) {
         sampleCountSanityCheck(fhirApi, directoryDefaultCollectionId);
+        patientCountSanityCheck(fhirApi, directoryDefaultCollectionId);
         materialTypeSanityCheck(fhirApi, directoryDefaultCollectionId);
         diseaseSanityCheck();
     }
@@ -148,6 +149,33 @@ public class FactTable {
             logger.warn("sampleCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! star model sample count (" + totalStarModelSpecimenCount + ") is much less than FHIR sample count (" + totalFhirSpecimenCount + ")");
         logger.debug("sampleCountSanityCheck: totalFhirSpecimenCount: " + totalFhirSpecimenCount);
         logger.debug("sampleCountSanityCheck: totalStarModelSpecimenCount: " + totalStarModelSpecimenCount);
+    }
+
+    /**
+     * Sanity check: compare sample counts from source data with sample counts derived from star model.
+     *
+     * @param fhirApi
+     * @param directoryDefaultCollectionId
+     */
+    public void patientCountSanityCheck(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+                .valueOf(directoryDefaultCollectionId)
+                .orElse(null);
+        int totalFhirPatientCount = fhirApi.calculateTotalPatientCount(defaultBbmriEricCollectionId);
+        int totalStarModelPatientCount = 0;
+        for (Map<String, String> factTable: getFactTables())
+            if (factTable.containsKey("number_of_donors")) {
+                int numberOfSamples = Integer.parseInt(factTable.get("number_of_donors"));
+                totalStarModelPatientCount += numberOfSamples;
+            }
+        if (totalFhirPatientCount < totalStarModelPatientCount)
+            logger.info("patientCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! FHIR patient count (" + totalFhirPatientCount + ") is less than star model patient count (" + totalStarModelPatientCount + ")");
+        if (totalStarModelPatientCount < totalFhirPatientCount)
+            logger.info("patientCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! star model patient count (" + totalStarModelPatientCount + ") is less than FHIR patient count (" + totalFhirPatientCount + ")");
+        if (totalStarModelPatientCount < (totalFhirPatientCount * 0.8))
+            logger.warn("patientCountSanityCheck: !!!!!!!!!!!!!!!!!!!!! star model patient count (" + totalStarModelPatientCount + ") is much less than FHIR patient count (" + totalFhirPatientCount + ")");
+        logger.debug("patientCountSanityCheck: totalFhirPatientCount: " + totalFhirPatientCount);
+        logger.debug("patientCountSanityCheck: totalStarModelPatientCount: " + totalStarModelPatientCount);
     }
 
     static int starModelMaterialTypeMissingCount = 0;

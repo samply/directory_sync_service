@@ -672,6 +672,16 @@ public class FhirApi {
     return totalSpecimenCount;
   }
 
+  public int calculateTotalPatientCount(BbmriEricId defaultBbmriEricCollectionId) {
+    Map<String, List<Specimen>> specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+    Map<String, List<Patient>> patientsByCollection = fetchPatientsByCollection(specimensByCollection);
+    int totalPatientCount = 0;
+    for (List<Patient> patientList : patientsByCollection.values())
+      totalPatientCount += patientList.size();
+
+    return totalPatientCount;
+  }
+
   /**
    * Retrieves all sample materials over all collections.
    *

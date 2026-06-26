@@ -136,7 +136,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     try {
       String countryCode = id.getCountryCode();
-      logger.info("fetchBiobank: UUUUUUUUUUUUUUUUUUUUUUUU fetching biobank: " + id);
+      logger.info("fetchBiobank: fetching biobank: " + id);
       Map<String, Object> item = directoryCallsGraphql.runGraphqlQueryReturnMap(getDatabaseEricEndpoint(countryCode), "Biobanks", "filter: { id: { equals: \"" + id + "\" } }", new ArrayList<>(List.of("id", "name")));
       if (item == null) {
         logger.warn("fetchBiobank: item is null");
@@ -845,7 +845,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     try {
       ArrayList<String> attributeNames = new ArrayList<>(List.of("id collection { id }"));
-      logger.info("getNextPageOfFactIdsForCollection: UUUUUUUUUUUUUUUUUUUUUUUU collectionId: " + collectionId);
+      logger.info("getNextPageOfFactIdsForCollection: collectionId: " + collectionId);
       List<Map<String, Object>> collectionFactsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(countryCode), "CollectionFacts", null, attributeNames);
       if (collectionFactsList == null) {
         logger.warn("getNextPageOfFactIdsForCollection: collectionFactsList is null for collectionId: " + collectionId + ", there may be a problem");
@@ -957,7 +957,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
       // Nothing to delete
       return true;
 
-    logger.info("deleteFactsByIds: UUUUUUUUUUUUUUUUUUUUUUUU countryCode: " + countryCode);
+    logger.info("deleteFactsByIds: countryCode: " + countryCode);
 
     for (String factId : factIds)
       if (!deleteFactById(countryCode, factId))
