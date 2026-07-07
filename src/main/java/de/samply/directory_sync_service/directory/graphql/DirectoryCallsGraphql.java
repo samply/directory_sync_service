@@ -198,6 +198,10 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
     JsonObject data = null;
     try {
       String url = urlCombine(baseUrl, endpoint);
+      if (url == null) {
+        logger.warn("runGraphqlCommand: url is null, baseUrl: " + baseUrl + ", endpoint: " + endpoint);
+        return null;
+      }
       HttpPost request = new HttpPost(url);
       String token = directoryCredentials.getToken();
       if (token != null && !token.isEmpty())

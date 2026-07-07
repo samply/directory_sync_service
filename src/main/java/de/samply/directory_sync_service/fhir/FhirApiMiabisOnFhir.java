@@ -21,7 +21,7 @@ public class FhirApiMiabisOnFhir extends FhirApi {
   protected static final Logger logger = LoggerFactory.getLogger(FhirApiMiabisOnFhir.class);
   protected static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-biobank";
   protected static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-collection"; // there is also a miabis-collection-organization, I am not sure which one to use.
-  protected static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-storage-temperature-extension";
+  protected static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-storage-temperature-extension"; // TODO: I think this is wrong
   private static final String STORAGE_TEMP_EXTENSION = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-storage-temperature-extension";
   private static final String STORAGE_TEMP_SYSTEM = "https://fhir.bbmri-eric.eu/CodeSystem/miabis-storage-temperature-cs";
   private static final String COLLECTION_EXTENSION_URL = "https://fhir.bbmri-eric.eu/StructureDefinition/miabis-sample-collection-extension";

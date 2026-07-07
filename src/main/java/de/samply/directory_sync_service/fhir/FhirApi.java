@@ -490,7 +490,7 @@ public class FhirApi {
       // This gets around the page size limit of 50 that is imposed by the current implementation of Blaze.
       int pageNum = 0;
       do {
-        if (pageNum % 10 == 0)
+        if (pageNum % 100 == 0)
           logger.info("getAllSpecimensAsMap: pageNum: " + pageNum);
 
         // Add entries to the result map
@@ -764,10 +764,13 @@ public class FhirApi {
     return nextBundle;
   }
 
+  private Map<Specimen, Patient> specimenToPatientMap = new HashMap<>();
   /**
    * Extracts a Patient resource from a Specimen resource.
    *
    * This works because every Specimen resource contains a reference to a Patient resource.
+   *
+   * Uses caching to improve performance.
    *
    * @param specimen a Specimen resource that contains a reference to a Patient resource
    * @return a Patient resource that matches the reference in the Specimen resource, or null if not found
@@ -777,6 +780,10 @@ public class FhirApi {
       logger.warn("extractPatientFromSpecimen: specimen is null");
       return null;
     }
+    // Pull from cache, if available
+    if (specimenToPatientMap.containsKey(specimen))
+      return specimenToPatientMap.get(specimen);
+
     Patient patient =  null;
     try {
       // Make sure that there is a patient (subject) reference and that it is valid.
@@ -815,6 +822,9 @@ public class FhirApi {
       logger.warn("extractPatientFromSpecimen: exception: " + e);
       logger.warn("extractPatientFromSpecimen: exception trace: " + Util.traceFromException(e));
     }
+
+    if (patient != null)
+      specimenToPatientMap.put(specimen, patient);
 
     return patient;
   }
@@ -874,16 +884,25 @@ public class FhirApi {
             .collect(Collectors.toList());
   }
 
-  Boolean conditionsPresentInFhirStore = null;
-
+  private Boolean conditionsPresentInFhirStore = null;
+  private Map<Patient, List<String>> patientToConditionCodesMap = new HashMap<>();
   /**
    * Extracts a list of condition codes from a Patient resource using a FHIR client.
    * The condition codes are based on the system "http://hl7.org/fhir/sid/icd-10".
+   *
+   * Usess two types of caching to improve performance:
+   * * If there are no conditions in the FHIR store, this is noted, and an empty list returned.
+   * * If the patient has already been encountered, the cached condition list is returned.
+   *
    * @param patient a Patient resource that has an ID element
    * @return a list of strings that represent the condition codes of the patient, or an empty list if none are found
    */
   public List<String> extractConditionCodesFromPatient(Patient patient) {
     List<String> conditionCodes = new ArrayList<String>();
+    if (patient == null) {
+      logger.warn("extractConditionCodesFromPatient: patient is null");
+      return conditionCodes;
+    }
     try {
       // If there are no conditions in the FHIR store, then we don't
       // need to bother checking the patient for conditions.
@@ -901,6 +920,9 @@ public class FhirApi {
       }
       if (!conditionsPresentInFhirStore)
         return conditionCodes;
+      // Used cached patient, if available.
+      if (patientToConditionCodesMap.containsKey(patient))
+        return patientToConditionCodesMap.get(patient);
 
       // Build the full reference like "Patient/{id}"
       IdType patientIdElement = patient.getIdElement();
@@ -958,6 +980,8 @@ public class FhirApi {
       logger.warn("extractConditionCodesFromPatient: could not find Condition, stack trace:\n" + Util.traceFromException(e));
     }
 
+    patientToConditionCodesMap.put(patient, conditionCodes);
+
     return conditionCodes;
   }
 
@@ -980,8 +1004,13 @@ public class FhirApi {
    * @return a list of strings that contains the code value of each extension element with the given URL, or an empty list if none is found
    */
   protected List<String> extractExtensionElementValuesFromSpecimen(Specimen specimen, String url) {
-    List<Extension> extensions = specimen.getExtensionsByUrl(url);
     List<String> elementValues = new ArrayList<String>();
+    if (specimen == null) {
+      logger.warn("extractExtensionElementValuesFromSpecimen: specimen is null");
+      return elementValues;
+    }
+
+    List<Extension> extensions = specimen.getExtensionsByUrl(url);
 
     // Check if the list is not empty
     for (Extension extension: extensions) {

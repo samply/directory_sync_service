@@ -40,7 +40,6 @@ public class ConvertCollectionsToDirectoryCollectionPut {
      */
     private static DirectoryCollectionPut convert(Collection collection, DirectoryCollectionPut directoryCollectionPut) {
         try {
-
             // Attributes pulled from the Directory
             directoryCollectionPut.setBiobank(collection.getId(), collection.getBiobank());
             directoryCollectionPut.setContact(collection.getId(), collection.getContact());

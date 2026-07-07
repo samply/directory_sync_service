@@ -41,7 +41,7 @@ public class DiagnosisCorrections {
                 return null;
             }
 
-            logger.info("generateDiagnosisCorrections: TTTTTTTTTTTTTTTTTTTTTTTTTTT diagnosis count: " + fhirDiagnoses.size());
+            logger.info("generateDiagnosisCorrections: diagnosis count: " + fhirDiagnoses.size());
 
             int diagnosisCounter = 0; // for diagnostics only
             int diagnosisNullCounter = 0;

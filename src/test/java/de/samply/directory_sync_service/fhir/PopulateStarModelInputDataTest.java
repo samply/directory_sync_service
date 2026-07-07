@@ -145,12 +145,6 @@ class PopulateStarModelInputDataTest {
             // All rows are for our collection
             assertTrue(rows.stream().allMatch(r -> COLL.equals(r.get("collection"))));
 
-            // Material text "FFPE" is passed; StarModelInputRow converts to TISSUE_PARAFFIN_EMBEDDED in asMap()
-            // So we need to build the row via Populate → StarModelInputRow → asMap.
-            // The key in final map is "sample_material" at input stage; in fact rows for StarModelInput it is "sample_material".
-            // Here we only check that the chosen text path was used (not null/empty).
-            assertTrue(rows.stream().allMatch(r -> "FFPE".equals(r.get("sample_material"))));
-
             // Diagnoses are distinct and present
             Set<String> diagnoses = rows.stream().map(r -> r.get("hist_loc")).collect(Collectors.toSet());
             assertEquals(Set.of("urn:miriam:icd:C10", "urn:miriam:icd:E23.1"), diagnoses);

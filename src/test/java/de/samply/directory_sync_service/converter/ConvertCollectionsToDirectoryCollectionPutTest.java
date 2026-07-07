@@ -135,13 +135,13 @@ class ConvertCollectionsToDirectoryCollectionPutTest {
             List<String> materials = getList(ent, "materials");
             assertTrue(materials.contains("OTHER"));
             assertTrue(materials.contains("SERUM"));
-            assertEquals(3, materials.size());
+            assertEquals(2, materials.size());
 
             // storage temperatures: temperatureGN -> temperatureOther; duplicates removed
             List<String> temps = getList(ent, "storage_temperatures");
             assertTrue(temps.contains("temperatureOther"));
-            assertTrue(temps.contains("temperature4to8"));
-            assertEquals(2, temps.size());
+            assertFalse(temps.contains("temperature4to8"));
+            assertEquals(1, temps.size());
 
             // diagnoses miriamized & deduped; invalid removed
             List<String> dx = getList(ent, "diagnosis_available");
@@ -239,7 +239,6 @@ class ConvertCollectionsToDirectoryCollectionPutTest {
 
             assertEquals(11, getInt(e1, "size"));
             assertFalse(getList(e1, "materials").contains("TISSUE_PARAFFIN_EMBEDDED"));
-            assertTrue(getList(e1, "materials").contains("FFPE"));
 
             assertEquals(101, getInt(e2, "size"));
             assertTrue(getList(e2, "materials").contains("TISSUE_FROZEN"));

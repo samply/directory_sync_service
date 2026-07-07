@@ -59,7 +59,7 @@ public class PopulateStarModelInputData {
     if (specimensByCollection.keySet().size() ==0)
       logger.warn("populate: specimensByCollection.keySet() is empty");
     for (String collectionId: specimensByCollection.keySet()) {
-      logger.info("populate: TTTTTTTTTTTTTTTTTTTTTTTTTTT collectionId: " + collectionId);
+      logger.info("populate: collectionId: " + collectionId);
       populateCollection(starModelInput, collectionId, specimensByCollection.get(collectionId));
     }
 
@@ -85,8 +85,8 @@ public class PopulateStarModelInputData {
     int specimenCounter = 0;
     for (Specimen specimen: specimens) {
       populateSpecimen(starModelInput, collectionId, specimen);
-      if (specimenCounter % 1000 == 0) {
-        logger.info("populateCollection: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT specimenCounter: " + specimenCounter + " of " + specimens.size());
+      if (specimenCounter % 10000 == 0) {
+        logger.info("populateCollection: specimenCounter: " + specimenCounter + " of " + specimens.size());
       }
       specimenCounter++;
     }
@@ -111,10 +111,8 @@ public class PopulateStarModelInputData {
     }
 
     String material = extractMaterialFromSpecimen(specimen);
-    String patientId = patient.getIdElement().getIdPart();
-    String sex = "unknown";
-    if (patient.hasGender())
-        sex = patient.getGender().getDisplay();
+    String patientId = extractIdFromPatient(patient);
+    String sex = extractSexFromPatient(patient);
     String age = determinePatientAgeAtCollection(patient);
 
     // Create a new Row object to hold data extracted from patient and specimen
@@ -139,6 +137,8 @@ public class PopulateStarModelInputData {
    * @return The patient's age at the time of specimen collection in years, or null if the age calculation fails.
    */
   private String determinePatientAgeAtCollection(Patient patient) {
+    if (patient == null)
+        return null;
     String age = null;
 
     try {
@@ -182,7 +182,6 @@ public class PopulateStarModelInputData {
     return age;
   }
 
-  Map <Patient,LocalDate> patientEarliestCollectionDateMap = new HashMap<>();
   /**
    * Retrieves the earliest specimen collection date for a given patient.
    *
@@ -202,8 +201,6 @@ public class PopulateStarModelInputData {
    */
   private LocalDate getEarliestCollectionDate(Patient patient) {
     // This method is slow, so use cached results if available.
-    if (patientEarliestCollectionDateMap.containsKey(patient))
-      return patientEarliestCollectionDateMap.get(patient);
 
     // Loop over all specimens associated with the patient and find the earliest collection date.
     LocalDate earliestCollectionDate = fhirApi.findAllSpecimensWithReferencesToPatient(patient).stream()
@@ -213,10 +210,9 @@ public class PopulateStarModelInputData {
             )
             .min(Comparator.naturalOrder())
             .orElse(null);
-    patientEarliestCollectionDateMap.put(patient,earliestCollectionDate); // cache the result
+
     return earliestCollectionDate;
   }
-
 
   /**
    * Extracts the collection date as a LocalDate from the given FHIR Specimen.
@@ -283,17 +279,40 @@ public class PopulateStarModelInputData {
      * @return the material as a String, or null if not available
      */
     private String extractMaterialFromSpecimen(Specimen specimen) {
-        String material = null;
+      if (specimen == null)
+          return null;
 
-        CodeableConcept type = specimen.getType();
-        if (type.hasText())
-            material = type.getText();
-        else {
-            List<Coding> coding = type.getCoding();
-            if (coding.size() > 0)
-                material = coding.get(0).getCode();
-        }
+      String material = null;
 
-        return material;
+      CodeableConcept type = specimen.getType();
+      if (type.hasText())
+          material = type.getText();
+      else {
+          List<Coding> coding = type.getCoding();
+          if (coding.size() > 0)
+              material = coding.get(0).getCode();
+      }
+
+      return material;
     }
+
+  private String extractIdFromPatient(Patient patient) {
+    if (patient == null)
+      return null;
+
+    String patientId = patient.getIdElement().getIdPart();
+
+    return patientId;
+  }
+
+  private String extractSexFromPatient(Patient patient) {
+    if (patient == null)
+      return null;
+
+    String sex = "unknown";
+    if (patient.hasGender())
+      sex = patient.getGender().getDisplay();
+
+    return sex;
+  }
 }

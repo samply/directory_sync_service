@@ -734,6 +734,10 @@ public class DirectoryApiGraphql extends DirectoryApi {
     boolean found = false;
     try {
       JsonObject result = directoryCallsGraphql.runGraphqlCommand(getDatabaseEricEndpoint(countryCode), graphqlCommand);
+      if (result == null) {
+        logger.warn("isColumnInTable: result is null");
+        return false;
+      }
       JsonArray tableArray = result.get("_schema").getAsJsonObject().get("tables").getAsJsonArray();
 
       for (JsonElement jsonElement : tableArray) {

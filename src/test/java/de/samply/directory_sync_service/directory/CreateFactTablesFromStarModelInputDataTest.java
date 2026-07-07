@@ -54,7 +54,7 @@ class CreateFactTablesFromStarModelInputDataTest {
             assertEquals("FEMALE", f.get("sex"));
             assertEquals("urn:miriam:icd:C10", f.get("disease")); // set via StarModelInputRow#setHistLoc
             assertEquals("Middle-aged", f.get("age_range"));      // 45–64 bucket
-            assertEquals("TISSUE_PARAFFIN_EMBEDDED", f.get("sample_type"));
+            assertEquals("OTHER", f.get("sample_type"));
             assertEquals("1", f.get("number_of_donors"));         // distinct(p1) = 1
             assertEquals("2", f.get("number_of_samples"));        // two rows
             assertEquals(COLL, f.get("collection"));

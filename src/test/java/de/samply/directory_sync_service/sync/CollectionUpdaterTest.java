@@ -30,7 +30,7 @@ public class CollectionUpdaterTest {
                 "    \"ageLow\": 42,\n" +
                 "    \"ageHigh\": 42,\n" +
                 "    \"materials\": [\n" +
-                "      \"TISSUE_PARAFFIN_EMBEDDED\"\n" +
+                "      \"tissue-formalin\"\n" +
                 "    ],\n" +
                 "    \"storageTemperatures\": [],\n" +
                 "    \"diagnosisAvailable\": [\n" +

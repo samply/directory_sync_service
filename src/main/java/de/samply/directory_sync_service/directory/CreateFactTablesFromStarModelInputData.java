@@ -220,12 +220,16 @@ public class CreateFactTablesFromStarModelInputData {
     /**
      * Cuts the age into bins and returns the corresponding age range.
      *
+     * The return values are valid Directory names.
+     *
      * @param ageStr The age to be categorized into bins.
      * @return The age range as a string.
      */
     private static String transformAgeRange(String ageStr) {
         int age = (ageStr != null && !ageStr.isEmpty()) ? Integer.parseInt(ageStr) : -1;
         if (age < 0) {
+            if (ageStr != null && !ageStr.isEmpty())
+                logger.warn("transformAgeRange: strange age value, ageStr: " + ageStr);
             return "Unknown";
         } else if (age == 0) {
             return "Newborn";
@@ -251,6 +255,8 @@ public class CreateFactTablesFromStarModelInputData {
     /**
      * Converts the sample material names to the Directory standard.
      *
+     * TODO: is this even necessary?
+     *
      * @param material The raw sample material type.
      * @return The standardized name for the sample material.
      */
@@ -258,10 +264,13 @@ public class CreateFactTablesFromStarModelInputData {
         if (material == null) return "";
         switch (material) {
             case "FFPE":
+                logger.info("transformSampleMaterial: unusual material: " + material);
                 return "TISSUE_PARAFFIN_EMBEDDED";
             case "Cryopreservation":
+                logger.info("transformSampleMaterial: unusual material: " + material);
                 return "TISSUE_FROZEN";
             case "Other":
+                logger.info("transformSampleMaterial: unusual material: " + material);
                 return "OTHER";
             default:
                 return material;
@@ -271,11 +280,22 @@ public class CreateFactTablesFromStarModelInputData {
     /**
      * Converts sex designations to the Directory standard.
      *
+     * TODO: is this even necessary?
+     *
      * @param sex The raw sex designation.
      * @return The standardized sex designation.
      */
     private static String transformSex(String sex) {
         if (sex == null) return "";
-        return sex.equalsIgnoreCase("female") ? "FEMALE" : sex.equalsIgnoreCase("male") ? "MALE" : sex;
+        switch (sex) {
+            case "female":
+                logger.info("transformSex: unusual sex: " + sex);
+                return "FEMALE";
+            case "male":
+                logger.info("transformSex: unusual sex: " + sex);
+                return "MALE";
+            default:
+                return sex;
+        }
     }
 }

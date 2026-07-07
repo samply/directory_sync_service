@@ -3,6 +3,8 @@ package de.samply.directory_sync_service.converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 /**
  * Utility class for converting FHIR attributes to Directory attributes.
  * This class provides static methods to perform conversions for specific FHIR attributes
@@ -11,20 +13,60 @@ import org.slf4j.LoggerFactory;
 public class FhirToDirectoryAttributeConverter {
     private static final Logger logger = LoggerFactory.getLogger(FhirToDirectoryAttributeConverter.class);
 
+
+    private static final Map<String, String> FHIR_TO_DIRECTORY_SEX = Map.of(
+            "male", "MALE",
+            "female", "FEMALE",
+            "other", "UNDIFFERENTIAL",
+            "unknown", "NAV"
+    );
     /**
-     * Converts the given sex attribute to uppercase as per Directory conventions.
+     * Converts the given sex attribute to Directory conventions.
      *
      * @param sex The sex attribute to be converted.
      * @return The converted sex attribute in uppercase.
      */
     public static String convertSex(String sex) {
-        if (sex.equals("other"))
-            return "UNDIFFERENTIAL";
-        if (sex.equals("unknown"))
-            return "NAV";
-        return sex.toUpperCase();
+        if (sex == null)
+            return null;
+
+        // Convert standard FHIR sex values.
+        String lcSex = sex.toLowerCase();
+        if (FHIR_TO_DIRECTORY_SEX.containsKey(lcSex))
+            return FHIR_TO_DIRECTORY_SEX.get(lcSex);
+
+        logger.warn("convertSex: unknown sex: " + sex + ", defaulting to NAV");
+        return "NAV";
     }
 
+    private static final Map<String, String> FHIR_TO_DIRECTORY_MATERIAL = Map.ofEntries(
+            Map.entry("ascites", "OTHER"),
+            Map.entry("blood-plasma", "PLASMA"),
+            Map.entry("blood-serum", "SERUM"),
+            Map.entry("bone-marrow", "OTHER"),
+            Map.entry("buffy-coat", "BUFFY_COAT"),
+            Map.entry("cf-dna", "CDNA"),
+            Map.entry("csf-liquor", "OTHER"),
+            Map.entry("derivative", "OTHER"),
+            Map.entry("derivative-other", "OTHER"),
+            Map.entry("dna", "DNA"),
+            Map.entry("dried-whole-blood", "WHOLE_BLOOD"),
+            Map.entry("liquid", "OTHER"),
+            Map.entry("liquid-other", "OTHER"),
+            Map.entry("peripheral-blood-cells-vital", "PERIPHERAL_BLOOD_CELLS"),
+            Map.entry("rna", "RNA"),
+            Map.entry("saliva", "SALIVA"),
+            Map.entry("stool-faeces", "FECES"),
+            Map.entry("swab", "NASAL_SWAB"),
+            Map.entry("tissue", "TISSUE_FROZEN"),
+            Map.entry("tissue-ffpe", "TISSUE_PARAFFIN_EMBEDDED"),
+            Map.entry("tissue-formalin", "TISSUE_PARAFFIN_EMBEDDED"),
+            Map.entry("tissue-frozen", "TISSUE_FROZEN"),
+            Map.entry("tissue-other", "TISSUE_FROZEN"),
+            Map.entry("tissue-paxgene-or-else", "OTHER"),
+            Map.entry("urine", "URINE"),
+            Map.entry("whole-blood", "WHOLE_BLOOD")
+    );
     /**
      * Converts the given material attribute to Directory conventions.
      *
@@ -35,29 +77,52 @@ public class FhirToDirectoryAttributeConverter {
         if (material == null)
             return null;
 
-        return material
-                // Basic conversion: make everything upper case, replace - with _
-                .toUpperCase()
-                .replaceAll("-", "_")
-                // Some names are different between FHIR and Directory, so convert those.
-                .replaceAll("_VITAL", "")
-                .replaceAll("^TISSUE_FORMALIN$", "TISSUE_PARAFFIN_EMBEDDED")
-                .replaceAll("^TISSUE$", "TISSUE_FROZEN")
-                .replaceAll("^CF_DNA$", "CDNA")
-                .replaceAll("^BLOOD_SERUM$", "SERUM")
-                .replaceAll("^STOOL_FAECES$", "FECES")
-                .replaceAll("^BLOOD_PLASMA$", "SERUM")
-                .replaceAll("^PLASMA_EDTA$", "SERUM")
-                // Some names are present in FHIR but not in Directory. Use "OTHER" as a placeholder.
-                .replaceAll("^.*_OTHER$", "OTHER")
-                .replaceAll("^DERIVATIVE$", "OTHER")
-                .replaceAll("^CSF_LIQUOR$", "OTHER")
-                .replaceAll("^LIQUID$", "OTHER")
-                .replaceAll("^ASCITES$", "OTHER")
-                .replaceAll("^BONE_MARROW$", "OTHER")
-                .replaceAll("^TISSUE_PAXGENE_OR_ELSE$", "OTHER");
+        // Convert standard FHIR material names.
+        String lcMaterial = material.toLowerCase().replaceAll("_", "-");
+        if (FHIR_TO_DIRECTORY_MATERIAL.containsKey(lcMaterial))
+            return FHIR_TO_DIRECTORY_MATERIAL.get(lcMaterial);
+
+        // Some material names are uppercase, so they might actually already be valid Directory terms..
+        String ucMaterial = material.toUpperCase().replaceAll("-", "_");
+        if (ucMaterial.contains("_VITAL"))
+            ucMaterial = ucMaterial.replaceAll("_VITAL", "");
+        if (FHIR_TO_DIRECTORY_MATERIAL.containsValue(ucMaterial))
+            return ucMaterial;
+
+        logger.info("convertMaterial: material has a non-standard name, trying some heuristics");
+
+        // Heuristics for some frequently-seen non-standard material names.
+        if (ucMaterial.contains("TISSUE")) {
+            return "TISSUE_FROZEN";
+        }
+        if (ucMaterial.contains("CF_DNA")) {
+            return "CDNA";
+        }
+        if (ucMaterial.contains("SERUM")) {
+            return "SERUM";
+        }
+        if (ucMaterial.contains("STOOL") || ucMaterial.contains("FAECES") || ucMaterial.contains("FECES")) {
+            return "FECES";
+        }
+        if (ucMaterial.contains("PLASMA")) {
+            return "PLASMA";
+        }
+
+        logger.warn("convertMaterial: unknown material: " + material + ", defaulting to OTHER");
+        return "OTHER";
     }
 
+    private static final Map<String, String> FHIR_TO_DIRECTORY_TEMPERATURE = Map.ofEntries(
+            Map.entry("temperatureRoom", "temperatureRoom"),
+            Map.entry("temperature2to10", "temperature2to10"),
+            Map.entry("four_degrees", "temperatureOther"),
+            Map.entry("temperature-18to-35", "temperature-18to-35"),
+            Map.entry("temperature-60to-85", "temperature-60to-85"),
+            Map.entry("temperatureGN", "temperatureOther"),
+            Map.entry("temperatureLN", "temperatureLN"),
+            Map.entry("storage_temperature_uncharted", "temperatureOther"),
+            Map.entry("temperatureOther", "temperatureOther")
+    );
     /**
      * Converts the given storage temperature attribute to align with Directory conventions.
      *
@@ -68,10 +133,12 @@ public class FhirToDirectoryAttributeConverter {
         if (storageTemperature == null)
             return null;
 
-        // The Directory understands most of the FHIR temperature codes, but it doesn't
-        // know about gaseous nitrogen.
-        return storageTemperature
-            .replaceAll("temperatureGN", "temperatureOther");
+        // Convert standard FHIR temperature values.
+        if (FHIR_TO_DIRECTORY_TEMPERATURE.containsKey(storageTemperature))
+            return FHIR_TO_DIRECTORY_TEMPERATURE.get(storageTemperature);
+
+        logger.warn("convertStorageTemperature: unknown storage temperature: " + storageTemperature + ", defaulting to temperatureOther");
+        return "temperatureOther";
     }
 
     /**

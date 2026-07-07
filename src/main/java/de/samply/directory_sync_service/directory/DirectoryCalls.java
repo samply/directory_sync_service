@@ -96,6 +96,14 @@ public abstract class DirectoryCalls {
    * @return the combined URL as a {@code String}
    */
   public static String urlCombine(String url1, String url2) {
+    if (url1 == null) {
+      logger.warn("urlCombine: url1 is null");
+      return null;
+    }
+    if (url2 == null) {
+      logger.warn("urlCombine: url2 is null");
+      return null;
+    }
     if (url1.endsWith("/") && url2.startsWith("/")) {
       return url1 + url2.substring(1);
     } else if (url1.endsWith("/") || url2.startsWith("/")) {

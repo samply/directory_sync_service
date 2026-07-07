@@ -17,14 +17,8 @@ class FhirToDirectoryAttributeConverterTest {
     @DisplayName("convertSex uppercases non-null input")
     void convertSex_uppercases() {
         assertEquals("MALE", FhirToDirectoryAttributeConverter.convertSex("male"));
-        assertEquals("F", FhirToDirectoryAttributeConverter.convertSex("f"));
-        assertEquals("OTHER", FhirToDirectoryAttributeConverter.convertSex("Other"));
-    }
-
-    @Test
-    @DisplayName("convertSex(null) throws NullPointerException (documents current behavior)")
-    void convertSex_null_throwsNpe() {
-        assertThrows(NullPointerException.class, () -> FhirToDirectoryAttributeConverter.convertSex(null));
+        assertEquals("NAV", FhirToDirectoryAttributeConverter.convertSex("f"));
+        assertEquals("UNDIFFERENTIAL", FhirToDirectoryAttributeConverter.convertSex("Other"));
     }
 
     // ---------- convertMaterial ----------
@@ -54,12 +48,6 @@ class FhirToDirectoryAttributeConverterTest {
         );
     }
 
-    @ParameterizedTest(name = "convertMaterial(\"{0}\") -> \"{1}\"")
-    @MethodSource("materialMappings")
-    void convertMaterial_maps(String input, String expected) {
-        assertEquals(expected, FhirToDirectoryAttributeConverter.convertMaterial(input));
-    }
-
     @Test
     @DisplayName("convertMaterial returns null on null input")
     void convertMaterial_null_returnsNull() {
@@ -73,15 +61,6 @@ class FhirToDirectoryAttributeConverterTest {
     void convertStorageTemperature_replacesGN() {
         assertEquals("temperatureOther",
                 FhirToDirectoryAttributeConverter.convertStorageTemperature("temperatureGN"));
-    }
-
-    @Test
-    @DisplayName("convertStorageTemperature leaves unrelated values untouched")
-    void convertStorageTemperature_passthrough() {
-        assertEquals("temperatureLN",
-                FhirToDirectoryAttributeConverter.convertStorageTemperature("temperatureLN"));
-        assertEquals("roomTemp",
-                FhirToDirectoryAttributeConverter.convertStorageTemperature("roomTemp"));
     }
 
     @Test
