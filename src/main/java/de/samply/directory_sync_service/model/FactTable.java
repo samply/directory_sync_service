@@ -182,6 +182,9 @@ public class FactTable {
     /**
      * Sanity check: do the material types in the star model match the material types in the FHIR store?
      *
+     * Note: if there are collections in the FHIR store that are not present in the Directory, then
+     * discrepancies between the material types in the star model and the FHIR store are to be expected.
+     *
      * @param fhirApi
      * @param directoryDefaultCollectionId
      */
@@ -189,6 +192,7 @@ public class FactTable {
         BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
                 .valueOf(directoryDefaultCollectionId)
                 .orElse(null);
+        // Collect all known sample materials from all collections.
         Map<String, String> fhirSampleMaterials = fhirApi.getSampleMaterials(defaultBbmriEricCollectionId);
         Map<String,String> convertedFhirSampleMaterials = new HashMap<>();
         for (String sampleMaterial: fhirSampleMaterials.keySet()) {
@@ -196,6 +200,7 @@ public class FactTable {
             if (convertedSampleMaterial != null && !convertedFhirSampleMaterials.containsKey(convertedSampleMaterial))
                 convertedFhirSampleMaterials.put(convertedSampleMaterial, convertedSampleMaterial);
         }
+        // Extract sample materials from fact tables.
         int totalStarModelSampleMaterialCount = 0;
         Map<String,String> starModelSampleMaterials = new HashMap<>();
         for (Map<String, String> factTable: getFactTables())
@@ -207,12 +212,11 @@ public class FactTable {
                 }
             } else if (starModelMaterialTypeMissingCount++ < 5)
                 logger.warn("materialTypeSanityCheck: fact table does not contain sample_type: " + Util.jsonStringFomObject(factTable));
+        // Compare all known materails with those in the fact tables.
         if (convertedFhirSampleMaterials.size() != totalStarModelSampleMaterialCount && getFactTables().size() != 0) {
             logger.warn("materialTypeSanityCheck: !!!!!!!!!!!!!!!!!!!!! converted FHIR material type count (" + convertedFhirSampleMaterials.size() + ") is different from star model material type count (" + totalStarModelSampleMaterialCount + ")");
-            logger.warn("materialTypeSanityCheck: FHIR material types: " + Util.orderedKeylistFromMap(fhirSampleMaterials));
             logger.warn("materialTypeSanityCheck: converted FHIR material types: " + Util.orderedKeylistFromMap(convertedFhirSampleMaterials));
             logger.warn("materialTypeSanityCheck: star model material types: " + Util.orderedKeylistFromMap(starModelSampleMaterials));
-            logger.warn("materialTypeSanityCheck: star model material fact count: " + getFactCount());
         }
     }
 

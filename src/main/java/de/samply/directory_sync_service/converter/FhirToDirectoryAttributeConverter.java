@@ -35,6 +35,14 @@ public class FhirToDirectoryAttributeConverter {
         if (FHIR_TO_DIRECTORY_SEX.containsKey(lcSex))
             return FHIR_TO_DIRECTORY_SEX.get(lcSex);
 
+        // Heuristics for some frequently-seen non-standard sex names.
+        if (lcSex.equals("undifferential") || lcSex.equals("undifferentiated")) {
+            return "UNDIFFERENTIAL";
+        }
+        if (lcSex.equals("nav")) {
+            return "NAV";
+        }
+
         logger.warn("convertSex: unknown sex: " + sex + ", defaulting to NAV");
         return "NAV";
     }
@@ -89,13 +97,8 @@ public class FhirToDirectoryAttributeConverter {
         if (FHIR_TO_DIRECTORY_MATERIAL.containsValue(ucMaterial))
             return ucMaterial;
 
-        logger.info("convertMaterial: material has a non-standard name, trying some heuristics");
-
         // Heuristics for some frequently-seen non-standard material names.
-        if (ucMaterial.contains("TISSUE")) {
-            return "TISSUE_FROZEN";
-        }
-        if (ucMaterial.contains("CF_DNA")) {
+        if (ucMaterial.contains("CF") && ucMaterial.contains("DNA")) {
             return "CDNA";
         }
         if (ucMaterial.contains("SERUM")) {
@@ -106,6 +109,24 @@ public class FhirToDirectoryAttributeConverter {
         }
         if (ucMaterial.contains("PLASMA")) {
             return "PLASMA";
+        }
+        if (ucMaterial.contains("BUFFY") && ucMaterial.contains("COAT")) {
+            return "BUFFY_COAT";
+        }
+        if (ucMaterial.contains("PBMC")) {
+            return "PERIPHERAL_BLOOD_CELLS";
+        }
+        if (ucMaterial.contains("WHOLE") && ucMaterial.contains("BLOOD")) {
+            return "WHOLE_BLOOD";
+        }
+        if (ucMaterial.contains("SPUTUM")) {
+            return "SALIVA";
+        }
+        if (ucMaterial.contains("TISSUE") && ucMaterial.contains("FIXED")) {
+            return "TISSUE_PARAFFIN_EMBEDDED";
+        }
+        if (ucMaterial.contains("TISSUE")) {
+            return "TISSUE_FROZEN";
         }
 
         logger.warn("convertMaterial: unknown material: " + material + ", defaulting to OTHER");

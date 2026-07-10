@@ -225,10 +225,8 @@ public class Collection {
         // Strip MIRIAM part of diagnosis before adding to list
         String plainCorrectedDiagnosis = correctedDiagnosis.substring(15);
         // Add to list only if it's not already present
-        if (!directoryDiagnoses.contains(plainCorrectedDiagnosis)) {
-          logger.debug("applyDiagnosisCorrections: adding new diagnosis: " + plainCorrectedDiagnosis);
+        if (!directoryDiagnoses.contains(plainCorrectedDiagnosis))
           directoryDiagnoses.add(plainCorrectedDiagnosis);
-        }
       }
     }
 
