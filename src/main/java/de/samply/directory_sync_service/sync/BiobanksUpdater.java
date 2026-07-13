@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -261,19 +260,17 @@ public class BiobanksUpdater extends AbstractUpdater {
      */
     private static boolean updateBiobankInFhirStore(FhirApi fhirApi, DirectoryApi directoryApi, Organization fhirBiobank) {
         // Retrieve the biobank's BBMRI-ERIC identifier from the FHIR organization
-        Optional<BbmriEricId> bbmriEricIdOpt = FhirApi.bbmriEricId(fhirBiobank);
+        BbmriEricId directoryId = FhirApi.extractDirectoryIdFromOrganizationIdentifier(fhirBiobank);
 
-        // Check if the identifier is present, if not, return false
-        if (!bbmriEricIdOpt.isPresent()) {
-            logger.warn("updateBiobankOnFhirServerIfNecessary: Missing BBMRI-ERIC identifier");
+        if (directoryId == null) {
+            logger.warn("updateBiobankOnFhirServerIfNecessary: Missing BBMRI-ERIC identifier in biobank");
             return false;
         }
-        BbmriEricId bbmriEricId = bbmriEricIdOpt.get();
 
-        logger.info("updateBiobankOnFhirServerIfNecessary: bbmriEricId: " + bbmriEricId);
+        logger.info("updateBiobankOnFhirServerIfNecessary: directoryId: " + directoryId);
 
         // Fetch the corresponding biobank from the Directory API
-        Biobank directoryBiobank = directoryApi.fetchBiobank(bbmriEricId);
+        Biobank directoryBiobank = directoryApi.fetchBiobank(directoryId);
 
         logger.info("updateBiobankOnFhirServerIfNecessary: directoryBiobank: " + directoryBiobank);
 

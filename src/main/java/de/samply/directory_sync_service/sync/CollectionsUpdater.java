@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -172,19 +171,17 @@ public class CollectionsUpdater extends AbstractUpdater {
      */
     private static boolean updateCollectionInFhirStore(FhirApi fhirApi, de.samply.directory_sync_service.model.Collections collections, Organization fhirCollection) {
         // Retrieve the collection's BBMRI-ERIC identifier from the FHIR organization
-        Optional<BbmriEricId> bbmriEricIdOpt = FhirApi.bbmriEricId(fhirCollection);
+        BbmriEricId directoryId = FhirApi.extractDirectoryIdFromOrganizationIdentifier(fhirCollection);
 
-        // Check if the identifier is present, if not, return false
-        if (!bbmriEricIdOpt.isPresent()) {
-            logger.warn("updateCollectionInFhirStore: Missing BBMRI-ERIC identifier");
+        if (directoryId == null) {
+            logger.warn("updateCollectionInFhirStore: Missing BBMRI-ERIC identifier in collection");
             return false;
         }
-        BbmriEricId bbmriEricId = bbmriEricIdOpt.get();
 
-        logger.debug("updateCollectionInFhirStore: bbmriEricId: " + bbmriEricId);
+        logger.debug("updateCollectionInFhirStore: directoryId: " + directoryId);
 
         // Fetch the corresponding collection from the Directory API
-        Collection directoryCollection = collections.getCollection(bbmriEricId.toString());
+        Collection directoryCollection = collections.getCollection(directoryId.toString());
 
         logger.debug("updateCollectionInFhirStore: directoryCollection: " + directoryCollection);
 

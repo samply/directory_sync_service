@@ -159,15 +159,27 @@ public class FhirApi {
   }
 
   /**
-   * Returns the BBMRI-ERIC identifier of {@code collection} if some valid one could be found.
+   * Returns the BBMRI-ERIC identifier of a biobank or a collection if a valid one could be found.
    *
-   * @param collection the Organization resource, possibly containing a BBMRI-ERIC identifier
+   * To be valid, an identifier must have:
+   * * System is "http://www.bbmri-eric.eu/";
+   * * Value is a valid Directory ID.
+   *
+   * @param organization an Organization resource representing a biobank or a collection, possibly containing a BBMRI-ERIC identifier
    * @return the found BBMRI-ERIC identifier or {@link Optional#empty empty}
    */
-  public static Optional<BbmriEricId> bbmriEricId(Organization collection) {
-    return collection.getIdentifier().stream()
-            .filter(i -> "http://www.bbmri-eric.eu/".equals(i.getSystem()))
-            .findFirst().map(Identifier::getValue).flatMap(BbmriEricId::valueOf);
+  public static BbmriEricId extractDirectoryIdFromOrganizationIdentifier(Organization organization) {
+    for (Identifier identifier : organization.getIdentifier())
+      if ("http://www.bbmri-eric.eu/".equals(identifier.getSystem())) {
+        String value = identifier.getValue();
+        if (value == null || value.isEmpty())
+          continue;
+        Optional<BbmriEricId> id = BbmriEricId.valueOf(value);
+        if (id.isPresent())
+          return id.get();
+      }
+
+    return null;
   }
 
   /**
