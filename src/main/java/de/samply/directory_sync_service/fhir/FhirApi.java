@@ -46,6 +46,7 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Organization;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.Specimen;
 import org.hl7.fhir.r4.model.Reference;
@@ -218,6 +219,16 @@ public class FhirApi {
     }
   }
 
+  private List<Organization> listAllFilteredOrganizations(String profileUrl) {
+    List<Organization> organizations = listAllOrganizations();
+    List<Organization> filteredOrganizations = new ArrayList<Organization>();
+    for (Organization organization: organizations)
+      if (organization.getMeta().hasProfile(profileUrl))
+        filteredOrganizations.add(organization);
+
+    return filteredOrganizations;
+  }
+
   /**
    * Lists all Organization resources with the biobank profile.
    *
@@ -225,17 +236,7 @@ public class FhirApi {
    * errors
    */
   public List<Organization> listAllBiobanks() {
-    // List all organizations with the specified biobank profile URI
-    Bundle organizationBundle = listAllOrganizations(getBiobankProfileUri());
-
-    // Check if the operation was successful
-    if (organizationBundle == null) {
-      logger.warn("listAllBiobanks: there was a problem during listAllOrganizations");
-      return null;
-    }
-
-    // Extract the organizations from the Bundle and return them
-    return extractOrganizations(organizationBundle, getBiobankProfileUri());
+    return listAllFilteredOrganizations(getBiobankProfileUri());
   }
 
   /**
@@ -245,17 +246,7 @@ public class FhirApi {
    *         or {@code null} if an error occurs.
    */
   protected List<Organization> listAllCollections() {
-    // List all organizations with the specified biobank profile URI
-    Bundle organizationBundle = listAllOrganizations(getCollectionProfileUri());
-
-    // Check if the operation was successful
-    if (organizationBundle == null) {
-      logger.warn("listAllCollections: there was a problem during listAllOrganizations");
-      return null;
-    }
-
-    // Extract the organizations from the Bundle and return them
-    return extractOrganizations(organizationBundle, getCollectionProfileUri());
+    return listAllFilteredOrganizations(getCollectionProfileUri());
   }
 
   /**
@@ -276,10 +267,6 @@ public class FhirApi {
       return null;
     }
 
-//    return collections.stream()
-//            .filter(c -> c.getIdentifier().stream()
-//                    .anyMatch(identifier -> collectionIds.contains(identifier.getValue())))
-//            .collect(Collectors.toList());
     List<Organization> result = new ArrayList<>();
 
     boolean success = false;
@@ -327,6 +314,34 @@ public class FhirApi {
     }
   }
 
+  protected List<Organization> listAllOrganizations() {
+    List<Organization> matchingOrganizations = new ArrayList<>();
+
+    try {
+      Bundle bundle = fhirClient.search()
+              .forResource(Organization.class)
+              .returnBundle(Bundle.class)
+              .execute();
+
+      while (bundle != null) {
+        for (Bundle.BundleEntryComponent entry : bundle.getEntry())
+          if (entry.getResource() instanceof Organization organization)
+            matchingOrganizations.add(organization);
+
+        if (bundle.getLink(Bundle.LINK_NEXT) == null)
+          break;
+
+        bundle = fhirClient.loadPage()
+                .next(bundle)
+                .execute();
+      }
+    } catch (Exception e) {
+      logger.warn("listAllOrganizations: exception: {}",Util.traceFromException(e));
+    }
+
+    return matchingOrganizations;
+  }
+
   /**
    * Extracts a list of {@link Organization} resources from a given FHIR {@link Bundle}.
    *
@@ -339,12 +354,23 @@ public class FhirApi {
    * @return A list of {@link Organization} objects matching the specified profile.
    */
   protected static List<Organization> extractOrganizations(Bundle bundle, String profileUrl) {
-    return bundle.getEntry().stream()
-            .map(BundleEntryComponent::getResource)
-            .filter(r -> r.getResourceType() == ResourceType.Organization)
-            .filter(r -> r.getMeta().hasProfile(profileUrl))
-            .map(r -> (Organization) r)
-            .collect(Collectors.toList());
+    List<Organization> organizations = new ArrayList<>();
+
+    for (BundleEntryComponent entry : bundle.getEntry()) {
+      Resource resource = entry.getResource();
+
+      if (resource.getResourceType() != ResourceType.Organization) {
+        continue;
+      }
+
+      if (!resource.getMeta().hasProfile(profileUrl)) {
+        continue;
+      }
+
+      organizations.add((Organization) resource);
+    }
+
+    return organizations;
   }
 
   /**

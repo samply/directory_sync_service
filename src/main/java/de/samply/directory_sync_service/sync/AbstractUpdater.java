@@ -59,11 +59,16 @@ public abstract class AbstractUpdater {
      */
     protected static Organization.OrganizationContactComponent extractContactByPurpose(List<Organization.OrganizationContactComponent> contacts, String purposeCode) {
         for (Organization.OrganizationContactComponent contact : contacts) {
-            if (contact.getPurpose().getCoding().get(0).getCode().equals(purposeCode)) {
-                contacts.remove(contact);
-                return contact;
-            }
+            List<Coding> codings = contact.getPurpose().getCoding();
+            for (Coding coding : codings)
+                if (coding.getCode().equals(purposeCode)) {
+                    contacts.remove(contact);
+                    return contact;
+                }
         }
+
+        logger.info("extractContactByPurpose: no contact component found for purpose: " + purposeCode);
+
         return new Organization.OrganizationContactComponent();
     }
 }
