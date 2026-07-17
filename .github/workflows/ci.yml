@@ -132,11 +132,13 @@ jobs:
       matrix:
         dataset:
           - 1patient_1collection
-          - crc_full_with_extra_collection
-
-          # Add further dataset names here:
-          # - another_dataset
-          # - yet_another_dataset
+          - 1patient_1collection_negative_age
+          - 1patient_1collection_wo_diagnoses
+          - 1patient_1collection_varied_collection_dates
+          - 2patients_2collections
+          - crc_1patient
+          - crc_1patient_with_extra_collection
+          - miabis_100_patients
 
     env:
       DATASET: ${{ matrix.dataset }}
