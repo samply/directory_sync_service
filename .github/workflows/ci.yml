@@ -7,102 +7,171 @@ on:
       - develop
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+**'
+
   pull_request:
     branches:
       - master
       - develop
 
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "19"
+
 jobs:
+  # ---------------------------------------------------------------------------
+  # Build the Java application and the Docker images needed by integration tests.
+  #
+  # This job runs exactly once per workflow.
+  # ---------------------------------------------------------------------------
   build:
     name: Build application
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "19"
+          java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
       - name: Build with Maven
         run: mvn -B install
 
-      - name: Build Directory Sync Service image
+      - name: Verify Maven build output
         run: |
-          docker build \
-            --no-cache \
-            --progress=plain \
-            -t samply/directory_sync_service \
-            .
+          set -euo pipefail
+          ls -la target
+          find target -maxdepth 1 -type f -name "*.jar" -print
 
-      - name: Build data-loader image
-        working-directory: ci/data_loader
-        run: |
-          docker build \
-            --no-cache \
-            --progress=plain \
-            -t samply/data-loader \
-            .
-
-      - name: Export integration-test images
-        run: |
-          mkdir -p docker-images
-
-          docker save \
-            samply/directory_sync_service \
-            -o docker-images/directory-sync-service.tar
-
-          docker save \
-            samply/data-loader \
-            -o docker-images/data-loader.tar
-
-      - name: Upload integration-test images
-        uses: actions/upload-artifact@v4
+      # Save the Maven-generated JAR so that the publish job does not need
+      # to run Maven again.
+      - name: Upload application JAR
+        uses: actions/upload-artifact@v5
         with:
-          name: integration-test-images
-          path: docker-images
+          name: directory-sync-service-jar
+          path: target/*.jar
+          if-no-files-found: error
           retention-days: 1
 
+      - name: Build Directory Sync Service integration-test image
+        run: |
+          set -euo pipefail
+
+          docker build \
+            --no-cache \
+            --progress=plain \
+            --tag samply/directory_sync_service \
+            .
+
+      - name: Build data-loader integration-test image
+        working-directory: ci/data_loader
+        run: |
+          set -euo pipefail
+
+          docker build \
+            --no-cache \
+            --progress=plain \
+            --tag samply/data-loader \
+            .
+
+      - name: Verify integration-test images
+        run: |
+          set -euo pipefail
+
+          docker image inspect \
+            samply/directory_sync_service \
+            samply/data-loader
+
+      # GitHub-hosted jobs run on separate machines. Export the locally built
+      # images so that every matrix job can load exactly these images.
+      - name: Export integration-test Docker images
+        run: |
+          set -euo pipefail
+
+          mkdir -p build-artifacts
+
+          docker save \
+            --output build-artifacts/integration-test-images.tar \
+            samply/directory_sync_service \
+            samply/data-loader
+
+          ls -lh build-artifacts/integration-test-images.tar
+
+      - name: Upload integration-test Docker images
+        uses: actions/upload-artifact@v5
+        with:
+          name: integration-test-images
+          path: build-artifacts/integration-test-images.tar
+          if-no-files-found: error
+          retention-days: 1
+
+          # Docker image archives are already compressed internally.
+          # Avoid spending time trying to compress them again.
+          compression-level: 0
+
+  # ---------------------------------------------------------------------------
+  # Run the integration stack once for every dataset.
+  #
+  # The complete job is expanded into one matrix job per dataset.
+  # ---------------------------------------------------------------------------
   integration-tests:
     name: Integration test — ${{ matrix.dataset }}
     needs: build
     runs-on: ubuntu-latest
 
     strategy:
+      # Run all datasets even when one of them fails.
       fail-fast: false
+
       matrix:
         dataset:
           - 1patient_1collection
+          - crc_full_with_extra_collection
+
+          # Add further dataset names here:
+          # - another_dataset
+          # - yet_another_dataset
 
     env:
       DATASET: ${{ matrix.dataset }}
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Download integration-test images
+      - name: Download integration-test Docker images
         uses: actions/download-artifact@v5
         with:
           name: integration-test-images
-          path: docker-images
+          path: build-artifacts
 
-      - name: Load integration-test images
+      - name: Load integration-test Docker images
         run: |
-          docker load \
-            --input docker-images/directory-sync-service.tar
+          set -euo pipefail
 
           docker load \
-            --input docker-images/data-loader.tar
+            --input build-artifacts/integration-test-images.tar
+
+      - name: Verify loaded Docker images
+        run: |
+          set -euo pipefail
+
+          docker image inspect \
+            samply/directory_sync_service \
+            samply/data-loader
 
       - name: Run integration stack
         working-directory: ci
         run: |
           set -euo pipefail
+
+          echo "Running integration tests for dataset: $DATASET"
 
           docker compose up -d postgres emx2 store
           docker compose run --rm emx2_init
@@ -115,35 +184,77 @@ jobs:
         working-directory: ci
         run: |
           set -euo pipefail
+
           bash compare_test_results_with_reference.sh "$DATASET"
 
+      # This must come before teardown so that the containers still exist
+      # when their logs are requested.
       - name: Show Compose logs on failure
         if: failure()
         working-directory: ci
         run: |
+          docker compose ps --all || true
           docker compose logs --no-color || true
 
-      - name: Tear down stack
+      - name: Tear down integration stack
         if: always()
         working-directory: ci
         run: |
-          docker compose down -v --remove-orphans || true
+          docker compose down \
+            --volumes \
+            --remove-orphans \
+            || true
+
           rm -rf output/* || true
           docker volume rm -f store-db-data || true
 
+  # ---------------------------------------------------------------------------
+  # Publish only after:
+  #
+  # 1. the application was built successfully; and
+  # 2. every dataset in the integration-test matrix passed.
+  #
+  # Pull requests are tested but are not published.
+  # ---------------------------------------------------------------------------
   publish:
     name: Publish Docker image
     needs:
       - build
       - integration-tests
-    runs-on: ubuntu-latest
 
-    # Do not publish images for pull requests.
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      # The publish runner is a fresh machine. Restore the JAR produced by
+      # the build job so that Dockerfile's COPY ./target/*.jar succeeds.
+      - name: Download application JAR
+        uses: actions/download-artifact@v5
+        with:
+          name: directory-sync-service-jar
+          path: target
+
+      - name: Verify application JAR
+        run: |
+          set -euo pipefail
+
+          ls -la target
+
+          jar_count="$(
+            find target \
+              -maxdepth 1 \
+              -type f \
+              -name "*.jar" \
+              | wc -l
+          )"
+
+          if [ "$jar_count" -eq 0 ]; then
+            echo "No JAR was downloaded into target/."
+            exit 1
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -152,7 +263,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
