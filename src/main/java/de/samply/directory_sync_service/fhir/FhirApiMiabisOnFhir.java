@@ -82,7 +82,7 @@ public class FhirApiMiabisOnFhir extends FhirApi {
           Map.entry("Serum","blood-serum"),
           Map.entry("Sputum","saliva"),
           Map.entry("TissueFFPE","tissue-formalin"),
-          Map.entry("TissueFixed","tissue-paxgene-or-else"),
+          Map.entry("TissueFixed","tissue-formalin"),
           Map.entry("TissueFreshFrozen","tissue-frozen"),
           Map.entry("TissueFrozen","tissue-frozen"),
           Map.entry("Urine","urine"),
