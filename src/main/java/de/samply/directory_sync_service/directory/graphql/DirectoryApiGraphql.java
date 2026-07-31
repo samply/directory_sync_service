@@ -393,11 +393,11 @@ public class DirectoryApiGraphql extends DirectoryApi {
       String cleanedName = replaceNewlines(replaceQuotes(name));
       if (!name.equals(cleanedName)) {
         entity.put("name", cleanedName);
-        logger.info("sendUpdatedNewlineTextCollection: corrected name: " + cleanedName);
+        logger.info("sendUpdatedNewlineAndQuotesTextCollection: corrected name: " + cleanedName);
         textChanged = true;
       }
     } catch (Exception e) {
-      logger.warn("sendUpdatedNewlineTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+      logger.warn("sendUpdatedNewlineAndQuotesTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
     }
 
     try {
@@ -405,18 +405,18 @@ public class DirectoryApiGraphql extends DirectoryApi {
       String cleanedDescription = replaceNewlines(replaceQuotes(description));
       if (!description.equals(cleanedDescription)) {
         entity.put("description", cleanedDescription);
-        logger.info("sendUpdatedNewlineTextCollection: corrected description: " + cleanedDescription);
+        logger.info("sendUpdatedNewlineAndQuotesTextCollection: corrected description: " + cleanedDescription);
         textChanged = true;
       }
     } catch (Exception e) {
-      logger.warn("sendUpdatedNewlineTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+      logger.warn("sendUpdatedNewlineAndQuotesTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
     }
 
     JsonObject result = null;
     if (textChanged)
       result = sendUpdatedCollection(collectionId, entity);
     else
-      logger.info("sendUpdatedNewlineTextCollection: no change necessary, returning null.");
+      logger.info("sendUpdatedNewlineAndQuotesTextCollection: no change necessary, returning null.");
 
     return result;
   }
@@ -578,28 +578,6 @@ public class DirectoryApiGraphql extends DirectoryApi {
       entity.remove("national_node");
     if (entity.containsKey("biobank_label") && !isColumnInTable(countryCode, "Collections", "biobank_label"))
       entity.remove("biobank_label");
-  }
-
-  /**
-   * Remove anything inserted by Directory sync. from the input map.
-   *
-   * @param map
-   * @return
-   */
-  private void removeDirsyncKeysFromMap(Map<String, Object> map) {
-    map.remove("diagnosis_available");
-    map.remove("data_categories");
-    map.remove("storage_temperatures");
-    map.remove("sex");
-    map.remove("type");
-    map.remove("age_low");
-    map.remove("size");
-    map.remove("order_of_magnitude_donors");
-    map.remove("materials");
-    map.remove("age_high");
-    map.remove("number_of_donors");
-    map.remove("order_of_magnitude");
-    map.remove("timestamp");
   }
 
   /**
