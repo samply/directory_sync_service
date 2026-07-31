@@ -294,9 +294,9 @@ public class DirectoryApiGraphql extends DirectoryApi {
         // attributes with other values and try resending. This may fix the problem, or at
         // least help to identify where the error is coming from.
         if (result == null) {
-          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedNewlineTextCollection.");
+          logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedNewlineAndQuotesTextCollection.");
           // Remove newlines from name and description.
-          result = sendUpdatedNewlineTextCollection(collectionId, entity);
+          result = sendUpdatedNewlineAndQuotesTextCollection(collectionId, entity);
         }
         if (result == null) {
           logger.warn("sendUpdatedCollections: result is null for collectionId: " + collectionId + ", Running sendUpdatedSpecialCharacterTextCollection.");
@@ -376,7 +376,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
-   * Try replacing newlines in the name and description attributes and then sending the corresponding GraphQL
+   * Try replacing newlines and quotes in the name and description attributes and then sending the corresponding GraphQL
    * to the Directory, to see if it fixes the 400 error.
    *
    * Return value is null if no change was necessary or if the change was not successful.
@@ -385,12 +385,12 @@ public class DirectoryApiGraphql extends DirectoryApi {
    * @param entity
    * @return
    */
-  private JsonObject sendUpdatedNewlineTextCollection(String collectionId, Map<String, Object> entity) {
+  private JsonObject sendUpdatedNewlineAndQuotesTextCollection(String collectionId, Map<String, Object> entity) {
     boolean textChanged = false;
 
     try {
       String name = (String) entity.get("name");
-      String cleanedName = replaceNewlines(name);
+      String cleanedName = replaceNewlines(replaceQuotes(name));
       if (!name.equals(cleanedName)) {
         entity.put("name", cleanedName);
         logger.info("sendUpdatedNewlineTextCollection: corrected name: " + cleanedName);
@@ -402,7 +402,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     try {
       String description = (String) entity.get("description");
-      String cleanedDescription = replaceNewlines(description);
+      String cleanedDescription = replaceNewlines(replaceQuotes(description));
       if (!description.equals(cleanedDescription)) {
         entity.put("description", cleanedDescription);
         logger.info("sendUpdatedNewlineTextCollection: corrected description: " + cleanedDescription);
@@ -477,13 +477,30 @@ public class DirectoryApiGraphql extends DirectoryApi {
     return cleaned;
   }
 
+  private String replaceQuotes(String text) {
+    if (text == null || text.isEmpty())
+      return text;
+    // Replace double quotes.
+    String cleaned = text
+            .replaceAll("\"", "");
+
+    return cleaned;
+  }
+
   private String replaceSpecialCharacters(String text) {
     if (text == null || text.isEmpty())
       return text;
+
     // Replace special characters with the nearest applicable standard ASCII.
     String cleaned = Normalizer.normalize(text, Normalizer.Form.NFD)
             .replaceAll("\\p{M}", "")
             .replaceAll("[^\\p{ASCII}]", "");
+
+    // Check the cleaned text. If it has no regular characters left, discard it.
+    if (!cleaned.chars().anyMatch(ch -> Character.isLetterOrDigit(ch))) {
+      logger.warn("replaceSpecialCharacters: it looks like all regular characters have been deleted, so rejecting changes. text: " + text + ", cleaned: " + cleaned);
+      return text;
+    }
 
     return cleaned;
   }

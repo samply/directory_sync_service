@@ -24,6 +24,8 @@ services:
       postgres:
         condition: service_healthy
     restart: on-failure
+    ports:
+      - 8080:8080 # MOLGENIS GUI, can be used to add biobanks, collections, etc.
 
   emx2_init:
     image: curlimages/curl:8.5.0
@@ -85,7 +87,7 @@ services:
       DS_IMPORT_BIOBANKS: "true"
       DS_IMPORT_COLLECTIONS: "true"
       SPRING_APPLICATION_JSON: '{"logging":{"level":{"ca":{"uhn":{"fhir":"WARN"}},"de":{"samply":{"directory_sync_service":"DEBUG"}}}}}' # just for testing
-      #DS_TIMER_CRON: "* * * * *"
+      #DS_TIMER_CRON: "* * * * *" # Once per minute, forever.
       DS_DIRECTORY_MOCK: "false"
       DS_DIRECTORY_DEFAULT_COLLECTION_ID: bbmri-eric:ID:DE_DKFZ_TEST:collection:Test1
       #JAVA_TOOL_OPTIONS: "-Xmx1g -agentlib:jdwp=transport=dt_socket,server=y,address=*:8086,suspend=y" # debugger
@@ -97,8 +99,8 @@ services:
         condition: service_completed_successfully
       emx2_init: # Wait for Molgenis to finish initializing
         condition: service_completed_successfully
-#    ports:
-#      - "8086:8086" # debugger
+    ports:
+      - "8086:8086" # debugger port to connect to your IDE
 
   emx2_tests:
     image: python:3.11-slim

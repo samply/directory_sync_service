@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import de.samply.directory_sync_service.Util;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -30,7 +31,16 @@ import java.util.concurrent.TimeoutException;
 public abstract class DirectoryCalls {
   protected static final Logger logger = LoggerFactory.getLogger(DirectoryCalls.class);
   protected final Gson gson = new Gson();
-  protected final CloseableHttpClient httpClient = HttpClients.createDefault();
+  // Impose a 30 second limit on the length of HTTP calls
+  RequestConfig requestConfig = RequestConfig.custom()
+        .setConnectTimeout(30_000)            // Time to establish TCP connection
+        .setConnectionRequestTimeout(30_000)  // Time waiting for a connection from the pool
+        .setSocketTimeout(30_000)             // Time waiting for data
+        .build();
+  protected final CloseableHttpClient httpClient =
+          HttpClients.custom()
+                  .setDefaultRequestConfig(requestConfig)
+                  .build();
   protected final String baseUrl;
   public DirectoryCredentials directoryCredentials;
 

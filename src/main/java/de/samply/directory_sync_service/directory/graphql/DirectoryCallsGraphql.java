@@ -256,7 +256,6 @@ public class DirectoryCallsGraphql extends DirectoryCalls {
   private String escapeQuotes(String str) {
     return str.replace("\"", "\\\"");
   }
-
   /**
    * Removes newlines from a string by replacing them with spaces.
    *
