@@ -1,4 +1,11 @@
 Very basic data set, with only 1 patient and 1 collection.
 
-Covers the edge case: Name / Description with plain unicode Greek characters
+Covers the edge case: With newlines in description
+
+Name = "Συλλογή Δειγμάτων "Ιπποκράτης"" Description:
+
+"Η συλλογή περιλαμβάνει δείγματα ιστού, αίματος και πλάσματος από ασθενείς με αυτοάνοσα νοσήματα
+(ρευματοειδής αρθρίτιδα, συστηματικός ερυθηματώδης λύκος, ψωριασική αρθρίτιδα),
+συλλεγμένα από το 2010 έως σήμερα στο πλαίσιο πολυκεντρικής μελέτης παρακολούθησης.
+Περιλαμβάνονται κλινικά δεδομένα, εργαστηριακές τιμές και δεδομένα απεικόνισης."
 
