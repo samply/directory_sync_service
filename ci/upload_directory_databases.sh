@@ -11,9 +11,16 @@ COOKIE_JAR="/tmp/emx2.cookies"
 
 api_gql="$BASE_URL/api/graphql"
 
+CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-5}"
+CURL_MAX_TIME="${CURL_MAX_TIME:-30}"
+
 echo "Waiting for EMX2 at $BASE_URL ..."
-until curl -fsS "$BASE_URL/" >/dev/null 2>&1; do
-  sleep 2
+until curl -fsS \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
+    "$BASE_URL/" >/dev/null 2>&1
+do
+    sleep 2
 done
 
 echo "Logging in as $ADMIN_EMAIL ..."
@@ -25,10 +32,14 @@ JSON
 signin_payload="${signin_payload/__EMAIL__/$ADMIN_EMAIL}"
 signin_payload="${signin_payload/__PASSWORD__/$ADMIN_PASSWORD}"
 
-resp="$(curl -fsS -c "$COOKIE_JAR" -b "$COOKIE_JAR" \
-  -H "Content-Type: application/json" \
-  --data "$signin_payload" \
-  "$api_gql")"
+resp="$(curl -fsS \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
+    -c "$COOKIE_JAR" \
+    -b "$COOKIE_JAR" \
+    -H "Content-Type: application/json" \
+    --data "$signin_payload" \
+    "$api_gql")"
 
 echo "$resp" | grep -q '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' || {
   echo "ERROR: login failed. Response:"
@@ -55,10 +66,14 @@ schema_id_from_filename() {
 }
 
 graphql_post() {
-  curl -fsS -c "$COOKIE_JAR" -b "$COOKIE_JAR" \
-    -H "Content-Type: application/json" \
-    --data "$1" \
-    "$api_gql"
+    curl -fsS \
+        --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+        --max-time "$CURL_MAX_TIME" \
+        -c "$COOKIE_JAR" \
+        -b "$COOKIE_JAR" \
+        -H "Content-Type: application/json" \
+        --data "$1" \
+        "$api_gql"
 }
 
 wait_schema_exists() {
