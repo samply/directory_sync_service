@@ -135,6 +135,9 @@ jobs:
           - 1patient_1collection_negative_age
           - 1patient_1collection_wo_diagnoses
           - 1patient_1collection_varied_collection_dates
+          - 1patient_1collection_greek1
+          - 1patient_1collection_greek2
+          - 1patient_1collection_greek3
           - 2patients_2collections
           - crc_1patient
           - crc_1patient_with_extra_collection
