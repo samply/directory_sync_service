@@ -11,7 +11,7 @@ COOKIE_JAR="/tmp/emx2.cookies"
 
 api_gql="$BASE_URL/api/graphql"
 
-CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-5}"
+CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-20}"
 CURL_MAX_TIME="${CURL_MAX_TIME:-30}"
 
 echo "Waiting for EMX2 at $BASE_URL ..."
