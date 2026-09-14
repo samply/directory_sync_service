@@ -1,10 +1,12 @@
 package de.samply.directory_sync_service.fhir;
 
 import de.samply.directory_sync_service.Util;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Specimen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,5 +153,78 @@ public class FhirApiMiabisOnFhir extends FhirApi {
     }
 
     return storageTemperatures;
+  }
+
+  /**
+   * Extracts and returns any diagnoses associated with the Specimen.
+   *
+   * @param specimen
+   * @return
+   */
+//  public List<String> extractDiagnosesFromSpecimen(Specimen specimen) {
+//    return extractExtensionElementValuesFromSpecimen(specimen, getSampleDiagnosisUri());
+//  }
+  public List<String> extractDiagnosesFromSpecimen(Specimen specimen) {
+    List<String> diagnoses = new ArrayList<>();
+
+    // Sample-diagnosis extension
+    List<String> extensionDiagnoses =
+            extractExtensionElementValuesFromSpecimen(
+                    specimen,
+                    getSampleDiagnosisUri());
+
+    if (extensionDiagnoses != null) {
+      diagnoses.addAll(extensionDiagnoses);
+    }
+
+    // Diagnoses represented as Observations referring to this Specimen
+    diagnoses.addAll(extractDiagnosesFromObservations(specimen));
+
+    return diagnoses.stream()
+            .filter(Objects::nonNull)
+            .distinct()
+            .toList();
+  }
+
+  private List<String> extractDiagnosesFromObservations(Specimen specimen) {
+    if (specimen == null || specimen.getIdElement().isEmpty()) {
+      return List.of();
+    }
+
+    String specimenReference =
+            "Specimen/" + specimen.getIdElement().getIdPart();
+
+    try {
+      Bundle bundle = fhirClient
+              .search()
+              .forResource(Observation.class)
+              .where(Observation.SPECIMEN.hasId(specimenReference))
+              .returnBundle(Bundle.class)
+              .execute();
+
+      return bundle.getEntry().stream()
+              .map(Bundle.BundleEntryComponent::getResource)
+              .filter(Observation.class::isInstance)
+              .map(Observation.class::cast)
+
+              // Optional, but useful if other kinds of Observations
+              // also point to specimens:
+              .filter(Observation::hasValueCodeableConcept)
+
+              .map(Observation::getValueCodeableConcept)
+              .flatMap(cc -> cc.getCoding().stream())
+              .filter(coding ->
+                      ICD10_SYSTEM.equals(coding.getSystem()))
+              .map(Coding::getCode)
+              .filter(Objects::nonNull)
+              .distinct()
+              .toList();
+
+    } catch (Exception e) {
+      logger.warn(
+              "extractDiagnosesFromObservations: exception: "
+                      + Util.traceFromException(e));
+      return List.of();
+    }
   }
 }

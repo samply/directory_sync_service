@@ -66,6 +66,7 @@ public class FhirApi {
   protected final IGenericClient fhirClient;
   protected final FhirContext ctx;
   protected String fhirStoreUrl;
+  protected static final String ICD10_SYSTEM = "http://hl7.org/fhir/sid/icd-10";
 
   public FhirApi(String fhirStoreUrl) {
     ctx = FhirContext.forR4();
@@ -926,7 +927,6 @@ public class FhirApi {
   private Map<Patient, List<String>> patientToConditionCodesMap = new HashMap<>();
   /**
    * Extracts a list of condition codes from a Patient resource using a FHIR client.
-   * The condition codes are based on the system "http://hl7.org/fhir/sid/icd-10".
    *
    * Usess two types of caching to improve performance:
    * * If there are no conditions in the FHIR store, this is noted, and an empty list returned.
@@ -1005,8 +1005,8 @@ public class FhirApi {
         List<Coding> codings = code.getCoding();
         // Loop over the coding elements
         for (Coding coding : codings) {
-          // Check if the coding element has the system "http://hl7.org/fhir/sid/icd-10"
-          if (coding.getSystem().equals("http://hl7.org/fhir/sid/icd-10")) {
+          // Check if the coding element has the ICD-10 system
+          if (coding.getSystem().equals(ICD10_SYSTEM)) {
             // Get the code value and the display value from the coding element
             String codeValue = coding.getCode();
             //String displayValue = coding.getDisplay();
@@ -1024,14 +1024,13 @@ public class FhirApi {
   }
 
   /**
-   * Extracts and returns any diagnoses in the extension to the specimen with the
-   * URI SAMPLE_DIAGNOSIS_URI.
+   * Extracts and returns any diagnoses associated with the Specimen.
    *
    * @param specimen
    * @return
    */
   public List<String> extractDiagnosesFromSpecimen(Specimen specimen) {
-    return extractExtensionElementValuesFromSpecimen(specimen, getSampleDiagnosisUri());
+    return null;
   }
 
   /**

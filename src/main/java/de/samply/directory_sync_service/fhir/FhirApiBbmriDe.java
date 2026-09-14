@@ -62,4 +62,14 @@ public class FhirApiBbmriDe extends FhirApi {
   protected List<String> extractStorageTemperaturesFromSpecimenList(List<Specimen> specimenList) {
     return extractExtensionElementValuesFromSpecimens(specimenList, STORAGE_TEMPERATURE_URI);
   }
+
+  /**
+   * Extracts and returns any diagnoses associated with the Specimen.
+   *
+   * @param specimen
+   * @return
+   */
+  public List<String> extractDiagnosesFromSpecimen(Specimen specimen) {
+    return extractExtensionElementValuesFromSpecimen(specimen, getSampleDiagnosisUri());
+  }
 }
