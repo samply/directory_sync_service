@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
  * is one-shot, which means that the job will only run once and the process will
  * then terminate.
  * <p>
- * If you set the timer-cron, then the job will be repeated forever, according to
+ * If you set the timer-cron, the job will run once straight away and then it will be repeated forever, according to
  * the cron settings. A Quartz job manager will be used for this purpose.
  */
 @Service
@@ -54,13 +54,13 @@ public class DirectorySyncLauncher {
     logger.info("run: Date()       =" + new java.util.Date());
     logger.info("run: Zoned now    =" + java.time.ZonedDateTime.now());
 
-    // If there is no cron timer defined, just run the job once and then quit.
-    if (timerCron == null || timerCron.isEmpty() || timerCron.equals("-")) {
-      logger.info("run: ********************** Running job just once");
-      directorySyncJob.execute(configuration);
-      logger.info("run: ********************** Finished running job just once\n\n\n\n\n");
+    logger.info("run: ********************** Initial immediate job run");
+    directorySyncJob.execute(configuration);
+    logger.info("run: ********************** Finished initial immediate job run\n\n\n\n\n");
+
+    // If there is no cron timer defined, quit after initial job run.
+    if (timerCron == null || timerCron.isEmpty() || timerCron.equals("-"))
       return;
-    }
 
     timerCron = CronConverter.unixToQuartz(timerCron);
 
