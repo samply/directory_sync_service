@@ -17,6 +17,7 @@ public class FhirApiBbmriDe extends FhirApi {
   protected static final String SAMPLE_DIAGNOSIS_URI = "https://fhir.bbmri.de/StructureDefinition/SampleDiagnosis";
   protected static final String BIOBANK_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Biobank";
   protected static final String COLLECTION_PROFILE_URI = "https://fhir.bbmri.de/StructureDefinition/Collection";
+  protected static final String ORGANIZATION_DESCRIPTION_URI = "https://fhir.bbmri.de/StructureDefinition/OrganizationDescription";
 
   public FhirApiBbmriDe(String fhirStoreUrl) {
     super(fhirStoreUrl);
@@ -33,6 +34,10 @@ public class FhirApiBbmriDe extends FhirApi {
 
   protected String getSampleDiagnosisUri() {
     return SAMPLE_DIAGNOSIS_URI;
+  }
+
+  protected String getOrganizationDescriptionUri() {
+    return ORGANIZATION_DESCRIPTION_URI;
   }
 
   /**

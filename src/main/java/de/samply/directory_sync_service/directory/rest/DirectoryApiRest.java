@@ -150,6 +150,9 @@ public class DirectoryApiRest extends DirectoryApi {
 
   }
 
+  public void showCollectionsKnownToDirectory(Collections collections) {
+  }
+
   private Map getItemZero(Map singleDirectoryCollectionGet) {
     if (singleDirectoryCollectionGet == null) {
       logger.warn("getItemZero: singleDirectoryCollectionGet is null");

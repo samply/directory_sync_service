@@ -75,6 +75,9 @@ public class DirectoryApiWriteToFile extends DirectoryApi {
   public void fetchBasicCollectionData(Collections collections) {
   }
 
+  public void showCollectionsKnownToDirectory(Collections collections) {
+  }
+
   /**
    * Deposits aggregated collection information into a file.
    *

@@ -70,6 +70,7 @@ else
 fi
 
 # Preprocess reference collection data
+echo Reference collection data: data/output/$REFERENCE/DirectoryCollections.csv
 cat data/output/$REFERENCE/DirectoryCollections.csv | \
 # Remove columns 12 and 13 (lower and upper age), since they change with date.
 awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=13) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \
@@ -81,6 +82,7 @@ grep -v "order_of_magnitude" | \
 sort > $TMP/crc-cohort_collections.processed.csv
 
 # Preprocess generated output collection data
+echo Output collection data: output/DirectoryCollections.csv
 cat output/DirectoryCollections.csv | \
 # Remove columns 12 and 13 (lower and upper age), since they change with date.
 awk -F';' 'BEGIN {OFS=";"} {for(i=1;i<=NF;i++) if(i!=13) printf "%s%s", $i, (i<NF ? OFS : ""); printf "\n"}' | \

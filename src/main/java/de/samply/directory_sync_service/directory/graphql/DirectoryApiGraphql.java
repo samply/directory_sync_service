@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.text.Normalizer;
+import java.util.Optional;
 
 /**
  * The DirectoryApiGraphql class provides an interface for interacting with the Directory service.
@@ -188,12 +189,12 @@ public class DirectoryApiGraphql extends DirectoryApi {
       return;
     }
 
-    logger.info("generateCollections: ewntered");
+    logger.info("fetchBasicCollectionData: entered");
 
     login();
 
     for (String collectionId: collections.getCollectionIds()) {
-      logger.info("generateCollections: collectionId: " + collectionId);
+      logger.info("fetchBasicCollectionData: collectionId: " + collectionId);
       String graphqlCommand = "query {" +
               "  Collections( filter: { id: { equals: \"" + collectionId + "\" } } ) {\n" +
               "    id\n" +
@@ -227,24 +228,85 @@ public class DirectoryApiGraphql extends DirectoryApi {
               "}";
 
       String collectionCountryCode = extractCountryCodeFromBbmriEricId(collectionId);
-      logger.info("generateCollections: collectionCountryCode: " + collectionCountryCode);
+      logger.info("fetchBasicCollectionData: collectionCountryCode: " + collectionCountryCode);
       List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(collectionCountryCode), graphqlCommand);
       if (collectionsList == null) {
-        logger.warn("generateCollections: biobankList list is null");
+        logger.warn("fetchBasicCollectionData: collectionsList list is null");
         continue;
       }
       if (collectionsList.size() == 0) {
-        logger.warn("generateCollections: collectionFactsList list is empty");
+        logger.warn("fetchBasicCollectionData: collectionsList list is empty");
         continue;
       }
 
       Map<String, Object> collectionMap = collectionsList.get(0);
 
       if (collectionMap == null) {
-        logger.warn("generateCollections: entity get item is null, does the collection exist in the Directory: " + collectionId);
+        logger.warn("fetchBasicCollectionData: entity get item is null, does the collection exist in the Directory: " + collectionId);
         continue;
       }
       ConvertDirectoryCollectionGetToCollections.addCollectionFromMap(collections, collectionId, collectionMap);
+    }
+  }
+
+  public void showCollectionsKnownToDirectory(Collections collections) {
+    if (mockDirectory) {
+      // Dummy return if we're in mock mode
+      return;
+    }
+
+    login();
+
+    for (String collectionId: collections.getCollectionIds()) {
+      String graphqlCommand = "query {" +
+              "  Collections( filter: { id: { equals: \"" + collectionId + "\" } } ) {\n" +
+              "    id\n" +
+              "    name\n" +
+              "    description\n" +
+              "    country {\n" +
+              "      label\n" +
+              "      name\n" +
+              "    }\n" +
+              "    contact {" +
+              "      id\n" +
+              "      email\n" +
+              "    }\n" +
+              "    biobank {\n" +
+              "      id\n" +
+              "      name\n" +
+              "    }\n" +
+              "    type {\n" +
+              "      name\n" +
+              "      label\n" +
+              "    }\n" +
+              "    data_categories {\n" +
+              "      name\n" +
+              "      label\n" +
+              "    }\n" +
+              "    order_of_magnitude {\n" +
+              "      name\n" +
+              "      label\n" +
+              "    }\n" +
+              "  }\n" +
+              "}";
+
+      String collectionCountryCode = extractCountryCodeFromBbmriEricId(collectionId);
+      List<Map<String, Object>> collectionsList = directoryCallsGraphql.runGraphqlQueryReturnList(getDatabaseEricEndpoint(collectionCountryCode), graphqlCommand);
+      if (collectionsList == null) {
+        logger.warn("showCollectionsKnownToDirectory: collectionId: " + collectionId + ", collectionsList list is null");
+        continue;
+      }
+      if (collectionsList.size() == 0) {
+        logger.warn("showCollectionsKnownToDirectory: collectionId: " + collectionId + ", collectionsList list is empty");
+        continue;
+      }
+
+      Map<String, Object> collectionMap = collectionsList.get(0);
+
+      if (collectionMap == null)
+        logger.info("showCollectionsKnownToDirectory: collectionId: " + collectionId + ", entity get item is null");
+      else
+        logger.info("showCollectionsKnownToDirectory: collectionId: " + collectionId + ", retrieved collection:\n" + Util.jsonStringFomObject(collectionMap));
     }
   }
 
@@ -272,6 +334,17 @@ public class DirectoryApiGraphql extends DirectoryApi {
 
     login();
 
+    // Try to find a valid contact person in the available collections
+    String contact = null;
+    for (String collectionId: directoryCollectionPut.getCollectionIds()) {
+      Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
+      if (entity.containsKey("contact")) {
+        contact = entity.get("contact").toString();
+        break;
+      }
+    }
+    logger.info("sendUpdatedCollections: contact: " + contact);
+
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
       try {
         logger.info("sendUpdatedCollections: about to update collection: " + collectionId);
@@ -280,11 +353,28 @@ public class DirectoryApiGraphql extends DirectoryApi {
         cleanEntity(entity);
         if (entity.containsKey("timestamp")) {
           String timestamp = cleanTimestamp(entity.get("timestamp").toString());
-          logger.info("sendUpdatedCollections: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX using timestamp: " + timestamp);
+          logger.info("sendUpdatedCollections: using timestamp: " + timestamp);
           entity.put("timestamp", timestamp);
         } else
-          logger.warn("sendUpdatedCollections: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX no timestamp available for this entity");
+          logger.warn("sendUpdatedCollections: no timestamp available for this entity");
         insertMissingAttributesIntoEntity(directoryCollectionPut, entity);
+        if (entity.containsKey("id")) {
+          // The Directory likes to see country, name and description when creating or updating a collection,
+          // so invent them if not already there.
+          if (!entity.containsKey("name"))
+            entity.put("name", entity.get("id"));
+          if (!entity.containsKey("description"))
+            entity.put("description", entity.get("name"));
+          if (!entity.containsKey("country")) {
+            Optional<BbmriEricId> idOption = BbmriEricId.valueOf((String) entity.get("id"));
+            if (idOption.isPresent())
+              entity.put("country", idOption.get().getCountryCode());
+          }
+        }
+        // The Directory also wants to have a contact when it creates or updates a collection, so
+        // if we don't already have one, use the default.
+        if (!entity.containsKey("contact") && contact != null)
+            entity.put("contact", contact);
         transformEntityForEmx2(entity);
         deleteUnknownFieldsFromEntity(extractCountryCodeFromBbmriEricId(collectionId), entity);
 
@@ -329,11 +419,18 @@ public class DirectoryApiGraphql extends DirectoryApi {
     String entityGraphql = mapToGraphQL(entity);
     String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
 
+    // If the collection is already in the Directory, update it, otherwise insert a fresh copy.
     String graphqlCommand = "mutation {\n" +
             "  update (Collections: \n" +
             entityGraphql +
             "  ) { message }\n" +
             "}";
+    if (!collectionIdKnownToDirectory(collectionId))
+      graphqlCommand = "mutation {\n" +
+              "  insert (Collections: \n" +
+              entityGraphql +
+              "  ) { message }\n" +
+              "}";
 
     logger.info("sendUpdatedCollection: collectionId: " + collectionId);
     logger.info("sendUpdatedCollection: graphqlCommand: " + graphqlCommand);
@@ -376,6 +473,23 @@ public class DirectoryApiGraphql extends DirectoryApi {
   }
 
   /**
+   * Ask the Directory if it knows about the supplied collection ID.
+   *
+   * @param collectionId
+   * @return
+   */
+  private boolean collectionIdKnownToDirectory(String collectionId) {
+    String countryCode = extractCountryCodeFromBbmriEricId(collectionId);
+    List<String> directoryknownCollectionIds = fetchKnownCollectionIds(countryCode);
+    if (directoryknownCollectionIds == null) {
+      logger.info("collectionIdKnownToDirectory: not able to get known collection ids from Directory");
+      return false;
+    }
+
+    return directoryknownCollectionIds.contains(collectionId);
+  }
+
+  /**
    * Try replacing newlines and quotes in the name and description attributes and then sending the corresponding GraphQL
    * to the Directory, to see if it fixes the 400 error.
    *
@@ -389,27 +503,33 @@ public class DirectoryApiGraphql extends DirectoryApi {
     boolean textChanged = false;
 
     try {
-      String name = (String) entity.get("name");
-      String cleanedName = replaceNewlines(replaceQuotes(name));
-      if (!name.equals(cleanedName)) {
-        entity.put("name", cleanedName);
-        logger.info("sendUpdatedNewlineAndQuotesTextCollection: corrected name: " + cleanedName);
-        textChanged = true;
-      }
+      if (entity.containsKey("name")) {
+        String name = (String) entity.get("name");
+        String cleanedName = replaceNewlines(replaceQuotes(name));
+        if (!name.equals(cleanedName)) {
+          entity.put("name", cleanedName);
+          logger.info("sendUpdatedNewlineAndQuotesTextCollection: corrected name: " + cleanedName);
+          textChanged = true;
+        }
+      } else
+        logger.warn("sendUpdatedNewlineAndQuotesTextCollection: no name attribute in entity.");
     } catch (Exception e) {
       logger.warn("sendUpdatedNewlineAndQuotesTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
     }
 
     try {
-      String description = (String) entity.get("description");
-      String cleanedDescription = replaceNewlines(replaceQuotes(description));
-      if (!description.equals(cleanedDescription)) {
-        entity.put("description", cleanedDescription);
-        logger.info("sendUpdatedNewlineAndQuotesTextCollection: corrected description: " + cleanedDescription);
-        textChanged = true;
-      }
+      if (entity.containsKey("description")) {
+        String description = (String) entity.get("description");
+        String cleanedDescription = replaceNewlines(replaceQuotes(description));
+        if (!description.equals(cleanedDescription)) {
+          entity.put("description", cleanedDescription);
+          logger.info("sendUpdatedNewlineAndQuotesTextCollection: corrected description: " + cleanedDescription);
+          textChanged = true;
+        }
+      } else
+        logger.warn("sendUpdatedNewlineAndQuotesTextCollection: no description attribute in entity.");
     } catch (Exception e) {
-      logger.warn("sendUpdatedNewlineAndQuotesTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+      logger.warn("sendUpdatedNewlineAndQuotesTextCollection: problem correcting description for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
     }
 
     JsonObject result = null;
@@ -435,27 +555,33 @@ public class DirectoryApiGraphql extends DirectoryApi {
     boolean textChanged = false;
 
     try {
-      String name = (String) entity.get("name");
-      String cleanedName = replaceSpecialCharacters(name);
-      if (!name.equals(cleanedName)) {
-        entity.put("name", cleanedName);
-        logger.info("sendUpdatedSpecialCharacterTextCollection: corrected name: " + cleanedName);
-        textChanged = true;
-      }
+      if (entity.containsKey("name")) {
+        String name = (String) entity.get("name");
+        String cleanedName = replaceSpecialCharacters(name);
+        if (!name.equals(cleanedName)) {
+          entity.put("name", cleanedName);
+          logger.info("sendUpdatedSpecialCharacterTextCollection: corrected name: " + cleanedName);
+          textChanged = true;
+        }
+      } else
+        logger.warn("sendUpdatedSpecialCharacterTextCollection: no name attribute in entity.");
     } catch (Exception e) {
       logger.warn("sendUpdatedSpecialCharacterTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
     }
 
     try {
-      String description = (String) entity.get("description");
-      String cleanedDescription = replaceSpecialCharacters(description);
-      if (!description.equals(cleanedDescription)) {
-        entity.put("description", cleanedDescription);
-        logger.info("sendUpdatedSpecialCharacterTextCollection: corrected description: " + cleanedDescription);
-        textChanged = true;
-      }
+      if (entity.containsKey("description")) {
+        String description = (String) entity.get("description");
+        String cleanedDescription = replaceSpecialCharacters(description);
+        if (!description.equals(cleanedDescription)) {
+          entity.put("description", cleanedDescription);
+          logger.info("sendUpdatedSpecialCharacterTextCollection: corrected description: " + cleanedDescription);
+          textChanged = true;
+        }
+      } else
+        logger.warn("sendUpdatedSpecialCharacterTextCollection: no description attribute in entity.");
     } catch (Exception e) {
-      logger.warn("sendUpdatedSpecialCharacterTextCollection: problem correcting name for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
+      logger.warn("sendUpdatedSpecialCharacterTextCollection: problem correcting description for collectionId: " + collectionId + ", exception: " + Util.traceFromException(e));
     }
 
     JsonObject result = null;

@@ -61,4 +61,7 @@ public class Configuration {
 
     @Value("${ds.import.collections}")
     private String importCollections;
+
+    @Value("${ds.directory.sync_only_known_collections}")
+    private String syncOnlyKnownCollections;
 }

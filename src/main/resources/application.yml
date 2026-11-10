@@ -21,6 +21,7 @@ ds:
     only_login: "False"
     write_to_file: "False"
     output_directory: "/tmp"
+    sync_only_known_collections: "False"
   import:
     biobanks: "False"
     collections: "False"

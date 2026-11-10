@@ -69,8 +69,9 @@ public class DirectorySyncJob implements StatefulJob  {
             String directoryOutputDirectory = configuration.getDirectoryOutputDirectory();
             boolean importBiobanks = Boolean.parseBoolean(configuration.getImportBiobanks());
             boolean importCollections = Boolean.parseBoolean(configuration.getImportCollections());
+            boolean syncOnlyKnownCollections = Boolean.parseBoolean(configuration.getSyncOnlyKnownCollections());
 
-            success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections);
+            success = Sync.syncWithDirectoryFailover(retryMax, retryInterval, fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections, syncOnlyKnownCollections);
         } catch (Exception e) {
             logger.warn("execute: single-job, problem with synchronization, stack trace:\n" + Util.traceFromException(e));
             logger.warn("execute: single-job, exception:\n" + e);

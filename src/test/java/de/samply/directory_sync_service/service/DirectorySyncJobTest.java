@@ -64,7 +64,8 @@ class DirectorySyncJobTest {
                         anyBoolean(), anyInt(), anyInt(),
                         anyBoolean(), anyBoolean(),
                         anyBoolean(), anyString(),
-                        anyBoolean(), anyBoolean()
+                        anyBoolean(), anyBoolean(),
+                        anyBoolean()
                 )).thenReturn(true);
 
                 job.execute(cfg);
@@ -87,7 +88,8 @@ class DirectorySyncJobTest {
                         eq(true),                      // directoryWriteToFile
                         eq("/tmp/out"),
                         eq(true),                      // importBiobanks
-                        eq(false)                      // importCollections
+                        eq(false),                     // importCollections
+                        eq(false)                      // syncOnlyKnownCollections
                 ));
             }
         }
@@ -103,7 +105,7 @@ class DirectorySyncJobTest {
                         anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
                         anyBoolean(), anyInt(), anyInt(),
                         anyBoolean(), anyBoolean(), anyBoolean(), anyString(),
-                        anyBoolean(), anyBoolean()
+                        anyBoolean(), anyBoolean(), anyBoolean()
                 )).thenReturn(false);
 
                 assertDoesNotThrow(() -> job.execute(cfg));

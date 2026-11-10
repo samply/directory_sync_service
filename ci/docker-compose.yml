@@ -24,8 +24,8 @@ services:
       postgres:
         condition: service_healthy
     restart: on-failure
-    ports:
-      - 8080:8080 # MOLGENIS GUI, can be used to add biobanks, collections, etc.
+#    ports:
+#      - 8080:8080 # MOLGENIS GUI, can be used to add biobanks, collections, etc.
 
   emx2_init:
     image: curlimages/curl:8.5.0

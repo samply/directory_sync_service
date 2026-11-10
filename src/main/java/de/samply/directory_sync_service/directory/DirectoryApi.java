@@ -60,6 +60,8 @@ public abstract class DirectoryApi {
    */
   public abstract void fetchBasicCollectionData(Collections putCollections);
 
+  public abstract void showCollectionsKnownToDirectory(Collections putCollections);
+
   /**
    * Send aggregated collection information to the Directory.
    *

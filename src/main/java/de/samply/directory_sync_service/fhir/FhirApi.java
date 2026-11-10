@@ -36,10 +36,12 @@ import java.util.stream.Stream;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Address;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
@@ -49,6 +51,7 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.Specimen;
+import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Condition;
 import org.slf4j.Logger;
@@ -157,6 +160,10 @@ public class FhirApi {
   }
 
   protected String getSampleDiagnosisUri() {
+    return null;
+  }
+
+  protected String getOrganizationDescriptionUri() {
     return null;
   }
 
@@ -372,6 +379,13 @@ public class FhirApi {
     }
 
     return organizations;
+  }
+
+  public Map<String,List<Specimen>> fetchSpecimensByCollectionString(String directoryDefaultCollectionId) {
+    BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
+            .valueOf(directoryDefaultCollectionId)
+            .orElse(null);
+    return specimensByCollection = fetchSpecimensByCollection(defaultBbmriEricCollectionId);
   }
 
   /**
@@ -1109,6 +1123,8 @@ public class FhirApi {
     }
     updateCollectionsWithPatientData(collections, patientsByCollection);
 
+    updateCollectionsWithFhirCollectionData(collections);
+
     return collections;
   }
 
@@ -1473,5 +1489,138 @@ public class FhirApi {
    */
   protected List<String> extractSampleDiagnosisFromSpecimenList(List<Specimen> specimenList) {
     return extractExtensionElementValuesFromSpecimens(specimenList, getSampleDiagnosisUri());
+  }
+
+  /**
+   * Updates the supplied {@link Collection} objects with metadata taken from the collection
+   * {@link Organization} resources in the FHIR store.
+   *
+   * <p>A FHIR collection is matched to a {@link Collection} if one of its identifiers is a valid
+   * Directory collection ID that is already present in {@code collections}. Collections that
+   * exist in the FHIR store but have no specimens are therefore ignored.
+   *
+   * <p>The following attributes are transferred, where available:
+   * <ul>
+   *   <li>name: from {@code Organization.name}</li>
+   *   <li>description: from the profile-specific organization description extension</li>
+   *   <li>url: from the first {@code Organization.telecom} of type URL</li>
+   *   <li>location: from the city of the first {@code Organization.address}</li>
+   *   <li>country: from the country of the first {@code Organization.address}</li>
+   *   <li>biobank: the Directory ID of the biobank referenced by {@code Organization.partOf}</li>
+   * </ul>
+   *
+   * <p>Contacts are not transferred, because the Directory expects references to contact IDs,
+   * whereas the FHIR store only holds names and email addresses.
+   *
+   * @param collections the collections to be updated.
+   */
+  protected void updateCollectionsWithFhirCollectionData(Collections collections) {
+    List<Organization> fhirCollectionList = listAllCollections();
+    if (fhirCollectionList == null || fhirCollectionList.isEmpty()) {
+      logger.warn("updateCollectionsWithFhirCollectionData: no collections defined in FHIR store");
+      return;
+    }
+
+    Map<String, BbmriEricId> biobankIdsByResourceId = mapBiobankResourceIdsToDirectoryIds();
+    List<String> collectionIds = collections.getCollectionIds();
+
+    for (Organization fhirCollection : fhirCollectionList) {
+      for (Identifier identifier : fhirCollection.getIdentifier()) {
+        String identifierValue = identifier.getValue();
+        if (identifierValue == null ||
+          !BbmriEricId.isValidDirectoryCollectionIdentifier(identifierValue) ||
+          !collectionIds.contains(identifierValue))
+          continue;
+
+        Collection collection = extractCollectionFromOrganization(fhirCollection, biobankIdsByResourceId);
+        logger.debug("updateCollectionsWithFhirCollectionData: collection " + identifierValue + ": " + Util.jsonStringFomObject(collection));
+
+        // Merges the non-null attributes into the existing Collection
+        collections.addCollection(identifierValue, collection);
+        break; // avoid processing the same collection multiple times
+      }
+    }
+  }
+
+  /**
+   * Builds a {@link Collection} containing the metadata held in a collection {@link Organization}.
+   * Attributes that cannot be found are left null, so that the result can be safely merged into
+   * an existing collection using {@link Collection#combineCollections(Collection)}.
+   *
+   * @param fhirCollection a collection Organization resource.
+   * @param biobankIdsByResourceId maps FHIR biobank resource IDs to Directory biobank IDs.
+   * @return a partially filled {@link Collection}.
+   */
+  protected Collection extractCollectionFromOrganization(Organization fhirCollection, Map<String, BbmriEricId> biobankIdsByResourceId) {
+    Collection collection = new Collection();
+
+    if (fhirCollection.hasName() && !fhirCollection.getName().isBlank())
+      collection.setName(fhirCollection.getName());
+
+    collection.setDescription(extractDescriptionFromOrganization(fhirCollection));
+
+    for (ContactPoint telecom : fhirCollection.getTelecom())
+      if (telecom.getSystem() == ContactPoint.ContactPointSystem.URL && telecom.hasValue()) {
+        collection.setUrl(telecom.getValue());
+        break;
+      }
+
+    if (fhirCollection.hasAddress()) {
+      Address address = fhirCollection.getAddress().get(0);
+      if (address.hasCity())
+        collection.setLocation(address.getCity());
+      if (address.hasCountry())
+        collection.setCountry(address.getCountry());
+    }
+
+    if (fhirCollection.hasPartOf() && fhirCollection.getPartOf().hasReference()) {
+      String biobankResourceId = fhirCollection.getPartOf().getReferenceElement().getIdPart();
+      BbmriEricId biobankId = biobankIdsByResourceId.get(biobankResourceId);
+      if (biobankId != null)
+        collection.setBiobank(biobankId.toString());
+      else
+        logger.warn("extractCollectionFromOrganization: no Directory ID found for biobank: " + fhirCollection.getPartOf().getReference());
+    }
+
+    return collection;
+  }
+
+  /**
+   * Extracts a description from the organization description extension of an Organization.
+   *
+   * @param organization an Organization resource representing a biobank or a collection.
+   * @return the description, or null if none could be found.
+   */
+  protected String extractDescriptionFromOrganization(Organization organization) {
+    String descriptionUri = getOrganizationDescriptionUri();
+    if (descriptionUri == null)
+      return null;
+
+    for (Extension extension : organization.getExtensionsByUrl(descriptionUri))
+      if (extension.getValue() instanceof StringType description && !description.isEmpty())
+        return description.getValue();
+
+    return null;
+  }
+
+  /**
+   * Creates a map from the FHIR resource IDs of the biobanks in the FHIR store to their
+   * Directory biobank IDs. Biobanks without a valid Directory ID are omitted.
+   *
+   * @return map of resource IDs to Directory IDs.
+   */
+  protected Map<String, BbmriEricId> mapBiobankResourceIdsToDirectoryIds() {
+    Map<String, BbmriEricId> biobankIdsByResourceId = new HashMap<>();
+    List<Organization> biobanks = listAllBiobanks();
+    if (biobanks == null)
+      return biobankIdsByResourceId;
+
+    for (Organization biobank : biobanks) {
+      BbmriEricId biobankId = extractDirectoryIdFromOrganizationIdentifier(biobank);
+      if (biobankId != null)
+        biobankIdsByResourceId.put(biobank.getIdElement().getIdPart(), biobankId);
+    }
+
+    return biobankIdsByResourceId;
   }
 }

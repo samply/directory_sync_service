@@ -27,6 +27,8 @@ class DirectoryApiTest {
         @Override public boolean login() { return true; }
         @Override public de.samply.directory_sync_service.directory.model.Biobank fetchBiobank(BbmriEricId id) { return null; }
         @Override public void fetchBasicCollectionData(de.samply.directory_sync_service.model.Collections putCollections) {}
+        @Override public void showCollectionsKnownToDirectory(de.samply.directory_sync_service.model.Collections collections) {}
+
         @Override public boolean sendUpdatedCollections(de.samply.directory_sync_service.model.Collections collections) { return true; }
 
         @Override

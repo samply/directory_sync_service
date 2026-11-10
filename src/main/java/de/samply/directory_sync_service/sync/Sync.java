@@ -50,7 +50,7 @@ public class Sync {
      * succeeds, or the number of attempts exceeds a threshold.
      *
      */
-    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections) {
+    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections, boolean syncOnlyKnownCollections) {
         logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting at: " + java.time.LocalDateTime.now().getHour() + ":" + java.time.LocalDateTime.now().getMinute());
         boolean success = false;
         try {
@@ -58,7 +58,7 @@ public class Sync {
             int retryNum;
             for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
                 logger.info("+++++++++++++++++++ syncWithDirectoryFailover: trying sync, attempt " + retryNum + " of " + retryMax);
-                if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections)) {
+                if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections, syncOnlyKnownCollections)) {
                     success = true;
                     break;
                 }
@@ -82,7 +82,7 @@ public class Sync {
         return success;
     }
 
-    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections) {
+    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections, boolean syncOnlyKnownCollections) {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
@@ -114,7 +114,9 @@ public class Sync {
 
         logger.info("syncWithDirectory: get diagnosis corrections");
 
-        filterOutCollectionsNotInDirectory(fhirApi, directoryApi, directoryDefaultCollectionId);
+        filterOutCollectionsThatAreNotValid(fhirApi, directoryDefaultCollectionId);
+        if (syncOnlyKnownCollections)
+            filterOutCollectionsNotInDirectory(fhirApi, directoryApi, directoryDefaultCollectionId);
 
         // The Directory is very strict about diagnosis codes and will reject an entire collection
         // if even one code is not recognized. So first find out which codes it will accept and
@@ -165,6 +167,7 @@ public class Sync {
             updateCollectionsProblem = true;
         } else {
             logger.info("syncWithDirectory: initial collections.size(): " + collections.size());
+            directoryApi.showCollectionsKnownToDirectory(collections);
 
             // Apply corrections to ICD 10 diagnoses, to make them compatible with
             // the Directory.
@@ -182,6 +185,8 @@ public class Sync {
                 logger.warn("syncWithDirectory: Problem during collection update");
                 updateCollectionsProblem = true;
             }
+            logger.info("syncWithDirectory: collection export complete");
+            directoryApi.showCollectionsKnownToDirectory(collections);
         }
 
         logger.info("syncWithDirectory: import metadata");
@@ -219,6 +224,35 @@ public class Sync {
     }
 
     /**
+     * Keep only those collections that have valid Directory IDs.
+     *
+     * This method takes advantage of a side-effect of FhirApi.fetchSpecimensByCollection():
+     * it returns a list of specimens for each collection which it also stores in the FhirApi object.
+     * Changes made to the returned list will thus also be stored in the FhirApi object.
+     * This object is then returned whenever the fetchSpecimensByCollection subsequently is called, complete
+     * with any changes.
+     *
+     * @param fhirApi
+     * @param directoryDefaultCollectionId
+     */
+    private static void filterOutCollectionsThatAreNotValid(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollectionString(directoryDefaultCollectionId);
+        if (specimensByCollection == null) {
+            logger.info("filterOutCollectionsThatAreNotValid: not able to get specimens from FHIR store");
+            return;
+        }
+        List<String> fhirKnownCollectionIdsList = getFhirknownCollectionIds(fhirApi, directoryDefaultCollectionId);
+        logger.info("filterOutCollectionsThatAreNotValid: get collection IDs from Directory");
+
+        for (String collectionId : fhirKnownCollectionIdsList) {
+            if (!BbmriEricId.isValidDirectoryCollectionIdentifier(collectionId)) {
+                logger.info("filterOutCollectionsThatAreNotValid: removing collection " + collectionId + " from collections to be updated, because it is not a valid Directory ID.");
+                specimensByCollection.remove(collectionId);
+            }
+        }
+    }
+
+    /**
      * Keep only those collections that the Directory also knows about. This avoids attempts
      * to push collections or facts that the Directory does not know about.
      *
@@ -233,28 +267,16 @@ public class Sync {
      * @param directoryDefaultCollectionId
      */
     private static void filterOutCollectionsNotInDirectory(FhirApi fhirApi, DirectoryApi directoryApi, String directoryDefaultCollectionId) {
-        BbmriEricId defaultBbmriEricCollectionId = BbmriEricId
-                .valueOf(directoryDefaultCollectionId)
-                .orElse(null);
-        Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollection(defaultBbmriEricCollectionId);
+        Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollectionString(directoryDefaultCollectionId);
         if (specimensByCollection == null) {
             logger.info("filterOutCollectionsNotInDirectory: not able to get specimens from FHIR store");
             return;
         }
-        Set<String> fhirKnownCollectionIds = specimensByCollection.keySet();
-        if (fhirKnownCollectionIds == null) {
-            logger.info("filterOutCollectionsNotInDirectory: not able to get known collection ids from FHIR store");
-            return;
-        }
-        if (fhirKnownCollectionIds.isEmpty()) {
-            logger.info("filterOutCollectionsNotInDirectory: no collections found in FHIR store");
-            return;
-        }
-        List<String> fhirKnownCollectionIdsList = new ArrayList<>(fhirKnownCollectionIds); // clone keys, because we may be deleting some of them
+        List<String> fhirKnownCollectionIdsList = getFhirknownCollectionIds(fhirApi, directoryDefaultCollectionId);
         logger.info("filterOutCollectionsNotInDirectory: get collection IDs from Directory");
 
         // TODO: the next line extracts a country code from a random collection ID. This is OK if all collections are from the same country but will break if collections are from multiple countries.
-        String countryCode = directoryApi.extractCountryCodeFromBbmriEricId(fhirKnownCollectionIds.iterator().next());
+        String countryCode = directoryApi.extractCountryCodeFromBbmriEricId(fhirKnownCollectionIdsList.get(0));
         List<String> directoryknownCollectionIds = directoryApi.fetchKnownCollectionIds(countryCode);
         if (directoryknownCollectionIds == null) {
             logger.info("filterOutCollectionsNotInDirectory: not able to get known collection ids from Directory");
@@ -266,5 +288,23 @@ public class Sync {
                 specimensByCollection.remove(collectionId);
             }
         }
+    }
+
+    private static List<String> getFhirknownCollectionIds(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        Map<String, List<Specimen>> specimensByCollection = fhirApi.fetchSpecimensByCollectionString(directoryDefaultCollectionId);
+        if (specimensByCollection == null) {
+            logger.info("getDirectoryknownCollectionIds: not able to get specimens from FHIR store");
+            return null;
+        }
+        Set<String> fhirKnownCollectionIds = specimensByCollection.keySet();
+        if (fhirKnownCollectionIds == null) {
+            logger.info("getDirectoryknownCollectionIds: not able to get known collection ids from FHIR store");
+            return null;
+        }
+        if (fhirKnownCollectionIds.isEmpty()) {
+            logger.info("getDirectoryknownCollectionIds: no collections found in FHIR store");
+            return null;
+        }
+        return new ArrayList<>(fhirKnownCollectionIds); // clone keys, because we may be deleting some of them
     }
 }
