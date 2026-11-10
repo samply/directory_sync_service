@@ -118,6 +118,7 @@ public class Sync {
         filterOutCollectionsThatAreNotValid(fhirApi, directoryDefaultCollectionId);
         if (syncOnlyKnownCollections)
             filterOutCollectionsNotInDirectory(fhirApi, directoryApi, directoryDefaultCollectionId);
+        sanityCheckCollectionIdValues(fhirApi, directoryDefaultCollectionId);
 
         // The Directory is very strict about diagnosis codes and will reject an entire collection
         // if even one code is not recognized. So first find out which codes it will accept and
@@ -243,7 +244,6 @@ public class Sync {
             return;
         }
         List<String> fhirKnownCollectionIdsList = getFhirknownCollectionIds(fhirApi, directoryDefaultCollectionId);
-        logger.info("filterOutCollectionsThatAreNotValid: get collection IDs from Directory");
 
         for (String collectionId : fhirKnownCollectionIdsList) {
             if (!BbmriEricId.isValidDirectoryCollectionIdentifier(collectionId)) {
@@ -274,7 +274,6 @@ public class Sync {
             return;
         }
         List<String> fhirKnownCollectionIdsList = getFhirknownCollectionIds(fhirApi, directoryDefaultCollectionId);
-        logger.info("filterOutCollectionsNotInDirectory: get collection IDs from Directory");
 
         // TODO: the next line extracts a country code from a random collection ID. This is OK if all collections are from the same country but will break if collections are from multiple countries.
         String countryCode = directoryApi.extractCountryCodeFromBbmriEricId(fhirKnownCollectionIdsList.get(0));
@@ -307,5 +306,41 @@ public class Sync {
             return null;
         }
         return new ArrayList<>(fhirKnownCollectionIds); // clone keys, because we may be deleting some of them
+    }
+
+    private static void sanityCheckCollectionIdValues(FhirApi fhirApi, String directoryDefaultCollectionId) {
+        List<String> fhirKnownCollectionIdsList = getFhirknownCollectionIds(fhirApi, directoryDefaultCollectionId);
+        Map<String, String> knownCountryCodes = new HashMap<>();
+        for (String collectionId : fhirKnownCollectionIdsList) {
+            BbmriEricId fullCollectionId = BbmriEricId.valueOf(collectionId).get();
+            if (fullCollectionId != null) {
+                String countryCode = fullCollectionId.getCountryCode();
+                if (countryCode != null && !knownCountryCodes.containsKey(countryCode))
+                    knownCountryCodes.put(countryCode, countryCode);
+            }
+        }
+        if (knownCountryCodes.size() > 1)
+            logger.warn("sanityCheckCollectionIdValues: collection IDs contain more than one country code: " + Util.jsonStringFomObject(knownCountryCodes.keySet()));
+
+        String previousCollectionIdPart = null;
+        for (String collectionId : fhirKnownCollectionIdsList) {
+            String collectionIdPart = extractCollectionIdPart(collectionId);
+            if (previousCollectionIdPart != null && !previousCollectionIdPart.substring(0, 3).equals(collectionIdPart.substring(0, 3)))
+                logger.warn("sanityCheckCollectionIdValues: " + previousCollectionIdPart + " and " + collectionIdPart + " do not show much similarity, do they really belong to the same biobank?");
+            previousCollectionIdPart = collectionIdPart;
+        }
+    }
+
+    private static String extractCollectionIdPart(String collectionId) {
+        String[] collectionIdParts = collectionId.split(":");
+        if (collectionIdParts.length < 5) {
+            logger.warn("extractCollectionIdPart: too few parts in collectionId: " + collectionId);
+            return null;
+        }
+        if (!collectionIdParts[3].equals("collection")) {
+            logger.warn("extractCollectionIdPart: invalid collectionId: " + collectionId);
+            return null;
+        }
+        return collectionIdParts[4];
     }
 }
