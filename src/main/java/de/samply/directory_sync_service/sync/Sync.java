@@ -50,7 +50,7 @@ public class Sync {
      * succeeds, or the number of attempts exceeds a threshold.
      *
      */
-    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections, boolean syncOnlyKnownCollections) {
+    public static boolean syncWithDirectoryFailover(String retryMax, String retryInterval, String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections, boolean syncOnlyKnownCollections, String collectionDefaultContact) {
         logger.info("+++++++++++++++++++ syncWithDirectoryFailover: starting at: " + java.time.LocalDateTime.now().getHour() + ":" + java.time.LocalDateTime.now().getMinute());
         boolean success = false;
         try {
@@ -58,7 +58,7 @@ public class Sync {
             int retryNum;
             for (retryNum = 0; retryNum < Integer.parseInt(retryMax); retryNum++) {
                 logger.info("+++++++++++++++++++ syncWithDirectoryFailover: trying sync, attempt " + retryNum + " of " + retryMax);
-                if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections, syncOnlyKnownCollections)) {
+                if (syncWithDirectory(fhirStoreUrl, directoryUrl, directoryUserName, directoryUserPass, directoryUserToken, directoryDefaultCollectionId, directoryAllowStarModel, directoryMinDonors, directoryMaxFacts, directoryMock, directoryOnlyLogin, directoryWriteToFile, directoryOutputDirectory, importBiobanks, importCollections, syncOnlyKnownCollections, collectionDefaultContact)) {
                     success = true;
                     break;
                 }
@@ -82,7 +82,7 @@ public class Sync {
         return success;
     }
 
-    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections, boolean syncOnlyKnownCollections) {
+    private static boolean syncWithDirectory(String fhirStoreUrl, String directoryUrl, String directoryUserName, String directoryUserPass, String directoryUserToken, String directoryDefaultCollectionId, boolean directoryAllowStarModel, int directoryMinDonors, int directoryMaxFacts, boolean directoryMock, boolean directoryOnlyLogin, boolean directoryWriteToFile, String directoryOutputDirectory, boolean importBiobanks, boolean importCollections, boolean syncOnlyKnownCollections, String collectionDefaultContact) {
         logger.info(">>>>>>>>>>>>>>> syncWithDirectory: entered");
         Map<String, String> correctedDiagnoses;
         // Re-initialize helper classes every time this method gets called
@@ -103,7 +103,8 @@ public class Sync {
                     logger.warn("syncWithDirectory: there was a problem during login to Directory");
                     return false;
                 }
-            }
+            } else
+                ((DirectoryApiGraphql)directoryApi).setDefaultContact(collectionDefaultContact);
         }
 
         // Login test. Don't perform any further actions on the Directory.

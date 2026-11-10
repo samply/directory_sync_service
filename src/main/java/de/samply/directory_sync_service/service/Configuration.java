@@ -64,4 +64,7 @@ public class Configuration {
 
     @Value("${ds.directory.sync_only_known_collections}")
     private String syncOnlyKnownCollections;
+
+    @Value("${ds.directory.collection_default_contact}")
+    private String collectionDefaultContact;
 }

@@ -36,6 +36,8 @@ public class DirectoryApiGraphql extends DirectoryApi {
   private final Map<String,String> databaseEricEndpointMap = new HashMap<>();
   private final Map<String,Boolean> columnInTableMap = new HashMap<>();
 
+  private String defaultContact = null;
+
 
   /**
    * Constructs a new instance.
@@ -57,6 +59,10 @@ public class DirectoryApiGraphql extends DirectoryApi {
     this.token = token;
 
     logger.debug("DirectoryApiGraphql: constructed");
+  }
+
+  public void setDefaultContact(String defaultContact) {
+    this.defaultContact = defaultContact;
   }
 
   /**
@@ -335,7 +341,7 @@ public class DirectoryApiGraphql extends DirectoryApi {
     login();
 
     // Try to find a valid contact person in the available collections
-    String contact = null;
+    String contact = defaultContact;
     for (String collectionId: directoryCollectionPut.getCollectionIds()) {
       Map<String, Object> entity = directoryCollectionPut.getEntity(collectionId);
       if (entity.containsKey("contact")) {

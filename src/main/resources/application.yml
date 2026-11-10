@@ -22,6 +22,7 @@ ds:
     write_to_file: "False"
     output_directory: "/tmp"
     sync_only_known_collections: "False"
+    collection_default_contact: "bbmri-eric:contactID:AT_XXX_0013"
   import:
     biobanks: "False"
     collections: "False"
