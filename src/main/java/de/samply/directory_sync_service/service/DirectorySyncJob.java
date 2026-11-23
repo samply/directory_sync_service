@@ -4,10 +4,9 @@ import de.samply.directory_sync_service.Util;
 import de.samply.directory_sync_service.sync.Sync;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.StatefulJob;
 import org.quartz.DisallowConcurrentExecution;
 
 /**
@@ -18,7 +17,7 @@ import org.quartz.DisallowConcurrentExecution;
  * Will not allow multiple instances of this job to run at the same time.
  */
 @DisallowConcurrentExecution
-public class DirectorySyncJob implements StatefulJob  {
+public class DirectorySyncJob implements Job  {
     private static final Logger logger = LogManager.getLogger(DirectorySyncJob.class);
     private int successCounter = 0;
     private int failureCounter = 0;
