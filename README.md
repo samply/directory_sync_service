@@ -122,7 +122,7 @@ You can also build and run this service on your own computer, if Docker is not a
 
 Please run from within Linux.
 
-You will need to install git, Java 19 and Maven. Clone this repository and cd into it.
+You will need to install git, Java 25 and Maven. Clone this repository and cd into it.
 
 ### Building
 
