@@ -2,7 +2,8 @@
 .env
 
 # Maven
-.mvn/
+# NOTE: .mvn/ holds the Maven Wrapper configuration and scripts and MUST be
+# committed - do not add it back to .gitignore.
 target/
 
 ### IntelliJ IDEA ###
